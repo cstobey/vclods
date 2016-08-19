@@ -1,0 +1,35 @@
+#! /bin/ksh
+# Ensures that at most N parallel batch jobs run for a particular lock. Processes beyond N abort (rather than
+# blocking). Behavior depends upon VCLOD_BATCH_JOBS and LOCK_NAME; also uses VCLOD_LOCK_DIR. This file fulfills the
+# vclod contract for a locking script.
+#
+# Usage: Designed to be sourced into another script file.
+# Examples:
+#
+# 1) use the sourcing scripts first argument as the LOCK_NAME:
+# . <dir>/vclod_get_semaphore
+#
+# 2) explicitly define a LOCK_NAME as an enviornment variable:
+# LOCK_NAME="<some lock name>"
+# . <dir>/vclod_get_semaphore
+#
+# 3) explicitly define a LOCK_NAME as a positional argument:
+# . <dir>/vclod_get_semaphore "<some lock name, possibley $0>"
+
+# Argument validation
+: ${VCLOD_LOCK_DIR:?} ${LOCK_NAME:=${1:?Missing a lock name}} ${VCLOD_BATCH_JOBS:=1}
+[ -d "$VCLOD_LOCK_DIR" ] || { echo VCLOD_LOCK_DIR must be an existing directory; exit; }
+# LOCK_NAME can be explicitly defined, or be used as the first argument of the sourcing script. It is always basenamed.
+LOCK_NAME=`basename $LOCK_NAME`
+
+for i in 1 `seq 2 $VCLOD_BATCH_JOBS` ; do
+  LOCK_FILE="${VCLOD_LOCK_DIR%/}/${LOCK_NAME}.${i}.LCK"
+  if [ -f "$LOCK_FILE" ] ; then
+    ps -p `<$LOCK_FILE` >/dev/null && continue || { echo "Removing apparently false lock $LOCK_FILE"; rm -f "$LOCK_FILE"; }
+  fi
+  : ${MY_LOCK:=$LOCK_FILE}
+done
+[ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ `find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l` -le "$VCLOD_BATCH_JOBS" ] && echo $$ >"$MY_LOCK" || exit 1
+
+# The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
+trap "rm -f '$MY_LOCK';$(trap -p EXIT | sed 's/^;*//;s/;*$//;s/;;*/;/g')" EXIT

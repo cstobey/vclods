@@ -1,0 +1,37 @@
+#! /bin/ksh
+# Parses log messages from $LOG_FILE (program output) and splits them to a database (LOG_SQL_DB) and an output file LF.
+# Rejected messages go to LF.sql_failed. Requires a program that outputs in these forms:
+# date time pid [tag] message
+# date time pid [LOG] variable value
+# This script fulfills the VCLOD logger contract, but works with any properly structured log file.
+
+# Usage:
+# ./my_program > program.out.log; LOG_FILE=program.out.log LF=final.out.log ./postprocess_logs2sql
+
+# Argument validation: LF is the actual log file.
+: ${LOG_FILE:?} ${LF:?} ${LOG_SQL_HOST:?} ${LOG_USER:=${VCLOD_MYSQL_USER:?}} ${LOG_PW:=${VCLOD_MYSQL_PASSWORD:?}} ${LOG_SQL_DB:?} ${LOG_ENGINE:=mysql}
+[ -s "$LF" ] || exit
+
+case "$LOG_ENGINE" in
+  mysql) LOG_SQL_CMD="mysql -h$LOG_SQL_HOST -u$LOG_USER -p$LOG_PW -BNfr $LOG_SQL_DB" ;;
+  # IMPROVE: add a postgres ENGINE
+  *) echo >&2 "Unknown log engine type $LOG_ENGINE" ; exit 1 ;;
+esac
+
+# Parse each line of a log file, expecting format (space separated):
+# <date> <time> <pid> [<tag>] <message>...
+# Insert into mysql table as follows:
+# datetime='<date> <time>', pid=<pid>, tag='[<tag>]', message=<message>,
+#   if(<tag> = 'LOG' and len(<message>), variable=<message>[0], value=<message>[1])
+AWK_CMD='{
+  message = $5;
+  for (i = 6; i <= NF; i++) {
+    message = message" "$i;
+  };
+  printf "INSERT INTO script_logs SET datetime = \""$1" "$2"\", pid = "$3", tag = \""$4"\", message = \""message"\", log_file = \""log_file"\"";
+  if ( $4 == "[LOG]" && NF == 6 && $6 ~ /^[0-9]+$/) {
+    printf ", variable = \""$5"\", value = "$6
+  };
+  print ";"; }'
+
+awk -v log_file=$LOG_FILE "$AWK_CMD" $LF | $LOG_SQL_CMD || mv $LF "$LF.mysql_failed"

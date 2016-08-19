@@ -1,0 +1,15 @@
+#! /bin/ksh
+# Launches all VCLOD batches defined in a directory, running up to VCLOD_JOBS at a time. One of the primary ways of
+# launching VCLOD batches.
+#
+# Usage:
+# ./vclod_do_dir /path/to/dir
+#
+. "`dirname $0`/vclod_loadenv"
+
+# Argument validation
+: ${VCLOD_BASE_DIR:?} ${VCLOD_JOBS:=10} ${1:?Missing a directory to process}
+[ -d "$VCLOD_BASE_DIR" ] || { echo VCLOD_BASE_DIR must be an existing directory; exit; }
+[ -d "$1" ] || { echo The positional argument must be an existing directory; exit; }
+
+find -L ${1%/}/ ! -empty -xtype f -regextype posix-egrep -regex '.*\.[^.]*(sh|sql)' | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script"

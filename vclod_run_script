@@ -1,0 +1,44 @@
+#! /bin/ksh
+# Executes a VCLOD script (Variable Config, Locking, Operation, and Destination) with all
+# the setup that entails. See the README for an overview of VCLODs.
+#
+# Usage:
+# ./vclod_run_script /path/to/script
+
+# Argument validation -- Continued later
+: ${VCLOD_BASE_DIR:?} ${1:?The full path of a file to process is a required positional argument}
+[ -s "$1" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
+
+# respect local config file
+[ -f "`dirname $1`/config" ] && . "`dirname $1`/config"
+
+. "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
+. "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
+
+# Connection parameters are required, but can be set either in the env or the current directory's config file
+: ${VCLOD_MYSQL_HOST:?} ${VCLOD_MYSQL_USER:?} ${VCLOD_MYSQL_PASSWORD:?} ${VCLOD_MYSQL_DB:?}
+: ${VCLOD_DST_HOST:=$VCLOD_MYSQL_HOST} ${VCLOD_DST_USER:=$VCLOD_MYSQL_USER} ${VCLOD_DST_PASSWORD:=$VCLOD_MYSQL_PASSWORD} ${VCLOD_DST_DB:=$VCLOD_MYSQL_DB}
+: ${DEBUG_SHOULD_TIME_IT:=0} ${VCLOD_ENGINE:=mysql} ${VCLOD_DST_ENGINE:=mysql}
+case "$VCLOD_ENGINE" in
+  mysql) SRC="mysql -h$VCLOD_MYSQL_HOST -u$VCLOD_MYSQL_USER -p$VCLOD_MYSQL_PASSWORD -BNr $VCLOD_MYSQL_DB" ;;
+  # IMPROVE: add a postgres ENGINE
+  *) echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ;;
+esac
+case "$VCLOD_DST_ENGINE" in
+  mysql) DST="mysql -h$VCLOD_DST_HOST -u$VCLOD_DST_USER -p$VCLOD_DST_PASSWORD -BNr $VCLOD_DST_DB" ;;
+  # IMPROVE: add a postgres ENGINE
+  *) echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ;;
+esac
+
+ret=0
+[ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
+case "${1##*.}" in
+  sh) . $1 ;;
+  sql) $SRC <$1 ;;
+  metasql) $SRC <$1 | ${VCLOD_BASE_DIR%/}/vclod_batcher | $DST ;;
+  sqlsh) $SRC <$1 | source /dev/stdin ;;
+  metasqlsh) $SRC <$1 | ${VCLOD_BASE_DIR%/}/vclod_batcher | $DST | source /dev/stdin ;;
+  *) echo >&2 "Unknown file type $s" ; exit 1 ;;
+esac || { ret=$?; echo >&2 "`basename $1` or mysql returned $ret"; }
+[ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
+exit $ret

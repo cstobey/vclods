@@ -1,0 +1,57 @@
+#! /bin/ksh
+# Designed to be sourced into another script file.
+# This file fulfills the vclod contract for a logging script. Example usages:
+#
+# 1) use the sourcing scripts first argument as the LOG_FILE:
+# . <dir>/vclod_stdio2log
+#
+# 2) explicitly define a LOG_FILE as an enviornment variable:
+# LOG_FILE="<some lock name>"
+# . <dir>/vclod_stdio2log
+#
+# 3) explicitly define a LOG_FILE as a positional argument:
+# . <dir>/vclod_stdio2log "<some lock name, possibley $0>"
+
+
+# Argument validation
+: ${LOG_FILE:=${1:?Missing a log file name}} ${LOG_BASE_DIR:?} ${VCLOD_ERR_DIR:?} ${OPERATIONS_EMAIL:?} ${RM_ERR_FILE:=1} ${LOG_POST_PROCESS:=}
+[ -d "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be an existing directory; exit 1; }
+[ -d "$VCLOD_ERR_DIR" ] || { echo VCLOD_ERR_DIR must be an existing directory; exit 1; }
+
+LF="${LOG_BASE_DIR%/}/`basename $LOG_FILE`.$$.log"   # Log File
+ELF="${VCLOD_ERR_DIR%/}/`basename $LOG_FILE`.$$.err"  # Error Log File
+PELF="${LOG_BASE_DIR%/}/logging_post_process.$$.err" # Post Processing Error Log File
+LOG_FIFO="/dev/shm/log.$$.fifo"
+ERR_FIFO="/dev/shm/err.$$.fifo"
+mkfifo "$LOG_FIFO" "$ERR_FIFO"
+
+# The conditionals in there allows for application specific tagging of normal output
+# If you keep it to 1 tag per line, then sql_logs will work wonderfully
+# If you want to send warnings through stderr, override [ERROR] with [WARNING].
+while IFS='' read -r line; do
+  new_line="$(date '+%Y-%m-%d %H:%M:%S') $$`[[ $line == [* ]] || echo ' [LOG]'` $line"
+  echo "$new_line" >>$LF
+  [ -t 1 ] && echo "$new_line"
+done < "$LOG_FIFO" &
+while IFS='' read -r line; do
+  new_line="$(date '+%Y-%m-%d %H:%M:%S') $$`[[ $line == [* ]] || echo ' [ERROR]'` $line"
+  echo "$new_line" | tee -a $ELF >>$LF
+  [ -t 1 ] && echo "$new_line"
+done < "$ERR_FIFO" &
+
+logger_leave () {
+  sync
+  rm -f $LOG_FIFO $ERR_FIFO
+  exec >"$PELF" 2>&1
+  sync  # close the pipes and make sure that $ELF has everything
+  [ -s "$ELF" ] && mail -s "Script error on `hostname`: $LOG_FILE" $OPERATIONS_EMAIL <$ELF
+  [ "$RM_ERR_FILE" == 1 ] && rm -f $ELF
+  [ -s "$LOG_POST_PROCESS" ] && . $LOG_POST_PROCESS
+  [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
+}
+
+exec >"$LOG_FIFO"
+exec 2>"$ERR_FIFO"
+
+# The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
+trap "$(trap -p EXIT | sed 's/^;*//;s/;*$//;s/;;*/;/g')"';logger_leave' EXIT

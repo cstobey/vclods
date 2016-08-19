@@ -1,0 +1,15 @@
+#! /bin/ksh
+# Usage:
+#   vclod_loadenv script [script args]
+#       OR
+#   . vclod_loadenv
+# Reads the first configured environment in the following order:
+#   CONFIG_FILE
+#   CONFIG_ENV_PATH/vclods
+#   /etc/vclods
+
+set -a
+. ${CONFIG_FILE:-${CONFIG_ENV_PATH:-/etc}/vclods}
+set +a
+
+[ "`basename $0`" = "vclod_loadenv" ] && eval "$@"

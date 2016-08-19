@@ -1,0 +1,27 @@
+#! /usr/bin/awk -f
+
+function concat_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function tail() {ret=""; for (i=2; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret}
+function add_tail(value) {return concat_ws(value, " ", tail())}
+function reset() {batch=1000;start=sep=end=del_start=del_sep=del_end=del_ids=""}
+
+BEGIN {reset();offset=0}
+
+/^#batch/ {batch=$2}
+/^#start/ {start=add_tail(start); if(sep=="") sep=","; if(end=="") end=";"}
+/^#sep/ {if(sep=",") sep=""; sep=add_tail(sep)}
+/^#end/ {if(end=";") end=""; end=add_tail(end)}
+/^#del_start/ {del_start=add_tail(del_start); if(del_sep=="") del_sep=","; if(del_end=="") del_end=");"}
+/^#del_sep/ {if(del_sep=",") del_sep=""; del_sep=add_tail(del_sep)}
+/^#del_end/ {if(del_end=");") del_end=""; del_end=add_tail(del_end)}
+/^#/ {offset=offset+1}
+
+/^#RESET/ {print end del_start del_ids del_end;reset();offset=NR}
+
+/^[^#]/ && (NR - offset) == 1 {print start}
+/^[^#]/ && (NR - offset) % batch == 1 && (NR - offset) != 1 {print end del_start del_ids del_end start;del_ids=""}
+/^[^#]/ && (NR - offset) % batch != 1 {printf sep}
+/^[^#]/ && del_start == "" {print}
+/^[^#]/ && del_start != "" {print tail(); del_ids=concat_ws(del_ids, del_sep, $1)}
+
+END {print end del_start del_ids del_end}
