@@ -5,7 +5,8 @@
 # Usage:
 # ./vclod_do_dir /path/to/dir
 #
-. "`dirname $0`/vclod_loadenv"
+
+[ -z "$VCLOD_BASE_DIR" ] && . "$(dirname $(which $0))/vclod_loadenv"
 
 # Argument validation
 : ${VCLOD_BASE_DIR:?} ${VCLOD_JOBS:=10} ${1:?Missing a directory to process}
