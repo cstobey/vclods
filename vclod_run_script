@@ -6,7 +6,7 @@
 # ./vclod_run_script /path/to/script
 
 # Argument validation -- Continued later
-[ -z "$VCLOD_BASE_DIR" ] && . "$(dirname $(which $0))/vclod_loadenv"
+[ -z "$VCLOD_BASE_DIR" ] && . "$(dirname $(readlink -f $(which $0)))/vclod_loadenv"
 : ${VCLOD_BASE_DIR:?} ${1:?The full path of a file to process is a required positional argument}
 [ -s "$1" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
 
