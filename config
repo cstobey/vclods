@@ -1,0 +1,31 @@
+: ${OPERATIONS_EMAIL:=} # an email address to send errors to for prompt notification.
+: ${LOG_BASE_DIR:=} # where flat file logs should go. This system also logs to syslog and the terminal when it exists, but it still needs flatfiles.
+: ${VCLOD_ERR_DIR:=/dev/shm}
+: ${VCLOD_LOCK_DIR:=/dev/shm}
+#: ${VCLOD_BATCH_JOBS:=1} # number of times that a single file is allowed to run at the same time. the default is normally right.
+#: ${VCLOD_JOBS:=10} # the number of scripts to run at a time
+#: ${RM_ERR_FILE:=1} # 1 means to delete the error file after it has been sent in email form (it is also inline in the log file).
+#: ${LOG_POST_PROCESS:=vclod_pp_log2sql} # a script to run after the script finishes running. Uncomment this (or put it in a local config) to auto log to SQL. Dont forget to uncomment the LOG_SQL connection parameters
+
+#### SQL connection:
+
+#: ${VCLOD_ENGINE:=mysql} # currently the only option
+: ${VCLOD_MYSQL_HOST:=}
+: ${VCLOD_MYSQL_USER:=}
+: ${VCLOD_MYSQL_PASSWORD:=}
+: ${VCLOD_MYSQL_DB:=}
+
+#### you probably want to leave these ones the way they are here, and override them in you local configs.
+#: ${VCLOD_DST_ENGINE:=mysql} # currently the only option
+#: ${VCLOD_DST_HOST:=}     # defaults to VCLOD_MYSQL_HOST
+#: ${VCLOD_DST_USER:=}     # defaults to VCLOD_MYSQL_USER
+#: ${VCLOD_DST_PASSWORD:=} # defaults to VCLOD_MYSQL_PASSWORD
+#: ${VCLOD_DST_DB:=}       # defaults to VCLOD_MYSQL_DB
+
+#### you probably want to override these here with whatever server you added the script_logs table to. 
+#### note that you only need them if you are going to use the SQL logging feature
+#: ${LOG_ENGINE:=mysql} # currently the only option
+#: ${LOG_SQL_HOST:=} # defaults to VCLOD_MYSQL_HOST
+#: ${LOG_USER:=}     # defaults to VCLOD_MYSQL_USER
+#: ${LOG_PW:=}       # defaults to VCLOD_MYSQL_PASSWORD
+#: ${LOG_SQL_DB:=}   # defaults to VCLOD_MYSQL_DB

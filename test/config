@@ -2,11 +2,9 @@
 VCLOD_LOCK_DIR=/dev/shm/
 VCLOD_ERR_DIR=/dev/shm/
 VCLOD_MYSQL_HOST=localhost
-
 VCLOD_MYSQL_USER=myuser
 VCLOD_MYSQL_PASSWORD=mypass
 VCLOD_MYSQL_DB=information_schema
-VCLOD_MYSQL_HOST=localhost
 
 LOG_BASE_DIR=./logs/
-OPERATIONS_EMAIL=noop@noop.ces.cvnt.net
+OPERATIONS_EMAIL=noop@noop.com
