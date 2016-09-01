@@ -21,12 +21,12 @@
 : ${VCLOD_DST_HOST:=$VCLOD_MYSQL_HOST} ${VCLOD_DST_USER:=$VCLOD_MYSQL_USER} ${VCLOD_DST_PASSWORD:=$VCLOD_MYSQL_PASSWORD} ${VCLOD_DST_DB:=$VCLOD_MYSQL_DB}
 : ${DEBUG_SHOULD_TIME_IT:=0} ${VCLOD_ENGINE:=mysql} ${VCLOD_DST_ENGINE:=mysql}
 case "$VCLOD_ENGINE" in
-  mysql) SRC="mysql -h$VCLOD_MYSQL_HOST -u$VCLOD_MYSQL_USER -p$VCLOD_MYSQL_PASSWORD -BNr $VCLOD_MYSQL_DB" ;;
+  mysql) SRC="mysql -h$VCLOD_MYSQL_HOST -u$VCLOD_MYSQL_USER -p$VCLOD_MYSQL_PASSWORD -BNrc $VCLOD_MYSQL_DB" ;;
   # IMPROVE: add a postgres ENGINE
   *) echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ;;
 esac
 case "$VCLOD_DST_ENGINE" in
-  mysql) DST="mysql -h$VCLOD_DST_HOST -u$VCLOD_DST_USER -p$VCLOD_DST_PASSWORD -BNr $VCLOD_DST_DB" ;;
+  mysql) DST="mysql -h$VCLOD_DST_HOST -u$VCLOD_DST_USER -p$VCLOD_DST_PASSWORD -BNrc $VCLOD_DST_DB" ;;
   # IMPROVE: add a postgres ENGINE
   *) echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ;;
 esac
