@@ -38,6 +38,7 @@ operation(){
   case "$extension" in
     batch) op="${VCLOD_BASE_DIR%/}/vclod_batcher" ;;
     sh) op='. /dev/stdin' ;;
+    awk-*) op="awk -f$(dirname $1)/${extension#*-}" ;;
     sql) op=$SRC ;;
     dst) op=$DST ;;
     *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
