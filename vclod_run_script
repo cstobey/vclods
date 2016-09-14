@@ -31,15 +31,22 @@ case "$VCLOD_DST_ENGINE" in
   *) echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ;;
 esac
 
+operation(){
+  next="${1%.*}"
+  [[ "$1" == "$next" ]] && cat && return # the cat connects stdin to stdout, note that the error case below does not.
+  extension="${1##*.}"
+  case "$extension" in
+    batch) op="${VCLOD_BASE_DIR%/}/vclod_batcher" ;;
+    sh) op='. /dev/stdin' ;;
+    sql) op=$SRC ;;
+    dst) op=$DST ;;
+    *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
+  esac
+  $op | operation $next
+}
+
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-case "${1##*.}" in
-  sh) . $1 ;;
-  sql) $SRC <$1 ;;
-  metasql) $SRC <$1 | ${VCLOD_BASE_DIR%/}/vclod_batcher | $DST ;;
-  sqlsh) $SRC <$1 | source /dev/stdin ;;
-  metasqlsh) $SRC <$1 | ${VCLOD_BASE_DIR%/}/vclod_batcher | $DST | source /dev/stdin ;;
-  *) echo >&2 "Unknown file type $s" ; exit 1 ;;
-esac || { ret=$?; echo >&2 "`basename $1` or mysql returned $ret"; }
+cat $1 | operation $1 || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret
