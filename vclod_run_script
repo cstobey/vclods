@@ -35,6 +35,8 @@ if [[ $1 =~ .*\.dst(\..*)? ]]; then
   esac
 fi
 
+INPUT_DIR="$(dirname $1)"
+
 operation(){
   next="${1%.*}"
   [[ "$1" == "$next" ]] && cat && return # the cat connects stdin to stdout, note that the error case below does not.
@@ -47,10 +49,10 @@ operation(){
 
     # middle extensions, used to reformat date between end points
     batch) op="${VCLOD_BASE_DIR%/}/vclod_batcher" ;;
-    awk-*) op="awk -f$(dirname $1)/${extension#*-}" ;;
+    awk-*) op="awk -f$INPUT_DIR/${extension#*-}" ;;
 
     # for testing, generally the last extension
-    diff) f=$(basename $1); op="diff -w $(dirname $1)/${f%%.*} -" ;;
+    diff) op="diff -w $INPUT_DIR/${1%.*} -" ;;
     err) op="eval cat >&2" ;;
     *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
   esac
@@ -59,6 +61,6 @@ operation(){
 
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-cat $1 | operation $1 || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
+cat $1 | operation $(basename $1) || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret
