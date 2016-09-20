@@ -39,6 +39,8 @@ operation(){
     batch) op="${VCLOD_BASE_DIR%/}/vclod_batcher" ;;
     sh) op='. /dev/stdin' ;;
     awk-*) op="awk -f$(dirname $1)/${extension#*-}" ;;
+    diff) f=$(basename $1); op="diff -w $(dirname $1)/${f%%.*} -" ;;
+    err) op="eval cat >&2" ;;
     sql) op=$SRC ;;
     dst) op=$DST ;;
     *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
