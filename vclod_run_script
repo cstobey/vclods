@@ -52,7 +52,7 @@ operation(){
     awk-*) op="awk -f$INPUT_DIR/${extension#*-}" ;;
 
     # for testing, generally the last extension
-    diff) op="diff -w $INPUT_DIR/${1%.*} -" ;;
+    diff) op="diff -w $INPUT_DIR/${1%%.*} -" ;;
     err) op="eval cat >&2" ;;
     *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
   esac
