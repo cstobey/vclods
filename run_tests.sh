@@ -1,6 +1,6 @@
 #!/usr/bin/env ksh
 
-cd "$(dirname $(readlink -f $(which $0)))"
+cd "$(dirname $(readlink -f $(which $0)))/test"
 mkdir -p ./logs/
 rm -f logs/*
 CONFIG_FILE=./config ../vclod_do_dir vclod_dir && \
@@ -9,4 +9,5 @@ CONFIG_FILE=./config ../vclod_do_dir vclod_dir && \
   rm logs/*
 ret=$?
 [ -t 1 ] && echo && echo && echo "syslog output to visually confirm it is getting populated (should be a copy of the above output):" && echo && sudo tail /var/log/messages -n"$(cat expected_logs/* | wc -l)"
-exit $ret
+CONFIG_FILE=./sh_only/config ../vclod_do_dir sh_only
+exit $((ret + $?))

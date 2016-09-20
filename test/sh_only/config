@@ -1,0 +1,5 @@
+# Empty config file for vclod test
+VCLOD_LOCK_DIR=/dev/shm/
+VCLOD_ERR_DIR=/dev/shm/
+LOG_BASE_DIR=./logs/
+OPERATIONS_EMAIL=noop@noop.com
