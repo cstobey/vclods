@@ -8,6 +8,10 @@ CONFIG_FILE=./config ../vclod_do_dir vclod_dir && \
   for f in expected_logs/*.expected ; do diff $f <(sed -r 's/^[^[]+[[]/[/' logs/$(basename ${f%expected})*) ; done && \
   rm logs/*
 ret=$?
-[ -t 1 ] && echo && echo && echo "syslog output to visually confirm it is getting populated (should be a copy of the above output):" && echo && sudo tail /var/log/messages -n"$(cat expected_logs/* | wc -l)"
+[ -t 1 ] && echo "
+
+syslog output to visually confirm it is getting populated (should be a copy of the above output -- also automatically checked):
+" && sudo tail /var/log/messages -n"$(cat expected_logs/* | wc -l)"
+diff <(cat expected_logs/* | sort) <(sudo tail /var/log/messages -n"$(cat expected_logs/* | wc -l)" | sed -r 's/^[^[]+[[]/[/' | sort)
 CONFIG_FILE=./sh_only/config ../vclod_do_dir sh_only
 exit $((ret + $?))
