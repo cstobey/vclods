@@ -26,9 +26,6 @@ ret="$((ret + $?))" # test syslog timing and pid are accurate
 CONFIG_FILE=./config ../vclod_do_dir ./test_single_file.diff.sh
 ret="$((ret + $?))" # A single file should runable without needing to run the whole directory
 
-CONFIG_FILE=./config ../vclod_do_dir ./local_config_override/
-ret="$((ret + $?))" # local configs override the global one
-
 CONFIG_FILE=./sh_only/config ../vclod_do_dir ./sh_only/
 ret="$((ret + $?))" # The mysql connection settings are not required when they arent needed
 
