@@ -15,7 +15,7 @@ syslog output to visually confirm it is getting populated (should be a copy of t
 
 # tests off the previous run
 diff -w <(ls -1 expected_logs/ | sed 's/.expected//' | sort) <(ls -1 logs/ | sed -r 's/\.[^.]+\.log$//' | sort)
-ret="$((ret + $?))" # test that there are the right number and names for the files.
+ret="$((ret + $?))" # test that there are the right number and names for the files
 for f in expected_logs/*.expected ; do diff -w $f <(sed -r 's/^[^[]+[[]/[/' logs/$(basename ${f%expected})[0-9]*) ; done
 ret="$((ret + $?))" # test that each file has the right content
 diff -w <(cat expected_logs/* | sort) <(sudo tail /var/log/messages -n"$numb_lines" | sed -r 's/^[^[]+[[]/[/' | sort)
