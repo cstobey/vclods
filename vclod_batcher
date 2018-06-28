@@ -15,6 +15,7 @@ BEGIN {reset();offset=0}
 /^#del_sep/ {if(del_sep=",") del_sep=""; del_sep=add_tail(del_sep)}
 /^#del_end/ {if(del_end=");") del_end=""; del_end=add_tail(del_end)}
 /^#/ {offset=offset+1}
+/^$/ {offset=offset+1}
 
 /^#RESET/ {print end del_start del_ids del_end;reset();offset=NR}
 
@@ -24,4 +25,4 @@ BEGIN {reset();offset=0}
 /^[^#]/ && del_start == "" {print}
 /^[^#]/ && del_start != "" {print tail(); del_ids=concat_ws(del_ids, del_sep, $1)}
 
-END {print end del_start del_ids del_end}
+END {if((NR - offset) > 0) print end del_start del_ids del_end;}
