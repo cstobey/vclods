@@ -12,4 +12,4 @@
 : ${VCLOD_BASE_DIR:?} ${VCLOD_JOBS:=10} ${1:?Missing a directory or file to process}
 [ -d "$VCLOD_BASE_DIR" ] || { echo VCLOD_BASE_DIR must be an existing directory; exit; }
 
-find -L $1 ! -empty -xtype f -regextype posix-egrep -regex '.*\.[^.]*(sh|sql|dst)' | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script"
+find $1 ! -empty -xtype f -regextype posix-egrep -regex '.*\.[^.]*(sh|sql|dst)' | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script"
