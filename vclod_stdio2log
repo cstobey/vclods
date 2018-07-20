@@ -31,14 +31,14 @@ mkfifo "$LOG_FIFO" "$ERR_FIFO"
 while IFS='' read -r line; do
   new_line="$$ $([[ $line == [* ]] || echo '[LOG] ')$line"
   logger "$new_line"
-  new_line="$(date '+%Y-%m-%d %H:%M:%S') $new_line"
+  new_line="$(printf '%(%F %T)T' -1) $new_line"
   echo "$new_line" >>$LF
   [ -t 1 ] && echo "$new_line"
 done < "$LOG_FIFO" &
 while IFS='' read -r line; do
   new_line="$$ $([[ $line == [* ]] || echo '[ERROR] ')$line"
   logger "$new_line"
-  new_line="$(date '+%Y-%m-%d %H:%M:%S') $new_line"
+  new_line="$(printf '%(%F %T)T' -1) $new_line"
   echo "$new_line" | tee -a $ELF >>$LF
   [ -t 1 ] && echo "$new_line"
 done < "$ERR_FIFO" &
