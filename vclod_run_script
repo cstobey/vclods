@@ -61,6 +61,6 @@ operation(){
 
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-cat $1 | operation $(basename $1) || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
+envsubst < $1 | operation $(basename $1) || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret

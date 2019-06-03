@@ -1,0 +1,2 @@
+SELECT '$LOG_BASE_DIR';
+
