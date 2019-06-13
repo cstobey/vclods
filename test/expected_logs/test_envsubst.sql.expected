@@ -1,1 +1,5 @@
 [LOG] ./logs/
+[LOG] ./logs/
+[LOG] $(env)
+[LOG] ${LOG_BASE_DIR/./}
+[LOG] 

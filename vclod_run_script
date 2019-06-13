@@ -43,24 +43,23 @@ operation(){
   extension="${1##*.}"
   case "$extension" in
     #end points - last extension must be in this list or the root script will ignore it.
-    sql) op=$SRC ;;
-    dst) op=$DST ;;
-    sh) op='. /dev/stdin' ;;
+    sql) envsubst | $SRC ;;
+    dst) envsubst | $DST ;;
+    sh) . /dev/stdin ;;
 
     # middle extensions, used to reformat date between end points
-    batch) op="${VCLOD_BASE_DIR%/}/vclod_batcher" ;;
-    awk-*) op="awk -f$INPUT_DIR/${extension#*-}" ;;
+    batch) ${VCLOD_BASE_DIR%/}/vclod_batcher ;;
+    awk-*) awk -f$INPUT_DIR/${extension#*-} ;;
 
     # for testing, generally the last extension
-    diff) op="diff -w $INPUT_DIR/${1%%.*} -" ;;
-    err) op="eval cat >&2" ;;
+    diff) diff -w $INPUT_DIR/${1%%.*} - ;;
+    err) eval cat >&2 ;;
     *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
-  esac
-  $op | operation $next
+  esac | operation $next
 }
 
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-envsubst < $1 | operation $(basename $1) || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
+cat $1 | operation $(basename $1) || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret
