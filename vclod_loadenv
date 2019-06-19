@@ -10,7 +10,7 @@
 
 set -a
 . ${CONFIG_FILE:-${CONFIG_ENV_PATH:-/etc}/vclods}
-VCLOD_BASE_DIR="$(dirname $(readlink -f $(which $0)))"
+: ${VCLOD_BASE_DIR:=$(dirname $(readlink -f $(which $0)))}
 set +a
 
 [ "`basename $0`" = "vclod_loadenv" ] && eval "$@"

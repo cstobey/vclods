@@ -1,0 +1,6 @@
+: ${DEST_FOLDER:=/usr/local/bin/vclods}
+cd "$(dirname $(readlink -f $(which $0)))"
+mkdir -p $DEST_FOLDER
+[ "$DEST_FOLDER" == "$(pwd)" ] || cp -r . $DEST_FOLDER
+cp $DEST_FOLDER/vclod /usr/local/bin/vclod
+sed -i "s#/usr/local/bin/vclods#$DEST_FOLDER#g" /usr/local/bin/vclod

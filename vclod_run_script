@@ -25,6 +25,8 @@ if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
     # IMPROVE: add a postgres ENGINE
     *) echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ;;
   esac
+else 
+  SRC='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use SRC if .sql is not in the extension path}'
 fi
 if [[ $1 =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   : ${VCLOD_DST_HOST:=${VCLOD_MYSQL_HOST:?}} ${VCLOD_DST_USER:=${VCLOD_MYSQL_USER:?}} ${VCLOD_DST_PASSWORD:=${VCLOD_MYSQL_PASSWORD:?}} ${VCLOD_DST_DB:=${VCLOD_MYSQL_DB:?}}
@@ -33,6 +35,8 @@ if [[ $1 =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
     # IMPROVE: add a postgres ENGINE
     *) echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ;;
   esac
+else
+  DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi
 
 INPUT_DIR="$(dirname $1)"
