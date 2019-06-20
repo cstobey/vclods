@@ -8,8 +8,7 @@ numb_lines="$(cat expected_logs/* | wc -l)"
 
 CONFIG_FILE=./config ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
-wait
-sleep 2
+wait ; sleep 2 # really make sure the logs have been written
 # [ -t 1 ] && echo "
 #
 # syslog output to visually confirm it is getting populated (should be a copy of the above output -- also automatically checked):
