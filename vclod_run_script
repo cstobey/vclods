@@ -39,27 +39,18 @@ else
   DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi
 
-INPUT_DIR="$(dirname $1)"
+export INPUT_DIR="$(dirname $1)"
 
 operation(){
   next="${1%.*}"
   [[ "$1" == "$next" ]] && cat && return # the cat connects stdin to stdout, note that the error case below does not.
   extension="${1##*.}"
-  case "$extension" in
-    #end points - last extension must be in this list or the root script will ignore it.
-    sql) envsubst | $SRC ;;
-    dst) envsubst | $DST ;;
-    sh) . /dev/stdin ;;
-
-    # middle extensions, used to reformat date between end points
-    batch) ${VCLOD_BASE_DIR%/}/vclod_batcher ;;
-    awk-*) awk -f$INPUT_DIR/${extension#*-} ;;
-
-    # for testing, generally the last extension
-    diff) diff -w $INPUT_DIR/${1%%.*} - ;;
-    err) eval cat >&2 ;;
-    *) echo "Unknown file type $extension" >&2 ; exit 99 ;;
-  esac | operation $next
+  ext="${extension%%-*}"
+  ext_opt="$([ $extension = $ext ] || echo ${extension#*-})"
+  base_filename="${1%%.*}"
+  op_ext_file="${VCLOD_BASE_DIR%/}/extensions/$ext"
+  test -f $op_ext_file || { echo "Unknown file type $ext" >&2 ; exit 99 ; }
+  . $op_ext_file | operation $next
 }
 
 ret=0
