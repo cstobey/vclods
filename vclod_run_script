@@ -31,7 +31,7 @@ if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
       VCLOD_USER=${VCLOD_MSSQL_USER:=${VCLOD_USER:?}}
       VCLOD_PASSWORD=${VCLOD_MSSQL_PASSWORD:=${VCLOD_PASSWORD:?}}
       VCLOD_DB=${VCLOD_MSSQL_DB:=${VCLOD_DB:?}}
-      export SRC="sqlcmd -S${VCLOD_HOST} -U${VCLOD_USER} -P${VCLOD_PASSWORD} -d${VCLOD_DB}" ;;  # or do we want to use sqlcmd?
+      export SRC="eval sqlcmd -h-1 -W -S${VCLOD_HOST} -U${VCLOD_USER} -P${VCLOD_PASSWORD} -d${VCLOD_DB} | egrep -v '[(][0-9]+ rows affected[])]'" ;;
     # IMPROVE: add a postgres ENGINE
     *) echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ;;
   esac
@@ -51,7 +51,7 @@ if [[ $1 =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
       : ${VCLOD_DST_USER:=${VCLOD_MSSQL_USER:-${VCLOD_USER:?}}}
       : ${VCLOD_DST_PASSWORD:=${VCLOD_MSSQL_PASSWORD:-${VCLOD_PASSWORD:?}}}
       : ${VCLOD_DST_DB:=${VCLOD_MSSQL_DB:-${VCLOD_DB:?}}}
-      export SRC="sqlcmd -S${VCLOD_DST_HOST} -U${VCLOD_DST_USER} -P${VCLOD_DST_PASSWORD} -d${VCLOD_DST_DB}" ;;  # or do we want to use sqlcmd?
+      export SRC="eval sqlcmd -h-1 -W -S${VCLOD_DST_HOST} -U${VCLOD_DST_USER} -P${VCLOD_DST_PASSWORD} -d${VCLOD_DST_DB} | egrep -v '[(][0-9]+ rows affected[])]'" ;;
     # IMPROVE: add a postgres ENGINE
     *) echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ;;
   esac
