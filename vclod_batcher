@@ -17,7 +17,8 @@ BEGIN {reset();offset=0}
 /^#/ {offset=offset+1}
 /^$/ {offset=offset+1}
 
-/^#RESET/ {print end del_start del_ids del_end;reset();offset=NR}
+/^#RESET/ && (NR - offset) % batch == 0 {print reset();offset=NR}
+/^#RESET/ && (NR - offset) % batch != 0 {print end del_start del_ids del_end;reset();offset=NR}
 
 /^[^#]/ && (NR - offset) == 1 {print start}
 /^[^#]/ && (NR - offset) % batch == 1 && (NR - offset) != 1 {print end del_start del_ids del_end start;del_ids=""}
