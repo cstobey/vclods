@@ -1,5 +1,10 @@
 #!/usr/bin/env ksh
 
+# in case this is being run from the terminal
+set -a
+DEBUG_SHOULD_TIME_IT=0
+set +a
+
 # setup
 cd "$(dirname $(readlink -f $(which $0)))/test"
 mkdir -p ./logs/

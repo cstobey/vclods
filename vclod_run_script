@@ -17,7 +17,7 @@
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 
 # Connection parameters are required, but can be set either in the env or the current directory's config file
-: ${DEBUG_SHOULD_TIME_IT:=0}
+: ${DEBUG_SHOULD_TIME_IT:=$([ -t 1 ] ; echo $?)}
 if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   case "${VCLOD_ENGINE:=mysql}" in
     mysql) 
