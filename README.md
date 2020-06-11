@@ -20,11 +20,13 @@ The last extension must be in this list or the root script will ignore it.
 * sql: uses the default sql connection
 * dst: uses the DST sql connection (or secondary connection)
 * sh: runs as a shell script
+* py: runs a python3 file
 
 #### Middle Extensions
 Used to reformat date between end points
 * batch: batch rows based on the rules of `./vclod_batcher`. TODO: write up how this works.
 * awk-*: run an arbitrary awk script with the name substituted by *. Note that said file may not have an extension.
+* py-*: runs an arbitrary python3 script with name substituted by *. Note that said file may not have an extension unless you override PY_EXT_OPT with a non-VCLODS dir file where the python script lives.
 
 #### Final Extensions
 Generally for testing output.
