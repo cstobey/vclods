@@ -1,5 +1,5 @@
 if [[ -z $ext_opt ]] ; then 
   cat | python3 
 else 
-  cat | python3 ${PY_EXT_DIR:-$INPUT_DIR}/$ext_opt
+  cat | python3 $(ls -1 ${PY_EXT_DIR:-$INPUT_DIR}/${ext_opt}* | head -1) # * allows for optional .py ending
 fi
