@@ -16,6 +16,8 @@
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 
+[[ $1 =~ .*\.sh$ ]] && head -1 $1 | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
+
 # Connection parameters are required, but can be set either in the env or the current directory's config file
 : ${DEBUG_SHOULD_TIME_IT:=$([ -t 1 ] ; echo $?)}
 if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then

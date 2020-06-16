@@ -1,0 +1,2 @@
+[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang.
+[LOG] success

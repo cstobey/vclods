@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/bin/ksh
 
 # in case this is being run from the terminal
 set -a
@@ -6,12 +6,13 @@ DEBUG_SHOULD_TIME_IT=0
 set +a
 
 # setup
-cd "$(dirname $(readlink -f $(which $0)))/test"
+LOCAL_DIR="$(dirname $(readlink -f $(which $0)))/test"
+cd "${LOCAL_DIR}"
 mkdir -p ./logs/
 rm -f logs/*
 numb_lines="$(cat expected_logs/* | wc -l)"
 
-CONFIG_FILE=./config ../vclod_do_dir ./vclod_dir/
+CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
 wait ; sleep 2 # really make sure the logs have been written
 # [ -t 1 ] && echo "
@@ -25,7 +26,7 @@ for f in expected_logs/*.expected ; do diff -w $f <(sed -r 's/^[^[]+[[]/[/' logs
 diff -w <(cat expected_logs/* | sort) <(sudo tail /var/log/messages -n"$numb_lines" | sed -r 's/^[^[]+[[]/[/' | sort) || { echo "FAILED syslog data mismatch" >&2 ; ret="$((ret + $?))" ; }
 diff -w <(cat logs/* | sed -r 's/^[0-9]{4}\-[0-9]{2}\-[0-9]{2} //;s/[]].*/]/' | sort) <(sudo tail /var/log/messages -n"$numb_lines" | awk '{print $3" "$6" "$7}' | sort) || { echo "FAILED syslog timing and pid mismatch" >&2 ; ret="$((ret + $?))" ; }
 
-CONFIG_FILE=./config ../vclod_do_dir ./test_single_file.diff.sh || { echo "FAILED single file should render without the directory"; ret="$((ret + $?))" ; }
-CONFIG_FILE=./sh_only/config ../vclod_do_dir ./sh_only/ || { echo "FAILED mysql should not be required when not used"; ret="$((ret + $?))" ; }
+CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./test_single_file.diff.sh || { echo "FAILED single file should render without the directory"; ret="$((ret + $?))" ; }
+CONFIG_FILE="${LOCAL_DIR}/sh_only/config" ../vclod_do_dir ./sh_only/ || { echo "FAILED mysql should not be required when not used"; ret="$((ret + $?))" ; }
 
 exit $ret

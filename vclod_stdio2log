@@ -29,14 +29,14 @@ mkfifo "$LOG_FIFO" "$ERR_FIFO"
 # If you keep it to 1 tag per line, then sql_logs will work wonderfully
 # If you want to send warnings through stderr, override [ERROR] with [WARNING].
 while IFS='' read -r line; do
-  new_line="$$ $([[ $line == [* ]] || echo '[LOG] ')$line"
+  new_line="$$ $([[ $line =~ \[.* ]] || echo '[LOG] ')$line"
   logger "$new_line"
   new_line="$(date +'%F %T') $new_line"
   echo "$new_line" >>$LF
   [ -t 1 ] && echo "$new_line"
 done < "$LOG_FIFO" &
 while IFS='' read -r line; do
-  new_line="$$ $([[ $line == [* ]] || echo '[ERROR] ')$line"
+  new_line="$$ $([[ $line =~ \[.* ]] || echo '[ERROR] ')$line"
   logger "$new_line"
   new_line="$(date +'%F %T') $new_line"
   echo "$new_line" | tee -a $ELF >>$LF
