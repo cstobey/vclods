@@ -21,44 +21,24 @@
 # Connection parameters are required, but can be set either in the env or the current directory's config file
 : ${DEBUG_SHOULD_TIME_IT:=$([ -t 1 ] ; echo $?)}
 if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
-  case "${VCLOD_ENGINE:=mysql}" in
-    mysql) 
-      VCLOD_HOST=${VCLOD_MYSQL_HOST:=${VCLOD_HOST:?}}
-      VCLOD_USER=${VCLOD_MYSQL_USER:=${VCLOD_USER:?}}
-      VCLOD_PASSWORD=${VCLOD_MYSQL_PASSWORD:=${VCLOD_PASSWORD:?}}
-      VCLOD_DB=${VCLOD_MYSQL_DB:=${VCLOD_DB:?}}
-      export SRC="mysql -h${VCLOD_HOST} -u${VCLOD_USER} -p${VCLOD_PASSWORD} -BNArc ${VCLOD_DB}" ;;
-    mssql) 
-      VCLOD_HOST=${VCLOD_MSSQL_HOST:=${VCLOD_HOST:?}}
-      VCLOD_USER=${VCLOD_MSSQL_USER:=${VCLOD_USER:?}}
-      VCLOD_PASSWORD=${VCLOD_MSSQL_PASSWORD:=${VCLOD_PASSWORD:?}}
-      VCLOD_DB=${VCLOD_MSSQL_DB:=${VCLOD_DB:?}}
-      export SRC="eval sqlcmd -h-1 -W -S${VCLOD_HOST} -U${VCLOD_USER} -P${VCLOD_PASSWORD} -d${VCLOD_DB} | egrep -v '[(][0-9]+ rows affected[])]'" ;;
-    # IMPROVE: add a postgres ENGINE
-    *) echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ;;
-  esac
-else 
-  SRC='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use SRC if .sql is not in the extension path}'
+  : ${VCLOD_ENGINE:=mysql}
+  [ -f "${VCLOD_BASE_DIR%/}/connections/$VCLOD_ENGINE" ] || { echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ; }
+  for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
+VCLOD_$v=\${VCLOD_$(echo $VCLOD_ENGINE | tr '[:lower:]' '[:upper:]')_$v:=\${VCLOD_$v:?}}
+EOF
+  export SRC=". ${VCLOD_BASE_DIR%/}/connections/$VCLOD_ENGINE $VCLOD_HOST $VCLOD_DB $VCLOD_USER $VCLOD_PASSWORD"
+else
+  export SRC='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use SRC if .sql is not in the extension path}'
 fi
 if [[ $1 =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
-  case "${VCLOD_DST_ENGINE:=mysql}" in
-    mysql)
-      : ${VCLOD_DST_HOST:=${VCLOD_MYSQL_HOST:-${VCLOD_HOST:?}}}
-      : ${VCLOD_DST_USER:=${VCLOD_MYSQL_USER:-${VCLOD_USER:?}}}
-      : ${VCLOD_DST_PASSWORD:=${VCLOD_MYSQL_PASSWORD:-${VCLOD_PASSWORD:?}}}
-      : ${VCLOD_DST_DB:=${VCLOD_MYSQL_DB:-${VCLOD_DB:?}}}
-      export DST="mysql -h$VCLOD_DST_HOST -u$VCLOD_DST_USER -p$VCLOD_DST_PASSWORD -BNArc $VCLOD_DST_DB" ;;
-    mssql)
-      : ${VCLOD_DST_HOST:=${VCLOD_MSSQL_HOST:-${VCLOD_HOST:?}}}
-      : ${VCLOD_DST_USER:=${VCLOD_MSSQL_USER:-${VCLOD_USER:?}}}
-      : ${VCLOD_DST_PASSWORD:=${VCLOD_MSSQL_PASSWORD:-${VCLOD_PASSWORD:?}}}
-      : ${VCLOD_DST_DB:=${VCLOD_MSSQL_DB:-${VCLOD_DB:?}}}
-      export SRC="eval sqlcmd -h-1 -W -S${VCLOD_DST_HOST} -U${VCLOD_DST_USER} -P${VCLOD_DST_PASSWORD} -d${VCLOD_DST_DB} | egrep -v '[(][0-9]+ rows affected[])]'" ;;
-    # IMPROVE: add a postgres ENGINE
-    *) echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ;;
-  esac
+  : ${VCLOD_DST_ENGINE:=${VCLOD_ENGINE:-mysql}}
+  [ -f "${VCLOD_BASE_DIR%/}/connections/$VCLOD_DST_ENGINE" ] || { echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ; }
+  for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
+: \${VCLOD_DST_${v}:=\${VCLOD_$(echo $VCLOD_DST_ENGINE | tr '[:lower:]' '[:upper:]')_$v:-\${VCLOD_$v:?}}}
+EOF
+  export DST=". ${VCLOD_BASE_DIR%/}/connections/$VCLOD_DST_ENGINE $VCLOD_DST_HOST $VCLOD_DST_DB $VCLOD_DST_USER $VCLOD_DST_PASSWORD"
 else
-  DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
+  export DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi
 
 export INPUT_DIR="$(dirname $1)"
