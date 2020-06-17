@@ -12,8 +12,11 @@ mkdir -p ./logs/
 rm -f logs/*
 numb_lines="$(cat expected_logs/* | wc -l)"
 
+rm -f ./vclod_dir/test_symlink.sh
+ln -s $(pwd)/vclod_dir/test{,_symlink}.sh
 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
+rm -f ./vclod_dir/test_symlink.sh
 wait ; sleep 2 # really make sure the logs have been written
 # [ -t 1 ] && echo "
 #
