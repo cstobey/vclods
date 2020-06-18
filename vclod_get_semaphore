@@ -19,6 +19,7 @@
 # Argument validation
 : ${VCLOD_LOCK_DIR:?} ${LOCK_NAME:=${1:?Missing a lock name}} ${VCLOD_BATCH_JOBS:=1}
 [ -d "$VCLOD_LOCK_DIR" ] || { echo VCLOD_LOCK_DIR must be an existing directory; exit; }
+[ -w "$VCLOD_LOCK_DIR" ] || { echo VCLOD_LOCK_DIR must be a writable directory; exit; }
 # LOCK_NAME can be explicitly defined, or be used as the first argument of the sourcing script. It is always basenamed.
 #LOCK_NAME=`basename $LOCK_NAME`
 LOCK_NAME=$(stat -c '%h %i' $LOCK_NAME 2>/dev/null | awk -v a=$(basename $LOCK_NAME) -v b=$(echo $LOCK_NAME | sed 's#/#_#g') '{n=$1;i=$2} END {if (n==1) print a"-"i; else print b;}')

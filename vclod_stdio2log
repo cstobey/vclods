@@ -17,6 +17,9 @@
 : ${LOG_FILE:=${1:?Missing a log file name}} ${LOG_BASE_DIR:?} ${VCLOD_ERR_DIR:?} ${OPERATIONS_EMAIL:?} ${RM_ERR_FILE:=1} ${LOG_POST_PROCESS:=}
 [ -d "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be an existing directory; exit 1; }
 [ -d "$VCLOD_ERR_DIR" ] || { echo VCLOD_ERR_DIR must be an existing directory; exit 1; }
+[ -w "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be a writable directory; exit 1; }
+[ -w "$VCLOD_ERR_DIR" ] || { echo VCLOD_ERR_DIR must be a writable directory; exit 1; }
+[ -w "/dev/shm/" ] || { echo "/dev/shm/ must be a writable directory"; exit 1; }
 
 LF="${LOG_BASE_DIR%/}/`basename $LOG_FILE`.$$.log"   # Log File
 ELF="${VCLOD_ERR_DIR%/}/`basename $LOG_FILE`.$$.err"  # Error Log File
