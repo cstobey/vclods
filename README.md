@@ -1,4 +1,48 @@
 # VCLODs
+## What are VCLODs?
+* A directory based script-running ksh framework, to make daemonized programs from simple scripts
+
+## How does it work?
+* VCLODs modularize simple scripts/programs automating ~95% of the boilerplate needed to productionize. For example, 
+  * Configuration,
+  * Locking, 
+  * Logging, 
+  * Timing,
+  * Piped Operations: Batching, Alerting, C and 
+  * Database Connections
+  
+
+## What are the benefits?
+* Scripts/programs can focus on their purpose without dealing with their infrastructure
+
+
+
+## What is the Strategy?
+
+
+
+## What are the Objections?
+
+
+Extension | Start | Must Pipe | Extra File | Description
+----------|-------|-----------|------------|------------
+awk|0|1|1| run stdout through awk file
+batch|0|1|0| aggregate input to batch statement
+diff|0|0|1| diff stdout:file
+dst|1|0|0| Run A SQL script with DST connection
+err|0|0|0| Everything is an error
+out|0|0|1| Write to file; stop
+outa|0|0|1| Append to file; stop
+py|1|0|2| Run either stdin or file as python3
+sh|1|0|0| Source a ksh script
+shebang|1|0|0| Respect script's shebang
+sql|1|0|0| Run a SQL script with SRC connection
+tee|0|0|1| Route output to file and continue
+
+2 in the Extra File column means it is optional (can use an extra file or stdin
+
+
+# VCLODs Detailed How it Works
 Variable Configuration Locking Operation Destination Scripts ksh Framework
 
 This is a directory based script running framework that automates much of the boilerplate of making server side daemons and scripts.
@@ -13,7 +57,7 @@ There is a global config file to make life easier, then each directory has its o
 Each script file automatically locks out redundant execution (or allows up to `VCLOD_BATCH_JOBS` number of instances to run).
 
 ### Operation
-Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary mysql connection, then pipe the output into the secondary mysql connection, effectively making it a metasql script.
+Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script.
 
 #### End Point Extensions
 The last extension must be in this list or the root script will ignore it.
