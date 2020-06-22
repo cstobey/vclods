@@ -3,26 +3,16 @@
 * A directory based script-running ksh framework, to make daemonized programs from simple scripts
 
 ## How does it work?
-* VCLODs modularize simple scripts/programs automating ~95% of the boilerplate needed to productionize. For example, 
+* 300 ksh lines that provide...
+* Modularizing simple scripts/programs to automate ~95% of the boilerplate needed to productionize
   * Configuration,
   * Locking, 
   * Logging, 
-  * Timing,
-  * Piped Operations: Batching, Alerting, C and 
-  * Database Connections
+  * Timing, 
+  * Database Connections, and
+  * Piped Operations: Batching, Alerting, Advanced Logging, ... 
   
-
-## What are the benefits?
-* Scripts/programs can focus on their purpose without dealing with their infrastructure
-
-
-
-## What is the Strategy?
-
-
-
-## What are the Objections?
-
+VCLODs Piped Operation Elements
 
 Extension | Start | Must Pipe | Extra File | Description
 ----------|-------|-----------|------------|------------
@@ -33,13 +23,35 @@ dst|1|0|0| Run A SQL script with DST connection
 err|0|0|0| Everything is an error
 out|0|0|1| Write to file; stop
 outa|0|0|1| Append to file; stop
-py|1|0|2| Run either stdin or file as python3
+py|1|0|optional| Run either stdin or file as python3
 sh|1|0|0| Source a ksh script
 shebang|1|0|0| Respect script's shebang
 sql|1|0|0| Run a SQL script with SRC connection
 tee|0|0|1| Route output to file and continue
 
-2 in the Extra File column means it is optional (can use an extra file or stdin
+## What are the benefits?
+* Build from simple scripts
+* Encoding Timing and Configuration in script absolute path, allows complex behavior
+* Automatic human readable process reporting
+* Connections are easy - InfluxDB, MongoDB, Redis, MySQL/MaraiDB, MSSQL, Postgres
+* Use your own language (shebang) - Javascript/Node, Ruby, Go
+* Scripts/programs can focus on their purpose without dealing with their infrastructure
+* Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
+  * ~500 C program lines convert to 14 VCLODs lines
+  * At a glance debugging
+
+## What is the Strategy?
+* Accomidating lazy Database Programmers ;)
+* Prioriting work done over copy paste boilerplate
+
+## What are the Objections?
+* Unnecessary!! I don't need this brain pain!!
+  * Copy and paste is always an option. As well as re-debugging
+  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement then every time you add a new language to your tech stack
+  
+* ksh < python3
+  * ok, so use python inside VCLODs. Daemonization is free
+  * Shell scripting is the universal languge
 
 
 # VCLODs Detailed How it Works
