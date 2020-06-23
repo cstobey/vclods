@@ -1,6 +1,6 @@
 # VCLODs
 ## What are VCLODs?
-* A directory based script-running ksh framework, to make daemonized programs from simple scripts
+* A directory based ksh framework to make daemonized programs from simple scripts
 
 ## What are the benefits?
 * Build from simple scripts
@@ -20,26 +20,33 @@
   * Locking 
   * Logging
   * Alerting
-  * Timing
+  * Timing (cron over directories)
+    * Precedence (alpha order)
+    * Parallelization
   * Database Connections
   * Piped Operations: Batching, Alerting, Advanced Logging ... 
   
-VCLODs Piped Operation Elements
+### VCLODs Piped Operation Elements
 
-Extension | Start | Must Pipe | Extra File | Description
+Extension | Start ^1 | Must Pipe ^2 | Extra File ^3 | Description
 ----------|-------|-----------|------------|------------
 awk|0|1|1| run stdout through awk file
-batch|0|1|0| aggregate input to batch statement
+batch ^4|0|1|0| aggregate input to batch statement
 diff|0|0|1| diff stdout:file
-dst|1|0|0| Run A SQL script with DST connection
+dst|1|0|0| Run A SQL script with the secondary connection
 err|0|0|0| Everything is an error
 out|0|0|1| Write to file; stop
 outa|0|0|1| Append to file; stop
 py|1|0|optional| Run either stdin or file as python3
 sh|1|0|0| Source a ksh script
 shebang|1|0|0| Respect script's shebang
-sql|1|0|0| Run a SQL script with SRC connection
+sql|1|0|0| Run a SQL script with default connection
 tee|0|0|1| Route output to file and continue
+
+1. Start denotes extensions that can start the pipe and are placed at the end of the extension chain (extensions are processed right to left). If false, it requries a producer
+1. Must Pipe requires a producer AND consumer
+1. Extra File means the extension can use an extension option (`<extension>-<filename>`) as either input (diff), code, or output. filename defaults to the basename of the script. The directory the extra is in defaults to the same directory as the script, but often can be overridden. py allows the extra file to have an extension if it is in a different directory, otherwise, the extra file may not have its own extension or it will be run as if it was a VCLODScript
+1. batch runs `vclod_batcher`. See vclod_batcher commands below
 
 ## What is the Strategy?
 * Accomidating lazy Database Programmers ;)
@@ -56,7 +63,7 @@ tee|0|0|1| Route output to file and continue
 
 
 
-### batch Extension commands:
+### vclod_batcher commands:
 
 Command | default if start exists | description
 --------|-------------------------|------------
@@ -88,26 +95,20 @@ Each script file automatically locks out redundant execution (or allows up to `V
 ### Operation
 Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script.
 
-#### End Point Extensions
-The last extension must be in this list or the root script will ignore it.
-* sql: uses the default sql connection
-* dst: uses the DST sql connection (or secondary connection)
-* sh: runs as a shell script
-* py: runs a python3 file
-
-#### Middle Extensions
-Used to reformat date between end points
-* batch: batch rows based on the rules of `./vclod_batcher`. TODO: write up how this works.
-* awk-*: run an arbitrary awk script with the name substituted by *. Note that said file may not have an extension.
-* py-*: runs an arbitrary python3 script with name substituted by *. Note that said file may not have an extension unless you override PY_EXT_OPT with a non-VCLODS dir file where the python script lives.
-
-#### Final Extensions
-Generally for testing output.
-* diff: diff the output of the data stream so far with a file that is named the same as the current file's basename (ie, without any extensions)
-* err: route stdout to stderr. Used to treat all output from the script as an error. Useful when you never expect the given script to do anything, but if it does, treat it like an error.
-
 ### Destination
-Log output is standardized. Anything going to stdout is put in log files (in the directory of your choosing), in syslog, and optionally post-processed (I have helpfully provided a postprocess script that inserts logs into a mysql database for later analytics).
+Log out (anything that is still in stdin after all the operation pipes) can go to 5 locations: 
+* log files (in $LOG_BASE_DIR and $VCLOD_ERR_DIR)
+* syslog. This can be pulled in by systems like graylog and datadog
+* stderr goes to email ($OPERATIONS_EMAIL) for alerting
+* stdout (if you are manually running the script in a terminal)
+* Optionally runs a post process script ($LOG_POST_PROCESS). The provided post process script (vclod_pp_log2sql) logs to SQL for relational querying
+
+### Pseudocode Examples
+* script.sh: run a script in directory context (VCLODs handles Timing, Configuraion, Locking, Logging, ...)
+* script.awk.
+* script.err.diff-file.sql: run a query, compare output with file, and if diff treat as error + send email
+* script.dst.sql: run a query on primary connection that generates a query for secondary connection
+* script.sql.tee-file.batch.sql: run a query, batch the output, stash batched statements into a file for auditing, run generated batch statements
 
 # Testing
 
