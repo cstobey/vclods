@@ -2,15 +2,27 @@
 ## What are VCLODs?
 * A directory based script-running ksh framework, to make daemonized programs from simple scripts
 
+## What are the benefits?
+* Build from simple scripts
+* Encoding Timing and Configuration in script absolute path, allows complex behavior
+* Automatic human readable process reporting
+* Connections are easy - InfluxDB, MongoDB, Redis, MySQL/MaraiDB, MSSQL, Postgres
+* Use your own language (shebang) - Javascript/Node, Ruby, Go
+* Scripts/programs can focus on their purpose without dealing with their infrastructure
+* Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
+  * ~500 C program lines convert to 14 VCLODs lines
+  * At a glance debugging
+
 ## How does it work?
-* 300 ksh lines that provide...
+* ~300 ksh lines that provide...
 * Modularizing simple scripts/programs to automate ~95% of the boilerplate needed to productionize
-  * Configuration,
-  * Locking, 
-  * Logging, 
-  * Timing, 
-  * Database Connections, and
-  * Piped Operations: Batching, Alerting, Advanced Logging, ... 
+  * Configuration
+  * Locking 
+  * Logging
+  * Alerting
+  * Timing
+  * Database Connections
+  * Piped Operations: Batching, Alerting, Advanced Logging ... 
   
 VCLODs Piped Operation Elements
 
@@ -29,17 +41,6 @@ shebang|1|0|0| Respect script's shebang
 sql|1|0|0| Run a SQL script with SRC connection
 tee|0|0|1| Route output to file and continue
 
-## What are the benefits?
-* Build from simple scripts
-* Encoding Timing and Configuration in script absolute path, allows complex behavior
-* Automatic human readable process reporting
-* Connections are easy - InfluxDB, MongoDB, Redis, MySQL/MaraiDB, MSSQL, Postgres
-* Use your own language (shebang) - Javascript/Node, Ruby, Go
-* Scripts/programs can focus on their purpose without dealing with their infrastructure
-* Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
-  * ~500 C program lines convert to 14 VCLODs lines
-  * At a glance debugging
-
 ## What is the Strategy?
 * Accomidating lazy Database Programmers ;)
 * Prioriting work done over copy paste boilerplate
@@ -52,6 +53,22 @@ tee|0|0|1| Route output to file and continue
 * ksh < python3
   * ok, so use python inside VCLODs. Daemonization is free
   * Shell scripting is the universal languge
+
+
+
+### batch Extension commands:
+
+Command | default if start exists | description
+--------|-------------------------|------------
+#batch | 1000 | Number of lines to put in each batch
+#start | | Start of statement (like INSERT INTO .... VALUES )
+#sep | ',' | how to separate lines
+#end | ';' | how to end lines
+#del_start | | if desried, the start of a delete statement to be used in archiving data
+#del_sep | ',' | delete statement separator
+#del_end | ');' | delete statement end
+#RESET | | reset to start state so you can start a new batch in the same pipe
+
 
 
 # VCLODs Detailed How it Works
