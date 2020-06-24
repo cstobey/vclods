@@ -28,32 +28,27 @@
   
 ### VCLODs Piped Operation Elements
 
-Producer ^1 Extensions | Extra File ^2 | Description
------------------------|---------------|------------
-sh|0| Source a ksh script
-py|optional| Run either stdin or file as python3
-shebang|0| Respect script's shebang
-sql|0| Run a SQL script with default connection
-dst|0| Run A SQL script with the secondary connection
+Extensions | Type |Extra File ^1 | Description
+-----------|------|--------------|------------
+sh| Producer ^2 |0| Source a ksh script
+py| Producer |optional| Run either stdin or file as python3
+shebang| Producer |0| Respect script's shebang
+sql| Producer |0| Run a SQL script with default connection
+dst| Producer |0| Run A SQL script with the secondary connection
+diff| Consumer ^3 |1| diff stdout:file
+err| Consumer |0| Everything is an error
+out| Consumer |1| Write to file; stop
+outa| Consumer |1| Append to file; stop
+awk| Pipe ^4 |1| run stdout through awk file
+batch ^5| Pipe |0| aggregate input to batch statement
+tee| Pipe |1| Route output to file and continue
 
-Consumer ^3 Extensions | Extra File ^2 | Description
------------------------|---------------|------------
-diff|1| diff stdout:file
-err|0| Everything is an error
-out|1| Write to file; stop
-outa|1| Append to file; stop
-
-Pipe^4 Extensions | Extra File ^2 | Description
-------------------|---------------|------------
-awk|1| run stdout through awk file
-batch ^5|0| aggregate input to batch statement
-tee|1| Route output to file and continue
-
-1. Producers can also consume pipes, but they don't need to
 1. Extra File means the extension can use an extension option (`<extension>-<filename>`) as either input (diff), code, or output. filename defaults to the basename of the script. The directory the extra is in defaults to the same directory as the script, but often can be overridden. py allows the extra file to have an extension if it is in a different directory, otherwise, the extra file may not have its own extension or it will be run as if it was a VCLODScript
+1. Producers can also consume pipes, but they don't need to
 1. Consumers require a Producer. `out` and `outa` end pipes; other Consumers can be Producers
 1. Pipes requires a Producer AND Consumer
 1. batch runs `vclod_batcher`. See vclod_batcher commands below
+
 
 ## What is the Strategy?
 * Accomidating lazy Database Programmers ;)
