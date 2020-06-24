@@ -6,7 +6,9 @@ An open-source directory based ksh framework to productionize programs from comp
 * Build from simple scripts
 * Encoding Timing and Configuration in script absolute path, allows complex behavior
 * Automatic human readable process reporting
-* Connections are easy - InfluxDB, MongoDB, Redis, MySQL/MaraiDB, MSSQL, Postgres
+* Connections are easy 
+  * InfluxDB, MongoDB, Redis, Postgres would be easy to add
+  * MySQL/MaraiDB, MSSQL already implemented
 * Use your own language (shebang) - Javascript/Node, Ruby, Go
 * Scripts/programs can focus on their purpose without dealing with their infrastructure
 * Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
@@ -71,7 +73,7 @@ Command | default if start exists | description
 #start | | Start of statement (like INSERT INTO .... VALUES )
 #sep | ',' | how to separate lines
 #end | ';' | how to end lines
-#del_start | | if desried, the start of a delete statement to be used in archiving data
+#del_start | | if desired, the start of a delete statement to be used in archiving data
 #del_sep | ',' | delete statement separator
 #del_end | ');' | delete statement end
 #RESET | | reset to start state so you can start a new batch in the same pipe
@@ -90,14 +92,17 @@ Based on the file extension list, different operations can be assigned. If the e
 
 ## Destination
 Log output (anything in stdout at pipe's end) can go to 5 locations: 
-* log files (in $LOG_BASE_DIR and $VCLOD_ERR_DIR)
-* syslog. This can be pulled in by systems like graylog and datadog
-* stderr goes to email ($OPERATIONS_EMAIL) for alerting
-* stdout (if you are manually running the script in a terminal)
-* Optionally runs a post process script ($LOG_POST_PROCESS). The provided post process script (vclod_pp_log2sql) logs to SQL for relational querying
+Control | Where | Description
+--------|-------|------------
+Always | log files | in $LOG_BASE_DIR and $VCLOD_ERR_DIR
+Always | syslog | This can be pulled in by systems like graylog and datadog
+Conditional | email | stderr goes to email ($OPERATIONS_EMAIL) for alerting
+Optional | stdout | if you are manually running the script in a terminal
+Optional | post process script | As defined in $LOG_POST_PROCESS. The provided post process script (vclod_pp_log2sql) logs to SQL for relational querying
 
 ## Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self descriptive
-* script.sh: run a script in directory context (VCLODs handles Timing, Configuraion, Locking, Logging, ...)
+* For more examples, look in this repo's test directory. Output is compared to `test/expected`
+* script.sh: run a script in directory context (VCLODs handles Timing, Configuration, Locking, Logging, ...)
 * script.sql.sh: script.sh except it spits out SQL to avoid connection call
 * script.sh.sql: a query generates a shell script (usually curl)
 * script.sh.tee-file.sql: script.sh.sql except shell commands go to file for analysis
@@ -131,6 +136,6 @@ Specify when you want which directories to run and then everything in them run
 
 # Testing
 
-First setup the `./test/config` file to have the right mysql permissions. Do not commit said credentials, though those belong in `/etc/vclods.cnf`
+First setup the `./test/config` file to have the right mysql permissions. Do not commit said credentials, though those belong in `/etc/vclods`
 `./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; outputs the contents of the log files and syslog for visual comparison
 `./run_test.sh | cat` - does the same thing, but with no output except on test error
