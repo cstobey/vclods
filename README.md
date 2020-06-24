@@ -14,7 +14,7 @@
   * At a glance debugging
 
 ## How does it work?
-* ~300 ksh lines that provide...
+* ~200 ksh lines that provide...
 * Modularizing simple scripts/programs to automate ~95% of the boilerplate needed to productionize
   * Configuration
   * Locking 
@@ -28,24 +28,31 @@
   
 ### VCLODs Piped Operation Elements
 
-Extension | Start ^1 | Must Pipe ^2 | Extra File ^3 | Description
-----------|-------|-----------|------------|------------
-awk|0|1|1| run stdout through awk file
-batch ^4|0|1|0| aggregate input to batch statement
-diff|0|0|1| diff stdout:file
-dst|1|0|0| Run A SQL script with the secondary connection
-err|0|0|0| Everything is an error
-out|0|0|1| Write to file; stop
-outa|0|0|1| Append to file; stop
-py|1|0|optional| Run either stdin or file as python3
-sh|1|0|0| Source a ksh script
-shebang|1|0|0| Respect script's shebang
-sql|1|0|0| Run a SQL script with default connection
-tee|0|0|1| Route output to file and continue
+Producer ^1 Extensions | Extra File ^2 | Description
+-----------------------|---------------|------------
+sh|0| Source a ksh script
+py|optional| Run either stdin or file as python3
+shebang|0| Respect script's shebang
+sql|0| Run a SQL script with default connection
+dst|0| Run A SQL script with the secondary connection
 
-1. Start denotes extensions that can start the pipe and are placed at the end of the extension chain (extensions are processed right to left). If false, it requries a producer
-1. Must Pipe requires a producer AND consumer
+Consumer ^3 Extensions | Extra File ^2 | Description
+-----------------------|---------------|------------
+diff|1| diff stdout:file
+err|0| Everything is an error
+out|1| Write to file; stop
+outa|1| Append to file; stop
+
+Pipe^4 Extensions | Extra File ^2 | Description
+------------------|---------------|------------
+awk|1| run stdout through awk file
+batch ^5|0| aggregate input to batch statement
+tee|1| Route output to file and continue
+
+1. Producers can also consume pipes, but they don't need to
 1. Extra File means the extension can use an extension option (`<extension>-<filename>`) as either input (diff), code, or output. filename defaults to the basename of the script. The directory the extra is in defaults to the same directory as the script, but often can be overridden. py allows the extra file to have an extension if it is in a different directory, otherwise, the extra file may not have its own extension or it will be run as if it was a VCLODScript
+1. Consumers require a Producer. `out` and `outa` end pipes; other Consumers can be Producers
+1. Pipes requires a Producer AND Consumer
 1. batch runs `vclod_batcher`. See vclod_batcher commands below
 
 ## What is the Strategy?
@@ -105,10 +112,36 @@ Log out (anything that is still in stdin after all the operation pipes) can go t
 
 ### Pseudocode Examples
 * script.sh: run a script in directory context (VCLODs handles Timing, Configuraion, Locking, Logging, ...)
-* script.awk.
-* script.err.diff-file.sql: run a query, compare output with file, and if diff treat as error + send email
-* script.dst.sql: run a query on primary connection that generates a query for secondary connection
+* script.sql.sh: script.sh except it spits out SQL to avoid connection call
+* script.sh.sql: a query generates a shell script (usually curl)
+* script.sh.tee-file.sql: script.sh.sql except shell commands go to file for analysis
+* script.err.diff-file.\*: run something, compare output with file, and if diff treat as error + send email
+* script.dst.sql: run a query on primary connection that generates a query for secondary connection (data migration)
 * script.sql.tee-file.batch.sql: run a query, batch the output, stash batched statements into a file for auditing, run generated batch statements
+
+### Example Crontab
+Specify when you want which directories to run and then everything in them run
+
+    44 4 1 1 *   /usr/local/bin/vclod /vclod/yearly/
+    15 2 1 * *   /usr/local/bin/vclod /vclod/monthly/
+    7  1 * * Sun /usr/local/bin/vclod /vclod/weekly/
+    7  1 * * Fri /usr/local/bin/vclod /vclod/fridays/
+    7  1 * * Wed /usr/local/bin/vclod /vclod/wednesdays/
+    3  6 * * *   DEBUG_SHOULD_TIME_IT=1 VCLOD_JOBS=5 /usr/local/bin/vclod /vclod/nightly/
+    30  4 * * *   DEBUG_SHOULD_TIME_IT=1 VCLOD_JOBS=2 /usr/local/bin/vclod /vclod/0430_nightly/
+    6 0,8-23/2 * * * /usr/local/bin/vclod /vclod/bihourly/
+    22 * * * *   /usr/local/bin/vclod /vclod/hourly/
+    *  * * * *   /usr/local/bin/vclod /vclod/minutely/
+
+### Example Directory Structure
+    /vclod/nightly/
+    /vclod/nightly/config
+    /vclod/nightly/script1.sh
+    /vclod/nightly/server_database/
+    /vclod/nightly/server_database/config: configures `VCLOD_HOST`/`VCLOD_DB`
+    /vclod/nightly/server_database/script2.sql
+    /vclod/nightly/server_database/script3.dst.sql
+    ...
 
 # Testing
 
