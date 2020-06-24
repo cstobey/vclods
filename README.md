@@ -1,6 +1,6 @@
 # VCLODs: Variable Configuration Locking Operation Destination Scripts
 ## What are VCLODs?
-* A directory based ksh framework to productionize programs from component scripts
+An open-source directory based ksh framework to productionize programs from component scripts
 
 ## What are the benefits?
 * Build from simple scripts
@@ -62,8 +62,6 @@ tee| Pipe |1| Route output to file and continue
 * ksh < python3
   * ok, so use python inside VCLODs. Productionization is free
   * Shell scripting is the universal languge
-
-
 
 ### vclod_batcher commands:
 
