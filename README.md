@@ -6,7 +6,7 @@ An open-source directory based ksh framework to productionize programs from comp
 * Build from simple scripts
 * Encoding Timing and Configuration in script absolute path, allows complex behavior
 * Automatic human readable process reporting
-* Connections are easy 
+* Connections are easy (see the connections/ directory)
   * InfluxDB, MongoDB, Redis, Postgres would be easy to add
   * MySQL/MaraiDB, MSSQL already implemented
 * Use your own language (shebang) - Javascript/Node, Ruby, Go
@@ -27,7 +27,9 @@ An open-source directory based ksh framework to productionize programs from comp
     * Parallelization
   * Database Connections
   * Piped Operations: Batching, Alerting, Advanced Logging ... 
-  
+
+![discriptive diagram of how VCLODs works](/VCLODs.png)  
+
 ### VCLODs Piped Operation Elements
 
 Extensions | Type |Extra File ^1 | Description
@@ -77,8 +79,6 @@ Command | default if start exists | description
 #del_sep | ',' | delete statement separator
 #del_end | ');' | delete statement end
 #RESET | | reset to start state so you can start a new batch in the same pipe
-
-
 
 # VCLODs Detailed How it Works
 ## Configuration
