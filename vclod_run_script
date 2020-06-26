@@ -26,7 +26,7 @@ if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
 VCLOD_$v=\${VCLOD_$(echo $VCLOD_ENGINE | tr '[:lower:]' '[:upper:]')_$v:=\${VCLOD_$v:?}}
 EOF
-  export SRC=". ${VCLOD_BASE_DIR%/}/connections/$VCLOD_ENGINE $VCLOD_HOST $VCLOD_DB $VCLOD_USER $VCLOD_PASSWORD"
+  export SRC="$(cat ${VCLOD_BASE_DIR%/}/connections/$VCLOD_ENGINE | HOST=$VCLOD_HOST DB=$VCLOD_DB USER=$VCLOD_USER PWORD=$VCLOD_PASSWORD envsubst)"
 else
   export SRC='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use SRC if .sql is not in the extension path}'
 fi
@@ -36,7 +36,7 @@ if [[ $1 =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
 : \${VCLOD_DST_${v}:=\${VCLOD_$(echo $VCLOD_DST_ENGINE | tr '[:lower:]' '[:upper:]')_$v:-\${VCLOD_$v:?}}}
 EOF
-  export DST=". ${VCLOD_BASE_DIR%/}/connections/$VCLOD_DST_ENGINE $VCLOD_DST_HOST $VCLOD_DST_DB $VCLOD_DST_USER $VCLOD_DST_PASSWORD"
+  export DST="$(cat ${VCLOD_BASE_DIR%/}/connections/$VCLOD_DST_ENGINE | HOST=$VCLOD_DST_HOST DB=$VCLOD_DST_DB USER=$VCLOD_DST_USER PWORD=$VCLOD_DST_PASSWORD envsubst)"
 else
   export DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi

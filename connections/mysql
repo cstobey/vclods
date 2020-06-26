@@ -1,2 +1,1 @@
-# $1=HOST $2=DB $3=USER $4=PASSWORD
-mysql -h$1 -u$3 -p$4 -BNArc $2
+mysql -h$HOST -u$USER -p$PWORD -BNArc $DB

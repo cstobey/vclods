@@ -12,5 +12,6 @@
 : ${VCLOD_BASE_DIR:?} ${VCLOD_JOBS:=10} ${1:?Missing a directory or file to process}
 [ -d "$VCLOD_BASE_DIR" ] || { echo VCLOD_BASE_DIR must be an existing directory; exit; }
 
-regex='^.*/[^.]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+$' 
-find $1 ! -empty -xtype f -regextype posix-egrep -regex $regex | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script" 
+regex='^.*/[^.]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+$'
+search_loc=$([ $(basename $1) == "$1" ] && echo "./$1" || echo "$1")
+find $search_loc ! -empty -xtype f -regextype posix-egrep -regex $regex | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script" 

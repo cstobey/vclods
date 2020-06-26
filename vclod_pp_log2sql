@@ -24,11 +24,11 @@ esac
 # datetime='<date> <time>', pid=<pid>, tag='[<tag>]', message=<message>,
 #   if(<tag> = 'LOG' and len(<message>), variable=<message>[0], value=<message>[1])
 AWK_CMD='{
+  gsub(/"/, "\\\"");
   message = $5;
   for (i = 6; i <= NF; i++) {
     message = message" "$i;
   };
-  gsub(/"/, "\\\"", message);
   printf "INSERT INTO script_logs SET datetime = \""$1" "$2"\", pid = "$3", tag = \""$4"\", message = \""message"\", log_file = \""log_file"\"";
   if ( $4 == "[LOG]" && NF == 6 && $6 ~ /^[0-9]+$/) {
     printf ", variable = \""$5"\", value = "$6
