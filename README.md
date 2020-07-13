@@ -43,8 +43,10 @@ diff| Consumer ^3 |1| diff stdout:file
 err| Consumer |0| Everything is an error
 out| Consumer |1| Write to file; stop
 outa| Consumer |1| Append to file; stop
-awk| Pipe ^4 |1| run stdout through awk file
+add| Pipe ^4 |1| Prepend stdin with file
+awk| Pipe |1| run stdout through awk file
 batch ^5| Pipe |0| aggregate input to batch statement
+end| Pipe |1| Postpend stdin with file
 tee| Pipe |1| Route output to file and continue
 
 1. Extra File means the extension can use an extension option (`<extension>-<filename>`) as either input (diff), code, or output. filename defaults to the basename of the script. The directory the extra is in defaults to the same directory as the script, but often can be overridden. py allows the extra file to have an extension if it is in a different directory, otherwise, the extra file may not have its own extension or it will be run as if it was a VCLODScript
