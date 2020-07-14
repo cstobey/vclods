@@ -8,19 +8,20 @@
 # Argument validation -- Continued later
 [ -z "$VCLOD_BASE_DIR" ] && . "$(dirname $(readlink -f $(which $0)))/vclod_loadenv"
 : ${VCLOD_BASE_DIR:?} ${VCLOD_FORCE_SETUP_SQL:=0} ${1:?The full path of a file to process is a required positional argument}
-[ -s "$1" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
+S=$([ $(basename $1) == "$1" ] && echo "./$1" || echo "$1")
+[ -s "$S" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
 
 # respect local config file
-[ -f "`dirname $1`/config" ] && . "`dirname $1`/config"
+[ -f "`dirname $S`/config" ] && . "`dirname $S`/config"
 
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 
-[[ $1 =~ .*\.sh$ ]] && head -1 $1 | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
+[[ $S =~ .*\.sh$ ]] && head -1 $S | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
 
 # Connection parameters are required, but can be set either in the env or the current directory's config file
 : ${DEBUG_SHOULD_TIME_IT:=$([ -t 1 ] ; echo $?)}
-if [[ $1 =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
+if [[ $S =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   : ${VCLOD_ENGINE:=mysql}
   [ -f "${VCLOD_BASE_DIR%/}/connections/$VCLOD_ENGINE" ] || { echo >&2 "Unknown engine type $VCLOD_ENGINE" ; exit 1 ; }
   for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
@@ -30,7 +31,7 @@ EOF
 else
   export SRC='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use SRC if .sql is not in the extension path}'
 fi
-if [[ $1 =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
+if [[ $S =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   : ${VCLOD_DST_ENGINE:=${VCLOD_ENGINE:-mysql}}
   [ -f "${VCLOD_BASE_DIR%/}/connections/$VCLOD_DST_ENGINE" ] || { echo >&2 "Unknown destination engine type $VCLOD_DST_ENGINE" ; exit 1 ; }
   for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
@@ -41,7 +42,7 @@ else
   export DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi
 
-export INPUT_DIR="$(dirname $1)"
+export INPUT_DIR="$(dirname $S)"
 
 operation(){
   next="${1%.*}"
@@ -57,6 +58,6 @@ operation(){
 
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-cat $1 | operation $(basename $1) || { ret=$?; echo >&2 "`basename $1` returned $ret"; }
+cat $S | operation $(basename $S) || { ret=$?; echo >&2 "`basename $S` returned $ret"; }
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret
