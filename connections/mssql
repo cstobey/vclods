@@ -1,1 +1,1 @@
-eval sqlcmd -h-1 -W -S$HOST -d$DB -U$USER -P$PWORD | egrep -v '[(][0-9]+ rows affected[])]'
+eval sqlcmd -y 0 -S$HOST -d$DB -U$USER -P$PWORD | egrep -v '[(][0-9]+ rows affected[])]'
