@@ -9,7 +9,6 @@
 [LOG] ,(2,'silly','baby')
 [LOG] ,(3,'pretty','woman')
 [LOG] ON DUPLICATE KEY UPDATE field1=VALUES(field1), field2=VALUES(field2);
-[LOG] 
 [LOG] DELETE FROM my_local_table WHERE id < 123456;
 [LOG] SELECT 'numb_rows_added_and_deleted', ROW_COUNT();
 [LOG] ,(1,'funny','man')

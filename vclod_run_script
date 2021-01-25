@@ -44,7 +44,7 @@ fi
 
 export INPUT_DIR="$(dirname $S)"
 
-operation(){
+vclod_operation(){
   next="${1%.*}"
   [[ "$1" == "$next" ]] && cat && return # the cat connects stdin to stdout, note that the error case below does not.
   extension="${1##*.}"
@@ -53,11 +53,12 @@ operation(){
   base_filename="${1%%.*}"
   op_ext_file="${VCLOD_BASE_DIR%/}/extensions/$ext"
   test -f $op_ext_file || { echo "Unknown file type $ext" >&2 ; exit 99 ; }
-  . $op_ext_file | operation $next
+  . $op_ext_file | vclod_operation $next
 }
+export vclod_operation
 
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-cat $S | operation $(basename $S) || { ret=$?; echo >&2 "`basename $S` returned $ret"; }
+cat $S | vclod_operation $(basename $S) || { ret=$?; echo >&2 "`basename $S` returned $ret"; }
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret

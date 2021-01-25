@@ -1,3 +1,5 @@
+PATH=/usr/local/bin/vclods:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin # might want a standard PATH for all VCLODS
+
 : ${OPERATIONS_EMAIL:=} # an email address to send errors to for prompt notification.
 : ${LOG_BASE_DIR:=} # where flat file logs should go. This system also logs to syslog and the terminal when it exists, but it still needs flatfiles.
 : ${VCLOD_ERR_DIR:=/dev/shm}
