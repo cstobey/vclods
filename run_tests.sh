@@ -6,11 +6,18 @@ DEBUG_SHOULD_TIME_IT=0
 set +a
 
 # setup
-LOCAL_DIR="$(dirname $(readlink -f $(which $0)))/test"
+export LOCAL_DIR="$(dirname $(readlink -f $(which $0)))/test"
 cd "${LOCAL_DIR}"
 mkdir -p ./logs/
 rm -f logs/*
 numb_lines="$(cat expected_logs/* | wc -l)"
+
+# allows you to run one test and see the output.. helpful for dev...
+# NOTE: you need to specify the test in relation to the test/ directory.
+if [ ! -z "$1" ] ; then
+  CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir "${LOCAL_DIR}/$1"
+  exit
+fi
 
 rm -f ./vclod_dir/test_symlink.sh
 ln -s $(pwd)/vclod_dir/test{,_symlink}.sh

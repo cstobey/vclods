@@ -5,6 +5,9 @@ VCLOD_MYSQL_HOST=localhost
 VCLOD_MYSQL_USER=myuser
 VCLOD_MYSQL_PASSWORD=mypass
 VCLOD_MYSQL_DB=information_schema
+VCLOD_FORCE_SETUP_SQL=1
 
 LOG_BASE_DIR=./logs/
 OPERATIONS_EMAIL=noop@noop.com
+
+. ${LOCAL_DIR}/secure_config  # so you can override the HOST, USER, and PASSWORD without accidentally putting it in version control
