@@ -10,7 +10,7 @@
 : ${VCLOD_BASE_DIR:?} ${VCLOD_FORCE_SETUP_SQL:=0} ${1:?The full path of a file to process is a required positional argument}
 S=$([ $(basename $1) == "$1" ] && echo "./$1" || echo "$1")
 [ -s "$S" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
-export INPUT_DIR="$(dirname $S)"
+export INPUT_DIR="$(dirname $(readlink -f $S))"
 
 # respect local config file
 [ -f "`dirname $S`/config" ] && . "`dirname $S`/config"

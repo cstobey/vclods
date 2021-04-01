@@ -28,6 +28,8 @@ LOG_FIFO="/dev/shm/log.$$.fifo"
 ERR_FIFO="/dev/shm/err.$$.fifo"
 mkfifo "$LOG_FIFO" "$ERR_FIFO"
 
+ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
+
 # The conditionals in there allows for application specific tagging of normal output
 # If you keep it to 1 tag per line, then sql_logs will work wonderfully
 # If you want to send warnings through stderr, override [ERROR] with [WARNING].
