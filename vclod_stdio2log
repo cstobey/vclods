@@ -35,7 +35,7 @@ ulimit -s unlimited  # log files might get large, need to let them float in howe
 # If you want to send warnings through stderr, override [ERROR] with [WARNING].
 while IFS='' read -r line; do
   if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
-    new_line="$$ $([[ $line =~ \[.* ]] || echo '[LOG] ')$line"
+    new_line="$$ $([[ $line =~ \[.* ]] || echo -n '[LOG] ')$line"
     logger "$new_line"
     new_line="$(date +'%F %T') $new_line"
     echo "$new_line" >>$LF
@@ -44,7 +44,7 @@ while IFS='' read -r line; do
 done < "$LOG_FIFO" &
 while IFS='' read -r line; do
   if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
-    new_line="$$ $([[ $line =~ \[.* ]] || echo '[ERROR] ')$line"
+    new_line="$$ $([[ $line =~ \[.* ]] || echo -n '[ERROR] ')$line"
     logger "$new_line"
     new_line="$(date +'%F %T') $new_line"
     echo "$new_line" | tee -a $ELF >>$LF
