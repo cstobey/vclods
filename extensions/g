@@ -1,0 +1,6 @@
+# g for guard -- usage .g-jq.sh or a.g-sql.batch.sql
+# it is expected to only use this once per pipe chain... so if using vclod_operation, vary the base_filename that you give to that function.
+GFL=$(mktemp)
+NFL=$LF.g-$base_filename
+tee $GFL | vclod_operation guard_$base_filename.$ext_opt || { ret=$? ; cat <$GFL >>$NFL ; return $ret ; }
+rm -f $GFL

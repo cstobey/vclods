@@ -27,6 +27,7 @@ PELF="${LOG_BASE_DIR%/}/logging_post_process.$$.err" # Post Processing Error Log
 LOG_FIFO="/dev/shm/log.$$.fifo"
 ERR_FIFO="/dev/shm/err.$$.fifo"
 mkfifo "$LOG_FIFO" "$ERR_FIFO"
+export LF ELF
 
 ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
 

@@ -1,0 +1,5 @@
+if [[ -z $ext_opt ]] ; then 
+  jq $JQ_EXT_OPT "$JQ_EXT_PROG"
+else 
+  jq $JQ_EXT_OPT -f "${JQ_EXT_DIR:-$INPUT_DIR}/${ext_opt}"
+fi

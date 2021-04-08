@@ -1,2 +1,4 @@
 test/logs/
 test/secure_config
+test/tmp_files/
+test/files/
