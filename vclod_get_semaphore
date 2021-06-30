@@ -9,7 +9,7 @@
 # 1) use the sourcing scripts first argument as the LOCK_NAME:
 # . <dir>/vclod_get_semaphore
 #
-# 2) explicitly define a LOCK_NAME as an enviornment variable:
+# 2) explicitly define a LOCK_NAME as an environment variable:
 # LOCK_NAME="<some lock name>"
 # . <dir>/vclod_get_semaphore
 #

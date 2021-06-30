@@ -35,16 +35,16 @@ wait ; sleep 2 # really make sure the logs have been written
 diff -w <(ls -1 expected_logs/ | sed 's/.expected//' | sort) <(ls -1 logs/ | grep '.log$' | sed -r 's/\.[0-9]+\.log$//' | sort) || { echo "FAILED to render the right log files" >&2 ; ret="$((ret + $?))" ; }
 [ -z $"DEBUG_WHERE" ] && echo "[WHERE] log file content check"
 for f in expected_logs/*.expected ; do diff -w <(cat $f | sort) <(sed -r 's/^[^[]+[[]/[/' logs/$(basename ${f%expected})[0-9]*.log | sort) || { echo "FAILED $f content mismatch" >&2 ; ret="$((ret + $?))" ; } ; done
-# test the outfiles... cant test the append, since they put date parts on the ends of the filenames... need to think more about that.
+# test the outfiles... can't test the append, since they put date parts on the ends of the filenames... need to think more about that.
 for f in files/* ; do cp $f tmp_files/$(basename ${f/-$(date +%F)/}) ; done
 for f in $(ls -1 logs/*.g-* | egrep '[.]g-[^.]*$') ; do cp $f tmp_files/$(basename ${f} | sed -r 's/\.[0-9]+\.log//') ; done
 [ -z $"DEBUG_WHERE" ] && echo "[WHERE] diff files"
 diff -wr expected_files tmp_files || { echo "FAILED to render the right output files with the right content" >&2 ; ret="$((ret + $?))" ; }
 
-[ -z $"DEBUG_WHERE" ] && echo "[WHERE] untested extentions"
-diff <(ls -1 vclod_dir/ | egrep -o '[.][^.-]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) || { echo "UNTESTED EXTENTIONS" >&2 ; ret="$((ret + $?))" ; }
+[ -z $"DEBUG_WHERE" ] && echo "[WHERE] untested extensions"
+diff <(ls -1 vclod_dir/ | egrep -o '[.][^.-]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) || { echo "UNTESTED EXTENSIONS" >&2 ; ret="$((ret + $?))" ; }
 
-# the specific one didnt work because of whitespace... and comm cant ignore whitespace... consider adding tr?
+# the specific one didn't work because of whitespace... and comm can't ignore whitespace... consider adding tr?
 [ -z $"DEBUG_WHERE" ] && echo "[WHERE] syslog data check"
 comm -23 <(cat expected_logs/* | sort) <(sudo tail /var/log/messages -n"$(($numb_lines*5))" | sed -r 's/^[^[]+[[]/[/' | sort) || { echo "FAILED syslog data mismatch" >&2 ; ret="$((ret + $?))" ; }
 [ -z $"DEBUG_WHERE" ] && echo "[WHERE] syslog timing check"
