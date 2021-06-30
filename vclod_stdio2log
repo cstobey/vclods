@@ -5,7 +5,7 @@
 # 1) use the sourcing scripts first argument as the LOG_FILE:
 # . <dir>/vclod_stdio2log
 #
-# 2) explicitly define a LOG_FILE as an enviornment variable:
+# 2) explicitly define a LOG_FILE as an environment variable:
 # LOG_FILE="<some lock name>"
 # . <dir>/vclod_stdio2log
 #

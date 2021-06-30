@@ -8,8 +8,8 @@ An open-source directory based ksh framework to productionize programs from comp
 * Automatic human readable process reporting
 * Connections are easy (see the connections/ directory)
   * InfluxDB, MongoDB, Redis, Postgres would be easy to add
-  * MySQL/MaraiDB, MSSQL already implemented
-* Use your own language (shebang) - Javascript/Node, Ruby, Go
+  * MySQL/MariaDB, MSSQL already implemented
+* Use your own language (shebang) - JavaScript/Node, Ruby, Go
 * Scripts/programs can focus on their purpose without dealing with their infrastructure
 * Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
   * ~500 C program lines convert to 14 VCLODs lines
@@ -28,7 +28,7 @@ An open-source directory based ksh framework to productionize programs from comp
   * Database Connections
   * Piped Operations: Batching, Alerting, Advanced Logging ... 
 
-![discriptive diagram of how VCLODs works](/VCLODs.png)  
+![descriptive diagram of how VCLODs works](/VCLODs.png)
 
 ### VCLODs Piped Operation Elements
 
@@ -57,17 +57,17 @@ tee| Pipe |1| Route output to file and continue
 
 
 ## What is the Strategy?
-* Accomidating lazy Database Programmers ;)
-* Prioriting work done over copy paste boilerplate
+* Accommodating lazy Database Programmers ;)
+* Prioritizing work done over copy paste boilerplate
 
 ## What are the Objections?
 * Unnecessary!! I don't need this brain pain!!
-  * Copy and paste is always an option. As well as re-debugging
-  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement then every time you add a new language to your tech stack
-  
+  * Copy-and-paste is always an option. As well as re-debugging.
+  * Since you have to run shell anyways, make it do the common, critical tasks so that you don't have to re-implement them every time you add a new language to your tech stack
+
 * ksh < python3
   * ok, so use python inside VCLODs. Productionization is free
-  * Shell scripting is the universal languge
+  * Shell scripting is the universal language
 
 ### vclod_batcher commands:
 
@@ -102,7 +102,7 @@ Conditional | email | stderr goes to email ($OPERATIONS_EMAIL) for alerting
 Optional | stdout | if you are manually running the script in a terminal
 Optional | post process script | As defined in $LOG_POST_PROCESS. The provided post process script (vclod_pp_log2sql) logs to SQL for relational querying
 
-## Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self descriptive
+## Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self-descriptive
 * For more examples, look in this repo's test directory. Output is compared to `test/expected`
 * script.sh: run a script in directory context (VCLODs handles Timing, Configuration, Locking, Logging, ...)
 * script.sql.sh: script.sh except it spits out SQL to avoid connection call
