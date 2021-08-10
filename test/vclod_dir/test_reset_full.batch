@@ -1,0 +1,7 @@
+#start This is the start
+#end We were missing this
+#batch 2
+line 1
+line 2
+#RESET
+after reset, since that was the error case

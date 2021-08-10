@@ -1,0 +1,5 @@
+[LOG] This is the start
+[LOG] line 1
+[LOG] ,line 2
+[LOG] We were missing this
+[LOG] after reset, since that was the error case
