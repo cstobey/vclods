@@ -14,7 +14,7 @@
 
 
 # Argument validation
-: ${LOG_FILE:=${1:?Missing a log file name}} ${LOG_BASE_DIR:?} ${VCLOD_ERR_DIR:?} ${OPERATIONS_EMAIL:?} ${RM_ERR_FILE:=1} ${LOG_POST_PROCESS:=}
+: ${LOG_FILE:=${1:?Missing a log file name}} ${LOG_BASE_DIR:?} ${VCLOD_ERR_DIR:?} ${OPERATIONS_EMAIL:?} ${RM_ERR_FILE:=1} ${LOG_POST_PROCESS:=} ${MAIL_ELF:?}
 [ -d "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be an existing directory; exit 1; }
 [ -d "$VCLOD_ERR_DIR" ] || { echo VCLOD_ERR_DIR must be an existing directory; exit 1; }
 [ -w "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be a writable directory; exit 1; }
@@ -58,7 +58,7 @@ logger_leave () {
   rm -f $LOG_FIFO $ERR_FIFO
   exec >"$PELF" 2>&1
   sync  # close the pipes and make sure that $ELF has everything
-  [ -s "$ELF" ] && [ ! -t 1 ] && mail -s "Script error on `hostname`: $LOG_FILE" $OPERATIONS_EMAIL <$ELF
+  [ -s "$ELF" ] && [ ! -t 1 ] && cat <(echo "$$ $LOG_FILE") <$ELF >>$MAIL_ELF
   [ "$RM_ERR_FILE" == 1 ] && rm -f $ELF
   [ -s "$LOG_POST_PROCESS" ] && . $LOG_POST_PROCESS
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
