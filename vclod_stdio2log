@@ -54,13 +54,16 @@ while IFS='' read -r line; do
 done < "$ERR_FIFO" &
 
 logger_leave () {
-  sync
+  sleep 1 # small allowance for orphaned processes... don't really like this, but it's all I got
+  sync # make sure we are done... and keep making sure we are done.
   rm -f $LOG_FIFO $ERR_FIFO
   exec >"$PELF" 2>&1
   sync  # close the pipes and make sure that $ELF has everything
   [ -s "$ELF" ] && [ ! -t 1 ] && cat <(echo "$$ $LOG_FILE") $ELF >>$MAIL_ELF
-  [ "$RM_ERR_FILE" == 1 ] && rm -f $ELF
+  sync
   [ -s "$LOG_POST_PROCESS" ] && . $LOG_POST_PROCESS
+  sync
+  [ "$RM_ERR_FILE" == 1 ] && rm -f $ELF
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
 }
 
