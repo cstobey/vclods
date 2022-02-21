@@ -16,7 +16,7 @@ export MAIL_ELF
 
 regex='^.*[^.]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+$'
 #search_loc=$([ $(basename $1) == "$1" ] && echo "./$1" || echo "$1")
-find $@ ! -empty -xtype f -regextype posix-egrep -regex $regex | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script"
+find $@ ! -empty -xtype f -regextype posix-egrep -regex $regex | sort | xargs -n1 -r -P$VCLOD_JOBS "${VCLOD_BASE_DIR%/}/vclod_run_script"
 ret=$?
 [ -s "$MAIL_ELF" ] && [ ! -t 1 ] && mail -s "Script error digest on `hostname`" $OPERATIONS_EMAIL <$MAIL_ELF
 exit $ret
