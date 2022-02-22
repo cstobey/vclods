@@ -1,11 +1,7 @@
 #!/bin/ksh
 
-# in case this is being run from the terminal
-set -a
-DEBUG_SHOULD_TIME_IT=0
-set +a
-
 # setup
+export DEBUG_SHOULD_TIME_IT=0 # in case this is being run from the terminal
 export LOCAL_DIR="$(dirname $(readlink -f $(which $0)))/test"
 cd "${LOCAL_DIR}"
 mkdir -p ./logs/ ./files/ ./tmp_files/
@@ -16,7 +12,7 @@ numb_lines="$(cat expected_logs/* | wc -l)"
 # NOTE: you need to specify the test in relation to the test/ directory.
 if [ ! -z "$1" ] ; then
   CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir "${LOCAL_DIR}/$1"
-  exit
+  exit $?
 fi
 
 rm -f ./vclod_dir/test_symlink.sh
@@ -24,7 +20,7 @@ ln -s $(pwd)/vclod_dir/test{,_symlink}.sh
 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
 rm -f ./vclod_dir/test_symlink.sh
-wait ; sleep 2 # really make sure the logs have been written
+wait ; sleep 2 ; sync # really make sure the logs have been written
 # [ -t 1 ] && echo "
 #
 # syslog output to visually confirm it is getting populated (should be a copy of the above output -- also automatically checked):

@@ -1,1 +1,1 @@
-$SRC -e"SELECT 'test sql';"
+$SRC -e"SELECT CONCAT(DATABASE(), ' sql');"
