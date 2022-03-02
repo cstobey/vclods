@@ -1,0 +1,23 @@
+CREATE OR REPLACE TABLE tmp_col (
+  entity_type_id INT(11) UNSIGNED NULL, #include get_entity_type #map entity entity_type_id
+  table_type VARCHAR(255), #ingest
+#sync_no_update entity SET_NOT_PRESENT is_active=0 WHERE master_location_id=${ml_id}
+  entity_id INT(11) UNSIGNED NULL, #key entity entity_id #unique field entity_id
+  master_location_id INT(11) UNSIGNED NOT NULL DEFAULT ${ml_id}, #unique entity master_location_id #ignore
+  table_name VARCHAR(255) NOT NULL, #unique entity name
+  table_comment VARCHAR(2048), #map entity description
+  filename VARCHAR(255) NOT NULL, #map entity definition_link
+#sync data_type
+  data_type_id INT(11) UNSIGNED, #key data_type data_type_id #map field data_type_id
+  column_type VARCHAR(255), #unique data_type sql_type
+  #generate_no_update data_type name SUBSTRING_INDEX(ttc.column_type,'(',1)
+  #generate entity is_active 1
+  #generate field is_active 1
+#sync field SET_NOT_PRESENT is_active=0 WHERE entity_id IN (SELECT DISTINCT entity_id FROM tmp_col)
+  column_name VARCHAR(255), #unique field name
+  field_authorization VARCHAR(50), #map field field_authorization
+  is_nullable INT(11), #map field is_nullable
+  default_value TEXT, #map field default_value
+  column_comment VARCHAR(2048), #map_no_update field description
+  column_position INT(11) #map field order_by
+);

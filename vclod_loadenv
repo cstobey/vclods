@@ -13,6 +13,8 @@
 set -a
 . $CONFIG_FILE
 : ${VCLOD_BASE_DIR:=$(dirname $(readlink -f $(which $0)))}
+VCLOD_FILE_REGEX='^.*[^.]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+$'
+VCLOD_DIR_REGEX='^.*/[^./]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+/[^.]+$' # this allows for sub-directories to be run with dynamic dot extentions.
 set +a
 
 [ "`basename $0`" = "vclod_loadenv" ] && eval "$@"

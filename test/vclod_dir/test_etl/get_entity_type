@@ -1,0 +1,3 @@
+UPDATE tmp_col AS t # start added from get_entity_type
+JOIN entity_type AS et ON t.table_name LIKE et.name_like AND t.table_type = et.physical_type 
+SET t.entity_type_id = et.entity_type_id; # end added from get_entity_type

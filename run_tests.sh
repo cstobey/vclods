@@ -38,7 +38,7 @@ for f in $(ls -1 logs/*.g-* | egrep '[.]g-[^.]*$') ; do cp $f tmp_files/$(basena
 diff -wr expected_files tmp_files || { ret="$((ret + $?))" ; echo "FAILED to render the right output files with the right content" >&2 ; }
 
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] untested extentions"
-diff <(ls -1 vclod_dir/ | egrep -o '[.][^.-]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) || { ret="$((ret + $?))" ; echo "UNTESTED EXTENTIONS" >&2 ; }
+comm -13 <(ls -R1 vclod_dir/ | egrep -o '[.][a-z]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) || { ret="$((ret + $?))" ; echo "UNTESTED EXTENTIONS" >&2 ; }
 
 # the specific one didnt work because of whitespace... and comm cant ignore whitespace... consider adding tr?
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] syslog data check"
