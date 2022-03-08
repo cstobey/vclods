@@ -1,1 +1,5 @@
-envsubst | $DST
+if [ "$(echo $DST | cut -d' ' -f1)" = "mysql" ] ; then
+  envsubst | $DST -${ext_opt:-BNArc}
+else
+  envsubst | $DST
+fi

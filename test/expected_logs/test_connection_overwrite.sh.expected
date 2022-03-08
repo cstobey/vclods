@@ -1,3 +1,3 @@
-[LOG] mysql -hnonexistent -udont_trust_this_guy -ptotally_insecure -BNArc funny
+[LOG] mysql -hnonexistent -udont_trust_this_guy -ptotally_insecure funny
 [ERROR] ERROR 2005 (HY000): Unknown MySQL server host 'nonexistent' (2)
 [ERROR] test_connection_overwrite.sh returned 1

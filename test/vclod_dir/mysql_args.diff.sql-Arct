@@ -1,0 +1,1 @@
+SELECT 'table data' AS table_column;

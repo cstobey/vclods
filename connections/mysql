@@ -1,1 +1,1 @@
-mysql -h$HOST -u$USER -p$PWORD -BNArc $DB
+mysql -h$HOST -u$USER -p$PWORD $DB
