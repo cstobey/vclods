@@ -1,1 +1,5 @@
-. /dev/stdin
+if [[ -z $ext_opt ]] ; then
+  . /dev/stdin
+else
+  . "${SH_EXT_DIR:-$INPUT_DIR}/${ext_opt}"
+fi
