@@ -1,0 +1,28 @@
+# virtual file system -- use #fifo to generate virual files and #run use those files inside a vclod context
+GFL=$(mktemp)
+add_file_cleanup $GFL
+curfifo=''
+while IFS='' read -r line; do
+  if [[ "$line" =~ ^#fifo ]]; then
+    read -r _ fn _ <<<"$line"
+    if [ -z "$fn" ] ; then 
+      curfifo=''
+    else
+      curfifo="$INPUT_DIR/$fn"
+      mkfifo "$curfifo" # TODO: test if exists first... and maybe see if it is already in the trap... might be reusing the same file in series?
+      add_file_cleanup "$curfifo"
+    fi
+  elif [[ "$line" =~ ^#run ]]; then
+    read -r _ operations <<<"$line"
+    if [ -z "$operations" ] ; then 
+      echo >&2 "vfs #run command needs a vclod_operation extension list to work"
+      exit 1
+    fi
+    vclod_operation $operations <$GFL
+    :> $GFL # TODO: is this right?
+  elif [ -z "$curfifo" ] ; then
+    echo "$line" >$GFL
+  else
+    echo "$line" >"$curfifo" &
+  fi
+done

@@ -71,4 +71,4 @@ exec >"$LOG_FIFO"
 exec 2>"$ERR_FIFO"
 
 # The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
-trap "$(trap -p EXIT | sed 's/^;*//;s/;*$//;s/;;*/;/g')"';logger_leave' EXIT
+trap "$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/(.)$/\1;/')logger_leave" EXIT

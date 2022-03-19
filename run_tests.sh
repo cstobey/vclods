@@ -55,4 +55,6 @@ CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./test_single_file.diff.sh || 
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] sh_only"
 CONFIG_FILE="${LOCAL_DIR}/sh_only/config" ../vclod_do_dir ./sh_only/ || { ret="$((ret + $?))" ; echo "FAILED mysql should not be required when not used $ret" ; }
 
+diff <(find $VCLOD_ERR_DIR $LOCAL_DIR -type p) <(printf "") || { ret="$((ret + $?))" ; echo "FAILED to clean up fifo files: find $VCLOD_ERR_DIR $LOCAL_DIR -type p -delete>&2" >&2; } # TODO: should I just delete them?
+
 exit $ret

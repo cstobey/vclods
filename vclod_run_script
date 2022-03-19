@@ -17,6 +17,9 @@ set -a
 [ -f "`dirname $S`/config" ] && . "`dirname $S`/config"
 set +a
 
+add_file_cleanup () { trap "rm -f $@$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } # TODO: handle spaces?
+export add_file_cleanup
+
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 

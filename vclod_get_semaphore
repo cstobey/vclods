@@ -33,5 +33,4 @@ for i in 1 `seq 2 $VCLOD_BATCH_JOBS` ; do
 done
 [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ `find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l` -le "$VCLOD_BATCH_JOBS" ] && echo $$ >"$MY_LOCK" || exit 1
 
-# The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
-trap "rm -f '$MY_LOCK';$(trap -p EXIT | sed 's/^;*//;s/;*$//;s/;;*/;/g')" EXIT
+add_file_cleanup $MY_LOCK

@@ -1,4 +1,4 @@
 GFL=$(mktemp)
+add_file_cleanup $GFL
 cat >$GFL
-[ -s "$GFL" ] && cat $GFL | mail -s "${SUPPORT_SUBJECT:-${base_filename//_/ } data" $SUPPORT_EMAIL
-rm -f %GFL
+[ -s "$GFL" ] && cat $GFL | mail -s "${SUPPORT_SUBJECT:-${base_filename//_/ } data" ${SUPPORT_EMAIL:-$OPERATIONS_EMAIL}

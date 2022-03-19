@@ -1,0 +1,4 @@
+echo this is a test of the virtual file system
+#fifo vfs_diff we throw away the rest of this, so we can have notes here if needed
+this is a test of the virtual file system
+#run vfs_test.diff-vfs_diff.sh
