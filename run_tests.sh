@@ -3,6 +3,7 @@
 # setup
 export DEBUG_SHOULD_TIME_IT=0 # in case this is being run from the terminal
 export LOCAL_DIR="$(dirname $(readlink -f $(which $0)))/test"
+export VCLOD_JOBS=100 # let's speed things up
 cd "${LOCAL_DIR}"
 mkdir -p ./logs/ ./files/ ./tmp_files/
 rm -f logs/* files/* tmp_files/*

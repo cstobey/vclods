@@ -1,4 +1,4 @@
 cat
 find $INPUT_DIR ! -empty -xtype f -regextype posix-egrep -regex $VCLOD_DIR_REGEX -regex "^.*/${ext_opt:-${VCLOD_DIR_START:?}}[^/]*/[^/]+" ! -name config | sort \
-  | awk -F'/' '{print "cat "$0" | vclod_operation "$(NF-1)}' | . /dev/stdin \
+  | awk -F'/' '{print "cat "$0" | vclod_operation "$(NF-1)" || exit 1"}' | . /dev/stdin \
   || { ret=$? ; echo "$VCLOD_DIR_START Directory Failed $VCLOD_DIR_CONTEXT" >&2; exit $?; }
