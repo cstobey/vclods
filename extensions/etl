@@ -38,4 +38,4 @@ END {
 }'
 }
 echo '#RESET'
-egrep -o '#(include|sync(_no_update)?) [^#]+' "$fn" | awk '/^#include/ {print "cat $INPUT_DIR/"$2} /^#sync/ {print "sync_tbl "$2}' | . /dev/stdin
+egrep -o '#(include|sync(_no_update)?) [^#]+' "$fn" | awk '/^#include/ {print "cat $INPUT_DIR/"$2" ; sync"} /^#sync/ {print "sync_tbl "$2" ; sync"}' | . /dev/stdin
