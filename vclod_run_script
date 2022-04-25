@@ -9,35 +9,15 @@
 [ -z "$VCLOD_BASE_DIR" ] && . "$(dirname $(readlink -f $(which $0)))/vclod_loadenv"
 : ${VCLOD_BASE_DIR:?} ${VCLOD_FORCE_SETUP_SQL:=0} ${1:?The full path of a file to process is a required positional argument}
 S=$([ $(basename $1) == "$1" ] && echo "./$1" || echo "$1")
-[ -s "$S" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
-export INPUT_DIR="$(dirname $(readlink -f $S))"
 
 # respect local config file
 set -a
-[ -f "`dirname $S`/config" ] && . "`dirname $S`/config"
+INPUT_DIR="$(dirname $(readlink -f $S))"
+[ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
 set +a
-
-add_file_cleanup () { trap "rm -f $@$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } # TODO: handle spaces?
-export add_file_cleanup
 
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
-
-[[ $S =~ .*\.sh$ ]] && head -1 $S | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
-
-# Connection parameters are required, but can be set either in the env or the current directory's config file
-: ${DEBUG_SHOULD_TIME_IT:=$([ -t 1 ] ; echo $?)}
-vclod_connection(){
-  CONN_PREFIX=${1:-VCLOD_OVERRIDE_}
-  echo "ENGINE=\${${CONN_PREFIX}ENGINE:=${VCLOD_ENGINE:=mysql}}" | . /dev/stdin
-  [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
-
-  for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
-$v=\${${CONN_PREFIX}${v}:-\${VCLOD_$(echo $ENGINE | tr '[:lower:]' '[:upper:]')_$v:-\${VCLOD_$v:?}}}
-EOF
-  cat ${VCLOD_BASE_DIR%/}/connections/$ENGINE | HOST=$HOST DB=$DB USER=$USER PWORD=$PASSWORD envsubst # return the connection string
-}
-export vclod_connection
 
 if [[ $S =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
   export SRC="$(vclod_connection VCLOD_SRC_)"
@@ -50,22 +30,8 @@ else
   export DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi
 
-vclod_operation(){
-  next="${1%.*}"
-  [[ "$1" == "$next" ]] && cat && return # The cat connects stdin to stdout, note that the error case below does not. This should never happen.
-  extension="${1##*.}"
-  ext="${extension%%-*}"
-  ext_opt="$([ $extension = $ext ] || echo ${extension#*-})"
-  base_filename="${1%%.*}"
-  op_ext_file="${VCLOD_BASE_DIR%/}/extensions/$ext"
-  test -f $op_ext_file || { echo "Unknown file type $ext" >&2 ; exit 99 ; }
-  if [[ "$next" == "${next%.*}" ]] ; then 
-    . $op_ext_file
-  else 
-    . $op_ext_file | vclod_operation $next
-  fi
-}
-export vclod_operation
+[ -s "$S" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
+[[ $S =~ .*\.sh$ ]] && head -1 $S | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
 
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"

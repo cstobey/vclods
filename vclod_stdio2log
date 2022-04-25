@@ -28,6 +28,7 @@ LOG_FIFO="/dev/shm/log.$$.fifo"
 ERR_FIFO="/dev/shm/err.$$.fifo"
 mkfifo "$LOG_FIFO" "$ERR_FIFO"
 export LF ELF
+let FIRST_ERROR=1
 
 ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
 
@@ -48,18 +49,17 @@ while IFS='' read -r line; do
     new_line="$$ $([[ $line =~ \[.* ]] || echo -n '[ERROR] ')$line"
     logger "$new_line"
     new_line="$(date +'%F %T') $new_line"
-    echo "$new_line" | tee -a $ELF >>$LF
+    [ $FIRST_ERROR == 1 ] && echo "$$ $LOG_FILE" >>$MAIL_ELF
+    let FIRST_ERROR=0
+    echo "$new_line" | tee -a $ELF $MAIL_ELF >>$LF
     [ -t 1 ] && echo "$new_line"
   fi
 done < "$ERR_FIFO" &
 
 logger_leave () {
-  sleep 1 # small allowance for orphaned processes... don't really like this, but it's all I got
   sync # make sure we are done... and keep making sure we are done.
   rm -f $LOG_FIFO $ERR_FIFO
   exec >"$PELF" 2>&1
-  sync  # close the pipes and make sure that $ELF has everything
-  [ -s "$ELF" ] && [ ! -t 1 ] && cat <(echo "$$ $LOG_FILE") $ELF >>$MAIL_ELF
   sync
   [ -s "$LOG_POST_PROCESS" ] && . $LOG_POST_PROCESS
   sync
