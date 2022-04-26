@@ -21,7 +21,7 @@ while IFS='' read -r line; do
     vclod_operation $operations <$GFL
     :> $GFL # TODO: is this right?
   elif [ -z "$curfifo" ] ; then
-    echo "$line" >$GFL
+    echo "$line" >>$GFL
   else
     echo "$line" >"$curfifo" &
   fi

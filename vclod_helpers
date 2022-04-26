@@ -1,0 +1,31 @@
+#! /bin/ksh
+# helper functions
+add_file_cleanup () { trap "rm -f $@$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } # TODO: handle spaces?
+
+vclod_connection(){
+  CONN_PREFIX=${1:-VCLOD_OVERRIDE_}
+  echo "ENGINE=\${${CONN_PREFIX}ENGINE:=${VCLOD_ENGINE:=mysql}}" | . /dev/stdin
+  [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
+
+  for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
+$v=\${${CONN_PREFIX}${v}:-\${VCLOD_$(echo $ENGINE | tr '[:lower:]' '[:upper:]')_$v:-\${VCLOD_$v:?}}}
+EOF
+  cat ${VCLOD_BASE_DIR%/}/connections/$ENGINE | HOST=$HOST DB=$DB USER=$USER PWORD=$PASSWORD envsubst # return the connection string
+}
+
+vclod_operation(){
+  next="${1%.*}"
+  [[ "$1" == "$next" ]] && cat && return # The cat connects stdin to stdout, note that the error case below does not. This should never happen.
+  extension="${1##*.}"
+  ext="${extension%%-*}"
+  ext_opt="$([ $extension = $ext ] || echo ${extension#*-})"
+  base_filename="${1%%.*}"
+  op_ext_file="${VCLOD_BASE_DIR%/}/extensions/$ext"
+  test -f $op_ext_file || { echo "Unknown file type $ext" >&2 ; exit 99 ; }
+  if [[ "$next" == "${next%.*}" ]] ; then
+    . $op_ext_file
+  else
+    . $op_ext_file | vclod_operation $next
+  fi
+}
+export add_file_cleanup vclod_connection vclod_operation

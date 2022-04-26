@@ -1,13 +1,9 @@
 #! /bin/ksh
-# Executes a VCLOD script (Variable Config, Locking, Operation, and Destination) with all
-# the setup that entails. See the README for an overview of VCLODs.
-#
-# Usage:
-# ./vclod_run_script /path/to/script
+# Executes a VCLOD script (Variable Config, Locking, Operation, and Destination) as called by vclod_do_dir
+# See the README for an overview of VCLODs.
 
-# Argument validation -- Continued later
-[ -z "$VCLOD_BASE_DIR" ] && . "$(dirname $(readlink -f $(which $0)))/vclod_loadenv"
-: ${VCLOD_BASE_DIR:?} ${VCLOD_FORCE_SETUP_SQL:=0} ${1:?The full path of a file to process is a required positional argument}
+# Argument validation -- Most is elsewhere
+: ${VCLOD_BASE_DIR:?} ${1:?The full path of a file (or pseudofile) to process is a required positional argument}
 S=$([ $(basename $1) == "$1" ] && echo "./$1" || echo "$1")
 
 # respect local config file
@@ -16,6 +12,7 @@ INPUT_DIR="$(dirname $(readlink -f $S))"
 [ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
 set +a
 
+. "${VCLOD_BASE_DIR%/}/vclod_helpers"
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 
@@ -30,11 +27,16 @@ else
   export DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
 fi
 
-[ -s "$S" ] || { echo >&2 The positional argument must be a non-empty file; exit 1; }
-[[ $S =~ .*\.sh$ ]] && head -1 $S | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
-
 ret=0
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
-cat $S | vclod_operation $(basename $S) || { ret=$?; echo >&2 "`basename $S` returned $ret"; }
+if [ -e "$S" ]; then
+  [ -s "$S" ] || { echo >&2 The positional file argument must be a non-empty file; exit 1; }
+  [[ $S =~ .*\.sh$ ]] && head -1 $S | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
+
+  cat $S
+else
+  cat
+fi | vclod_operation $(basename $S) || { ret=$?; echo >&2 "`basename $S` returned $ret"; }
+
 [ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
 exit $ret
