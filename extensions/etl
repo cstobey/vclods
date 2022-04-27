@@ -1,4 +1,6 @@
-fn="$INPUT_DIR/${ext_opt:?}"
+fn=$(mktemp)
+add_file_cleanup $fn
+cat "$INPUT_DIR/${ext_opt:?}" >$fn # handle fifos
 cat "$fn" | sed '/^ *#/ d;s/#.*$//' # dont want to confuse other potential stream readers
 tmp_tbl=$(egrep '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one
 ingest_fields=$(egrep '#(map|map_no_update|ingest|unique) ' "$fn" | egrep -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')

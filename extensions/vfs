@@ -1,28 +1,26 @@
 # virtual file system -- use #fifo to generate virual files and #run use those files inside a vclod context
 GFL=$(mktemp)
 add_file_cleanup $GFL
-curfifo=''
-while IFS='' read -r line; do
-  if [[ "$line" =~ ^#fifo ]]; then
-    read -r _ fn _ <<<"$line"
-    if [ -z "$fn" ] ; then 
-      curfifo=''
-    else
-      curfifo="$INPUT_DIR/$fn"
-      mkfifo "$curfifo" # TODO: test if exists first... and maybe see if it is already in the trap... might be reusing the same file in series?
-      add_file_cleanup "$curfifo"
-    fi
-  elif [[ "$line" =~ ^#run ]]; then
-    read -r _ operations <<<"$line"
-    if [ -z "$operations" ] ; then 
-      echo >&2 "vfs #run command needs a vclod_operation extension list to work"
-      exit 1
-    fi
-    vclod_operation $operations <$GFL
-    :> $GFL # TODO: is this right?
-  elif [ -z "$curfifo" ] ; then
-    echo "$line" >>$GFL
-  else
-    echo "$line" >"$curfifo" &
-  fi
-done
+cat >$GFL
+
+setup_fifo(){
+  f="$INPUT_DIR/$1"
+  [ -e "$f" ] && { echo >&2 virtual file already exists; exit 1; }
+  mkfifo "$f"
+  add_file_cleanup "$f"
+  sed -n "$2,$3p" "$GFL" >"$f" &
+}
+
+egrep -n '^#(fifo|run) ' "$GFL" | sed 's/:/ /' | awk -v f="$GFL" '
+BEGIN {dstart=1;dend=0;} 
+$2 == "#fifo" {
+  if(dend==0){dend=$1-1}else{print $1-1}; 
+  if($3=="") {print "vfs #fifo command needs a filename to work" > "/dev/stderr"}; 
+  printf "setup_fifo "$3" "$1+1" ";}
+$2 == "#run" {
+  if(dend==0){dend=$1-1}else{print $1-1};
+  if($3=="") {print "vfs #run command needs a vclod_operation extension list to work" > "/dev/stderr"}; 
+  print "sed -n \047"dstart","dend"p\047 "f" | vclod_operation "$3;
+  dstart=$1+1;dend=0;
+  }
+END {if(dend==0){dend="$"};print "sed -n \047"dstart","dend"p\047 "f;}' | . /dev/stdin
