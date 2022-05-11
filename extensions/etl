@@ -3,7 +3,7 @@ add_file_cleanup $fn
 cat "$INPUT_DIR/${ext_opt:?}" >$fn # handle fifos
 cat "$fn" | sed '/^ *#/ d;s/#.*$//' # dont want to confuse other potential stream readers
 tmp_tbl=$(egrep '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one
-ingest_fields=$(egrep '#(map|map_no_update|ingest|unique) ' "$fn" | egrep -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')
+ingest_fields=$(egrep '#(map(_no_update)? |ingest|unique )' "$fn" | egrep -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')
 working_fields=$(egrep "#(key|unique|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | egrep "#(key|unique|sync|map|generate)")
 cat << EOF
 #RESET
@@ -14,13 +14,13 @@ cat # include the previous pipe's data
 function sync_tbl {
   tbl=$1
   shift
-  echo "$working_fields" | egrep "#[^ ]+ $tbl " | awk -v t="$tbl" -v tt="$tmp_tbl" '
+  echo "$working_fields" | egrep "#[^ ]+ $tbl( |$)" | awk -v t="$tbl" -v tt="$tmp_tbl" '
 function concat_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret}
 function ext(msg) {should_exit=1; print msg > "/dev/stderr"; exit 1;}
 $1~/^#sync/ && $3=="SET_NOT_PRESENT"    {snp=1;snp_c=tail();if(snp_c ~ /WHERE/){snp_c=snp_c" AND "}else{snp_c=snp_c" WHERE "};} 
 $1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=1;dnp_c=tail();if(dnp_c)dnp_c=dnp_c" AND "} 
-$1~/^#sync_no_update$/ {no_update=1}
+$1~/^#sync_no_update$/ {no_update=1;}
 $1~/^#generate/ {tc=concat_ws(tc, ",", $3);ttc=concat_ws(ttc, ",", tail());} 
 $1~/^#generate$/ {odku=concat_ws(odku, ",", $3"=VALUES("$3")");} 
 $2~/^#(map|unique)/ {ttc=concat_ws(ttc, ",", $1);tc=concat_ws(tc, ",", $4);}
@@ -29,10 +29,10 @@ $2~/^#unique$/   {w=concat_ws(w, " AND ", tt"."$1"="t"."$4);ugb=concat_ws(ugb,",
 $2~/^#key$/      {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
 END {
   if (should_exit) {exit 1;}
-  if (!ugb) {ext("There needs to be at least one unique field for table "t);}
+  if (ugb) {ugb="\n GROUP BY "ugb;}
   if (odku) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";}
   if (no_update && f) {print "UPDATE "t" JOIN "tt" ON "w" SET "tt"."nf"="t"."f";";w_no_update="\n  WHERE "nf" IS NULL";}
-  print "INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_no_update "\n  GROUP BY "ugb odku";";
+  print "INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_no_update ugb odku";";
   print "ALTER TABLE "t" AUTO_INCREMENT = 1;";
   if (f) {print "UPDATE "t" JOIN "tt" ON "w" SET "tt"."nf"="t"."f";";row_not_in=f" NOT IN (SELECT "nf" FROM "tt");"} else {row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt");";}
   if(snp) {print "UPDATE "t" SET "snp_c row_not_in;};

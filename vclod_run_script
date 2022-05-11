@@ -28,7 +28,7 @@ else
 fi
 
 ret=0
-[ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] $@"
+[ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[START] start"
 if [ -e "$S" ]; then
   [ -s "$S" ] || { echo >&2 The positional file argument must be a non-empty file; exit 1; }
   [[ $S =~ .*\.sh$ ]] && head -1 $S | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
@@ -38,5 +38,5 @@ else
   cat
 fi | vclod_operation $(basename $S) || { ret=$?; echo >&2 "`basename $S` returned $ret"; }
 
-[ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] $@ returned $ret"
+[ $DEBUG_SHOULD_TIME_IT == 1 ] && echo "[FINISH] returned $ret"
 exit $ret

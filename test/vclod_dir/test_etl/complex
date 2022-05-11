@@ -17,7 +17,7 @@ CREATE OR REPLACE TABLE tmp_col (
   column_position INT(11) 
 );
 
-INSERT INTO tmp_col (table_name,table_comment,filename,column_type,column_name,field_authorization,is_nullable,default_value,column_comment,column_position) VALUES
+INSERT INTO tmp_col (table_type,table_name,table_comment,filename,column_type,column_name,field_authorization,is_nullable,default_value,column_comment,column_position) VALUES
 ('test data goes here')
 ;
 

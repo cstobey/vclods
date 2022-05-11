@@ -3,11 +3,13 @@
 # setup
 export DEBUG_SHOULD_TIME_IT=0 # in case this is being run from the terminal
 export LOCAL_DIR="$(dirname $(readlink -f $(which $0)))/test"
-export VCLOD_JOBS=100 # let's speed things up
 cd "${LOCAL_DIR}"
 mkdir -p ./logs/ ./files/ ./tmp_files/
 rm -f logs/* files/* tmp_files/*
 numb_lines="$(cat expected_logs/* | wc -l)"
+
+# setup the test logging database.
+CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir "${LOCAL_DIR}/setup_test_pp_db.sh"
 
 # allows you to run one test and see the output.. helpful for dev...
 # NOTE: you need to specify the test in relation to the test/ directory.
@@ -22,10 +24,6 @@ CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
 rm -f ./vclod_dir/test_symlink.sh
 wait ; sleep 2 ; sync # really make sure the logs have been written
-# [ -t 1 ] && echo "
-#
-# syslog output to visually confirm it is getting populated (should be a copy of the above output -- also automatically checked):
-# " && sudo tail /var/log/messages -n"$numb_lines" && echo "Start Test verification output"
 
 # tests off the previous run
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] log file check"
@@ -37,6 +35,19 @@ for f in files/* ; do cp $f tmp_files/$(basename ${f/-$(date +%F)/}) ; done
 for f in $(ls -1 logs/*.g-* | egrep '[.]g-[^.]*$') ; do cp $f tmp_files/$(basename ${f} | sed -r 's/\.[0-9]+\.log//') ; done
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] diff files"
 diff -wr expected_files tmp_files || { ret="$((ret + $?))" ; echo "FAILED to render the right output files with the right content" >&2 ; }
+
+# ensure that the post process log2sql process works in all ways.
+cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_pp_logger.sh || { ret="$((ret + $?))" ; echo "FAILED to export log2sql" >&2 ; }
+export SRC="$(vclod_connection LOG_SQL_)"
+diff -w <(cat << 'STMT' | vclod_operation get_sql.sql | sed 's/\t/ /g' | sort
+SELECT
+  SUBSTRING_INDEX(log_file, '/', -1) AS base_file, 
+  ROW_NUMBER() OVER (PARTITION BY log_file, pid ORDER BY script_log_id) AS line_number, 
+  happened_at, pid, tag, message, IFNULL(value, '') AS value 
+FROM script_log;
+STMT
+) <(find logs/* ! -empty -xtype f -regextype posix-egrep -regex '.*[.]log$' | xargs grep ^ -n | sed -r 's#^logs/(.*)[.][0-9]+[.]log:([0-9]+):#\1 \2 #' | sort)
+EOF
 
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] untested extentions"
 comm -13 <(ls -R1 vclod_dir/ | egrep -o '[.][a-z]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) || { ret="$((ret + $?))" ; echo "UNTESTED EXTENTIONS" >&2 ; }

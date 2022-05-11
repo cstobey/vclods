@@ -24,10 +24,11 @@
 LF="${LOG_BASE_DIR%/}/`basename $LOG_FILE`.$$.log"   # Log File
 ELF="${VCLOD_ERR_DIR%/}/`basename $LOG_FILE`.$$.err"  # Error Log File
 PELF="${LOG_BASE_DIR%/}/logging_post_process.$$.err" # Post Processing Error Log File
+TLF=$([ -t 1 ] && echo '/dev/stdout' || echo '/dev/null')
 LOG_FIFO="/dev/shm/log.$$.fifo"
 ERR_FIFO="/dev/shm/err.$$.fifo"
 mkfifo "$LOG_FIFO" "$ERR_FIFO"
-export LF ELF
+export LF ELF LOG_FILE
 let FIRST_ERROR=1
 
 ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
@@ -39,30 +40,28 @@ while IFS='' read -r line; do
   if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
     new_line="$$ $([[ $line =~ ^\[.* ]] || echo -n '[LOG] ')$line"
     logger "$new_line"
-    new_line="$(date +'%F %T') $new_line"
-    echo "$new_line" >>$LF
-    [ -t 1 ] && echo "$new_line"
+    echo "$(date +'%F %T') $new_line" | tee -a $LF >>$TLF
   fi
 done < "$LOG_FIFO" &
+OUT_PID=$!
 while IFS='' read -r line; do
   if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
     new_line="$$ $([[ $line =~ ^\[.* ]] || echo -n '[ERROR] ')$line"
     logger "$new_line"
-    new_line="$(date +'%F %T') $new_line"
-    [ $FIRST_ERROR == 1 ] && echo "$$ $LOG_FILE" >>$MAIL_ELF
+    [ $FIRST_ERROR -eq 1 ] && echo "$$ $LOG_FILE" >>$MAIL_ELF
     let FIRST_ERROR=0
-    echo "$new_line" | tee -a $ELF $MAIL_ELF >>$LF
-    [ -t 1 ] && echo "$new_line"
+    echo "$(date +'%F %T') $new_line" | tee -a $ELF $MAIL_ELF $LF >>$TLF
   fi
 done < "$ERR_FIFO" &
+ERR_PID=$!
 
 logger_leave () {
-  sync # make sure we are done... and keep making sure we are done.
-  rm -f $LOG_FIFO $ERR_FIFO
   exec >"$PELF" 2>&1
-  sync
+  [ -n "$OUT_PID" ] && wait $OUT_PID
+  [ -n "$ERR_PID" ] && wait $ERR_PID
+  rm -f $LOG_FIFO $ERR_FIFO
   [ -s "$LOG_POST_PROCESS" ] && . $LOG_POST_PROCESS
-  sync
+  exec >&- 2>&-
   [ "$RM_ERR_FILE" == 1 ] && rm -f $ELF
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
 }

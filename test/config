@@ -1,4 +1,5 @@
 # Empty config file for vclod test
+VCLOD_JOBS=100 # let's speed things up
 VCLOD_LOCK_DIR=/dev/shm/
 VCLOD_ERR_DIR=/dev/shm/
 VCLOD_MYSQL_HOST=localhost
@@ -6,6 +7,9 @@ VCLOD_MYSQL_USER=myuser
 VCLOD_MYSQL_PASSWORD=mypass
 VCLOD_MYSQL_DB=information_schema
 VCLOD_FORCE_SETUP_SQL=1
+LOG_SQL_HOST=localhost
+LOG_SQL_DB=test
+LOG_POST_PROCESS=${VCLOD_BASE_DIR}/vclod_pp_log2sql
 
 LOG_BASE_DIR=./logs/
 TEE_EXT_DIR=./files/
