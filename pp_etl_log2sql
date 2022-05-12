@@ -7,7 +7,7 @@ CREATE TEMPORARY TABLE tmp_log (
   log_file VARCHAR(255) NOT NULL DEFAULT '$LOG_FILE', #ignore #unique log_file name
   in_message VARCHAR(4096) NOT NULL, #ingest
   log_message_id INT UNSIGNED NULL DEFAULT NULL, #key log_message log_message_id #map_no_update log_line log_message_id
-  message VARCHAR(4096) NOT NULL, #ignore #unique log_message name
+  message VARCHAR(4096) NULL DEFAULT NULL, #ignore #unique log_message name
   value INT NULL DEFAULT NULL #ignore #map_no_update log_line value
 #include pp_etl_log2sql_compute_variables
 #sync_no_update log_tag
