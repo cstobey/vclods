@@ -8,7 +8,7 @@ An open-source directory based ksh framework to productionize programs from comp
 * Automatic human readable process reporting
 * Connections are easy (see the connections/ directory)
   * InfluxDB, MongoDB, Redis, Postgres would be easy to add
-  * MySQL/MaraiDB, MSSQL already implemented
+  * MySQL/MariaDB, MSSQL already implemented
 * Use your own language (shebang) - Javascript/Node, Ruby, Go
 * Scripts/programs can focus on their purpose without dealing with their infrastructure
 * Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
@@ -16,7 +16,7 @@ An open-source directory based ksh framework to productionize programs from comp
   * At a glance debugging
 
 ## How does it work?
-* ~200 ksh lines that provide...
+* ~400 ksh lines that provide...
 * Modularizing simple scripts/programs to automate ~95% of the boilerplate needed to productionize
   * Configuration
   * Locking 
@@ -35,11 +35,12 @@ An open-source directory based ksh framework to productionize programs from comp
 Extensions | Type |Extra File ^1 | Description
 -----------|------|--------------|------------
 sh| Producer ^2 |0| Source a ksh script
-py| Producer |optional| Run either stdin or file as python3
+py| Producer or Consumer |optional| Run either stdin or file as python3
 shebang| Producer |0| Respect script's shebang
 sql| Producer |0| Run a SQL script with default connection
-dst| Producer |0| Run A SQL script with the secondary connection
+dst| Producer |0| Run a SQL script with the secondary connection
 diff| Consumer ^3 |1| diff stdout:file
+email| Consumer |0| email stdout to SUPPORT_EMAIL. Errors still go to OPERATIONS_EMAIL
 err| Consumer |0| Everything is an error
 out| Consumer |1| Write to file; stop
 outa| Consumer |1| Append to file; stop
@@ -47,29 +48,21 @@ add| Pipe ^4 |1| Prepend stdin with file
 awk| Pipe |1| run stdout through awk file
 batch ^5| Pipe |0| aggregate input to batch statement
 end| Pipe |1| Postpend stdin with file
+etl| Pipe |1| Preform advanced ETL operations. More below
+jq| Pipe |1| Run stdin through the jq utility to parse JSON
 tee| Pipe |1| Route output to file and continue
+dir| Redirct ^6 |1| Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions
+g| Redirct |1| Guard another extension (like in g-jq) so that its output is saved on error
+vfs| Redirect |0| pipes stdin through fifos and then runs any number of commands. Helps with large composite programs if it is easier to put them all in one file. Also useful for when using stdin to run a oneoff script
 
 1. Extra File means the extension can use an extension option (`<extension>-<filename>`) as either input (diff), code, or output. filename defaults to the basename of the script. The directory the extra is in defaults to the same directory as the script, but often can be overridden. py allows the extra file to have an extension if it is in a different directory, otherwise, the extra file may not have its own extension or it will be run as if it was a VCLODScript
 1. Producers can also consume pipes, but they don't need to
 1. Consumers require a Producer. `out` and `outa` end pipes; other Consumers can be Producers
 1. Pipes requires a Producer AND Consumer
 1. batch runs `vclod_batcher`. See vclod_batcher commands below
+1. Redirect indicates an extension that pipes to another extention in some way
 
-
-## What is the Strategy?
-* Accomidating lazy Database Programmers ;)
-* Prioriting work done over copy paste boilerplate
-
-## What are the Objections?
-* Unnecessary!! I don't need this brain pain!!
-  * Copy and paste is always an option. As well as re-debugging
-  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement then every time you add a new language to your tech stack
-  
-* ksh < python3
-  * ok, so use python inside VCLODs. Productionization is free
-  * Shell scripting is the universal languge
-
-### vclod_batcher commands:
+### .batch Commands:
 
 Command | default if start exists | description
 --------|-------------------------|------------
@@ -81,6 +74,31 @@ Command | default if start exists | description
 #del_sep | ',' | delete statement separator
 #del_end | ');' | delete statement end
 #RESET | | reset to start state so you can start a new batch in the same pipe
+
+### .etl Commands:
+Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in and extension option file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
+Command | Requires preceding field ^1 | no_update Option? ^2| Positional Args ^3 | Description
+--------|-----------------------------|---------------------|--------------------|------------
+#ingest |Y|N|N| force this field to be ingested in the initial INSERT INTO tmp table
+#ignore |Y|N|N| Do not ingest this field into the initial temp table.
+#key |Y|N|Std| The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table
+#unique |Y|Y|Std| Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains)
+#map |Y|Y|Std| A regular field on the given table. 
+#generate |N|Y|Std + SQL statement| generate a field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table.
+#include |YN|N|local SQL filename| include a sql script file (with no .extension) to handle any additional reformatting or processing that is required. 
+#sync |N|Y|Destination Table + More ^4 | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order
+
+1. If Y, add the command after the temp table field definition. If N, then put it on its own line as a stand alone command. If YN (ie for `#include`), if the command is on a temp table field line, it acts as both `#include` AND `#ignore`.
+1. on_update means the field will not be updated when it changes (ie, will not be in the ON DUPLICATE KEY UPDATE list). It is annotated by updating the command name, for instance `#sync` becomes `#sync_no_update`.
+1. N means there are no Positional Arguments after the command. Std means the standard ones are required (destination table name followed by the destiniation field name -- spaces not allowed).
+1. #sync extra options are either `SET_NOT_PRESENT` followed by whatever you would put in an UPDATE SET clause for any rows that are not in the temp table followed by an optional WHERE clause to indicate additional cohort constraints, or `DELETE_NOT_PRESENT` followed by an optional WHERE clause that acts the same way. (In the SET version, the WHERE is a requied delimiter; in the DELETE version, the WHERE keyword may not be present.)
+
+### .vfs Commands:
+Only 1 Positional Argument is used. everything else is a comment
+Command | Argument | Description
+--------|----------|------------
+#fifo | filename | creates a fifo (a virtual file) in the INPUT_DIR (ie, where the file we are processing lives, or pwd if that is stdin) and pipes everything after this line into that file (until it reaches another command)
+#run | vitual vclod filename | runs everything from the start of stream to the first .vfs command through vclod_operation. The vitural filename here can then use the fifo files as extesion arguments
 
 # VCLODs Detailed How it Works
 ## Configuration
@@ -101,6 +119,19 @@ Always | syslog | This can be pulled in by systems like graylog and datadog
 Conditional | email | stderr goes to email ($OPERATIONS_EMAIL) for alerting
 Optional | stdout | if you are manually running the script in a terminal
 Optional | post process script | As defined in $LOG_POST_PROCESS. The provided post process script (vclod_pp_log2sql) logs to SQL for relational querying
+
+## What is the Strategy?
+* Accomidating lazy Database Programmers ;)
+* Prioriting work done over copy paste boilerplate
+
+## What are the Objections?
+* Unnecessary!! I don't need this brain pain!!
+  * Copy and paste is always an option. As well as re-debugging
+  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement then every time you add a new language to your tech stack
+  
+* ksh < python3
+  * ok, so use python inside VCLODs. Productionization is free
+  * Shell scripting is the universal languge
 
 ## Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self descriptive
 * For more examples, look in this repo's test directory. Output is compared to `test/expected`
@@ -138,6 +169,6 @@ Specify when you want which directories to run and then everything in them run
 
 # Testing
 
-First setup the `./test/config` file to have the right mysql permissions. Do not commit said credentials, though those belong in `/etc/vclods`
-`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; outputs the contents of the log files and syslog for visual comparison
+First setup the `./test/secure_config` file to have the right mysql permissions.
+`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; check post_process log2sql; prints all output to the terminal
 `./run_test.sh | cat` - does the same thing, but with no output except on test error
