@@ -1,10 +1,10 @@
-FILE=$(mktemp)
-add_file_cleanup "$FILE"
-cat >"$FILE"
-if head -1 "$FILE" | grep -q '^#!' ; then 
-  CMD="$(head -1 "$FILE" | cut -c 3-)"
-  $CMD <"$FILE"
+TEMP_FILE=$(mktemp)
+add_file_cleanup "$TEMP_FILE"
+cat >"$TEMP_FILE"
+if head -1 "$TEMP_FILE" | grep -q '^#!' ; then 
+  CMD="$(head -1 "$TEMP_FILE" | cut -c 3-)"
+  $CMD <"$TEMP_FILE"
 else
   echo >&2 '[WARNING] No Shebang found, defaulting to ksh sourcing' 
-  . "$FILE"
+  . "$TEMP_FILE"
 fi

@@ -16,16 +16,9 @@ set +a
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 
-if [[ $S =~ .*\.sql(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
-  SRC="$(vclod_connection VCLOD_SRC_)"
-else
-  SRC='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use SRC if .sql is not in the extension path}'
-fi
-if [[ $S =~ .*\.dst(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]]; then
-  DST="$(vclod_connection VCLOD_DST_)"
-else
-  DST='eval : ${VCLOD_FORCE_SETUP_SQL:?required to use DST if .dst is not in the extension path}'
-fi
+conn () { [[ $S =~ .*\.$1(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]] && vclod_connection $2 || echo 'eval echo >&2 VCLOD_FORCE_SETUP_SQL required to use connections not indicated in the extension path; exit 1;'; }
+SRC="$(conn sql VCLOD_SRC_)"
+DST="$(conn dst VCLOD_DST_)"
 export SRC DST
 
 ret=0
