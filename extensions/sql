@@ -1,5 +1,5 @@
-if [ "$(echo $SRC | cut -d' ' -f1)" = "mysql" ] ; then
-  envsubst | $SRC -${ext_opt:-BNArc}
+if [ "$(echo "$SRC" | cut -d' ' -f1)" = "mysql" ] ; then
+  envsubst | $SRC -"${ext_opt:-BNArc}"
 else
   envsubst | $SRC
 fi

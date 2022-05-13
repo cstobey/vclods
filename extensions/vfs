@@ -1,7 +1,7 @@
 # virtual file system -- use #fifo to generate virual files and #run use those files inside a vclod context
 GFL=$(mktemp)
-add_file_cleanup $GFL
-cat >$GFL
+add_file_cleanup "$GFL"
+cat >"$GFL"
 
 setup_fifo(){
   f="$INPUT_DIR/$1"
@@ -11,7 +11,7 @@ setup_fifo(){
   sed -n "$2,$3p" "$GFL" >"$f" &
 }
 
-egrep -n '^#(fifo|run) ' "$GFL" | sed 's/:/ /' | awk -v f="$GFL" '
+grep -E -n '^#(fifo|run) ' "$GFL" | sed 's/:/ /' | awk -v f="$GFL" '
 BEGIN {dstart=1;dend=0;} 
 $2 == "#fifo" {
   if(dend==0){dend=$1-1}else{print $1-1}; 

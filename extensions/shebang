@@ -1,10 +1,10 @@
-FILE="${LOG_BASE_DIR%/}/`basename $LOG_FILE`.$$.SBOUT"   # Log File
-add_file_cleanup $FILE
-cat >$FILE
-if head -1 $FILE | grep -q '^#!' ; then 
-  CMD=$(head -1 $FILE | cut -c 3-)
-  $CMD <$FILE
+FILE=$(mktemp)
+add_file_cleanup "$FILE"
+cat >"$FILE"
+if head -1 "$FILE" | grep -q '^#!' ; then 
+  CMD="$(head -1 "$FILE" | cut -c 3-)"
+  $CMD <"$FILE"
 else
   echo >&2 '[WARNING] No Shebang found, defaulting to ksh sourcing' 
-  . $FILE
+  . "$FILE"
 fi

@@ -1,5 +1,5 @@
 : ${DEST_FOLDER:=/usr/local/bin/vclods}
-cd "$(dirname $(readlink -f $(which $0)))"
+cd "$(dirname "$(readlink -f "$(which "$0")")")" || { echo >&2 "could not cd into $0"; exit 1; }
 mkdir -p $DEST_FOLDER
 [ "$DEST_FOLDER" == "$(pwd)" ] || cp -r . $DEST_FOLDER
 cp $DEST_FOLDER/vclod /usr/local/bin/vclod
