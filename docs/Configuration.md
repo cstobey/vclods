@@ -13,7 +13,6 @@ NOTE: Setting the variable in the config file must be of the form `VAR_NAME=...`
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. `$INPUT_DIR` is the Local directory of the script.
 Name | Scope | Defaults
 -----|-------|---------
-|Post Process|
 ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
