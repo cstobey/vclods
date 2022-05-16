@@ -59,7 +59,7 @@ vfs| Redirect |0| pipes stdin through fifos and then runs any number of commands
 1. Producers can also consume pipes, but they don't need to
 1. Consumers require a Producer. `out` and `outa` end pipes; other Consumers can be Producers
 1. Pipes requires a Producer AND Consumer
-1. batch runs `vclod_batcher`. See vclod_batcher commands below
+1. See .batch commands below
 1. Redirect indicates an extension that pipes to another extention in some way
 
 ### .batch Commands:
