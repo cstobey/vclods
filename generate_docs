@@ -23,7 +23,7 @@ function s() {if(l==1) return "Global"; if(l==2) return "Script"; if(l==3) retur
 BEGIN {cur="";l=0;e=""} 
 $2==cur && l==3 {e=e" "$1} 
 $2==cur && l==$3 && tail()!=d {print "WARNING: inconsistent definitions for "cur >"/dev/stderr"}
-$2!=cur {print cur"|"s()"|"d;cur=$2;l=$3;d=tail();e=""}
+$2!=cur {print cur"|"s()"|"d;cur=$2;l=$3;d=tail();e=$1}
 END {print cur"|"s()"|"d}')
 EOF
 

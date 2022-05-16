@@ -11,10 +11,10 @@ Here is an automated listing of all Enviornment Variables, their Scopes and Defa
 Variable | Scope | Defaults
 ---------|-------|---------
 |Post Process|
-ADD_EXT_DIR|Extensions:  end|$INPUT_DIR
+ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
-JQ_EXT_DIR|Extensions: |$INPUT_DIR
+JQ_EXT_DIR|Extensions: jq|$INPUT_DIR
 LF_OVERRIDE|Post Process|
 LOCK_NAME|Script|${1:?Missing a lock name}
 LOG_BASE_DIR|Global|
@@ -29,15 +29,15 @@ LOG_SQL_USER|Post Process|$LOG_USER
 MAIL_ELF|Script|
 MY_LOCK|Script|$LOCK_FILE
 OPERATIONS_EMAIL|Script|
-OUT_EXT_DIR|Extensions:  outa|$INPUT_DIR
-PY_EXT_DIR|Extensions: |$INPUT_DIR
+OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR
+PY_EXT_DIR|Extensions: py|$INPUT_DIR
 RM_ERR_FILE|Script|1
-SH_EXT_DIR|Extensions: |$INPUT_DIR
-SUPPORT_EMAIL|Extensions: |$OPERATIONS_EMAIL
-SUPPORT_SUBJECT|Extensions: |${base_filename//_/ }
-TEE_EXT_DIR|Extensions:  teea|$INPUT_DIR
+SH_EXT_DIR|Extensions: sh|$INPUT_DIR
+SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL
+SUPPORT_SUBJECT|Extensions: email|${base_filename//_/ }
+TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR
 VCLOD_BATCH_JOBS|Script|1
-VCLOD_DIR_START|Extensions: |
+VCLOD_DIR_START|Extensions: dir|
 VCLOD_ENGINE|Script|mysql
 VCLOD_ERR_DIR|Script|
 VCLOD_FORCE_SETUP_SQL|Script|0
