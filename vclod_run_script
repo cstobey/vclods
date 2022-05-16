@@ -8,7 +8,7 @@ S=$([ "$(basename "$1")" == "$1" ] && echo "./$1" || echo "$1")
 
 # respect local config file
 set -a
-INPUT_DIR="$(dirname "$(readlink -f "$S")")"
+INPUT_DIR="$(dirname "$S")"
 [ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
 set +a
 
