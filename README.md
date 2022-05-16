@@ -30,85 +30,15 @@ An open-source directory based ksh framework to productionize programs from comp
 
 ![discriptive diagram of how VCLODs works](/VCLODs.png)  
 
-### VCLODs Piped Operation Elements
-
-Extensions | Type |Extra File ^1 | Description
------------|------|--------------|------------
-sh| Producer ^2 |0| Source a ksh script
-py| Producer or Consumer |optional| Run either stdin or file as python3
-shebang| Producer |0| Respect script's shebang
-sql| Producer |0| Run a SQL script with default connection
-dst| Producer |0| Run a SQL script with the secondary connection
-diff| Consumer ^3 |1| diff stdout:file
-email| Consumer |0| email stdout to SUPPORT_EMAIL. Errors still go to OPERATIONS_EMAIL
-err| Consumer |0| Everything is an error
-out| Consumer |1| Write to file; stop
-outa| Consumer |1| Append to file; stop
-add| Pipe ^4 |1| Prepend stdin with file
-awk| Pipe |1| run stdout through awk file
-batch ^5| Pipe |0| aggregate input to batch statement
-end| Pipe |1| Postpend stdin with file
-etl| Pipe |1| Preform advanced ETL operations. More below
-jq| Pipe |1| Run stdin through the jq utility to parse JSON
-tee| Pipe |1| Route output to file and continue
-dir| Redirct ^6 |1| Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions
-g| Redirct |1| Guard another extension (like in g-jq) so that its output is saved on error
-vfs| Redirect |0| pipes stdin through fifos and then runs any number of commands. Helps with large composite programs if it is easier to put them all in one file. Also useful for when using stdin to run a oneoff script
-
-1. Extra File means the extension can use an extension option (`<extension>-<filename>`) as either input (diff), code, or output. filename defaults to the basename of the script. The directory the extra is in defaults to the same directory as the script, but often can be overridden. py allows the extra file to have an extension if it is in a different directory, otherwise, the extra file may not have its own extension or it will be run as if it was a VCLODScript
-1. Producers can also consume pipes, but they don't need to
-1. Consumers require a Producer. `out` and `outa` end pipes; other Consumers can be Producers
-1. Pipes requires a Producer AND Consumer
-1. See .batch commands below
-1. Redirect indicates an extension that pipes to another extention in some way
-
-### .batch Commands:
-
-Command | default if start exists | description
---------|-------------------------|------------
-#batch | 1000 | Number of lines to put in each batch
-#start | | Start of statement (like INSERT INTO .... VALUES )
-#sep | ',' | how to separate lines
-#end | ';' | how to end lines
-#del_start | | if desired, the start of a delete statement to be used in archiving data
-#del_sep | ',' | delete statement separator
-#del_end | ');' | delete statement end
-#RESET | | reset to start state so you can start a new batch in the same pipe
-
-### .etl Commands:
-Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in and extension option file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
-Command | Requires preceding field ^1 | no_update Option? ^2| Positional Args ^3 | Description
---------|-----------------------------|---------------------|--------------------|------------
-#ingest |Y|N|N| force this field to be ingested in the initial INSERT INTO tmp table
-#ignore |Y|N|N| Do not ingest this field into the initial temp table.
-#key |Y|N|Std| The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table
-#unique |Y|Y|Std| Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains)
-#map |Y|Y|Std| A regular field on the given table. 
-#generate |N|Y|Std + SQL statement| generate a field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table.
-#include |YN|N|local SQL filename| include a sql script file (with no .extension) to handle any additional reformatting or processing that is required. 
-#sync |N|Y|Destination Table + More ^4 | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order
-
-1. If Y, add the command after the temp table field definition. If N, then put it on its own line as a stand alone command. If YN (ie for `#include`), if the command is on a temp table field line, it acts as both `#include` AND `#ignore`.
-1. on_update means the field will not be updated when it changes (ie, will not be in the ON DUPLICATE KEY UPDATE list). It is annotated by updating the command name, for instance `#sync` becomes `#sync_no_update`.
-1. N means there are no Positional Arguments after the command. Std means the standard ones are required (destination table name followed by the destiniation field name -- spaces not allowed).
-1. #sync extra options are either `SET_NOT_PRESENT` followed by whatever you would put in an UPDATE SET clause for any rows that are not in the temp table followed by an optional WHERE clause to indicate additional cohort constraints, or `DELETE_NOT_PRESENT` followed by an optional WHERE clause that acts the same way. (In the SET version, the WHERE is a requied delimiter; in the DELETE version, the WHERE keyword may not be present.)
-
-### .vfs Commands:
-Only 1 Positional Argument is used. everything else is a comment
-Command | Argument | Description
---------|----------|------------
-#fifo | filename | creates a fifo (a virtual file) in the INPUT_DIR (ie, where the file we are processing lives, or pwd if that is stdin) and pipes everything after this line into that file (until it reaches another command)
-#run | vitual vclod filename | runs everything from the start of stream to the first .vfs command through vclod_operation. The vitural filename here can then use the fifo files as extesion arguments
-
 # VCLODs Detailed How it Works
 ## Configuration
-There is a global config file to make life easier (`/etc/vclods`), then each directory has its own configs to fine tune what all the scripts in a given directory will do
+There is a global config file to make life easier (`/etc/vclods`), then each directory has its own configs to fine tune what all the scripts in a given directory will do. [Here is a list of all the Configuration Variables](/docs/Configuration.md).
 
 ## Locking
 Each script file automatically locks out redundant execution (or allows up to `VCLOD_BATCH_JOBS` number of instances to run).
 
 ## Operation
-Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script.
+Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. [Here is a list of all the .extension Operations](/docs/Operation.md).
 
 ## Destination
 Log output (anything in stdout at pipe's end) can go to 5 locations: 
@@ -166,6 +96,47 @@ Specify when you want which directories to run and then everything in them run
     /vclod/nightly/server_database/script2.sql
     /vclod/nightly/server_database/script3.dst.sql
     ...
+
+# Commands
+specialized stream commands for a few of the dot extensions:
+
+## .batch Commands:
+
+Command | default if start exists | description
+--------|-------------------------|------------
+#batch | 1000 | Number of lines to put in each batch
+#start | | Start of statement (like INSERT INTO .... VALUES )
+#sep | ',' | how to separate lines
+#end | ';' | how to end lines
+#del_start | | if desired, the start of a delete statement to be used in archiving data
+#del_sep | ',' | delete statement separator
+#del_end | ');' | delete statement end
+#RESET | | reset to start state so you can start a new batch in the same pipe
+
+## .etl Commands:
+Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in and extension option file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
+Command | Requires preceding field ^1 | no_update Option? ^2| Positional Args ^3 | Description
+--------|-----------------------------|---------------------|--------------------|------------
+#ingest |Y|N|N| force this field to be ingested in the initial INSERT INTO tmp table
+#ignore |Y|N|N| Do not ingest this field into the initial temp table.
+#key |Y|N|Std| The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table
+#unique |Y|Y|Std| Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains)
+#map |Y|Y|Std| A regular field on the given table. 
+#generate |N|Y|Std + SQL statement| generate a field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table.
+#include |YN|N|local SQL filename| include a sql script file (with no .extension) to handle any additional reformatting or processing that is required. 
+#sync |N|Y|Destination Table + More ^4 | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order
+
+1. If Y, add the command after the temp table field definition. If N, then put it on its own line as a stand alone command. If YN (ie for `#include`), if the command is on a temp table field line, it acts as both `#include` AND `#ignore`.
+1. on_update means the field will not be updated when it changes (ie, will not be in the ON DUPLICATE KEY UPDATE list). It is annotated by updating the command name, for instance `#sync` becomes `#sync_no_update`.
+1. N means there are no Positional Arguments after the command. Std means the standard ones are required (destination table name followed by the destiniation field name -- spaces not allowed).
+1. #sync extra options are either `SET_NOT_PRESENT` followed by whatever you would put in an UPDATE SET clause for any rows that are not in the temp table followed by an optional WHERE clause to indicate additional cohort constraints, or `DELETE_NOT_PRESENT` followed by an optional WHERE clause that acts the same way. (In the SET version, the WHERE is a requied delimiter; in the DELETE version, the WHERE keyword may not be present.)
+
+## .vfs Commands:
+Only 1 Positional Argument is used. everything else is a comment
+Command | Argument | Description
+--------|----------|------------
+#fifo | filename | creates a fifo (a virtual file) in the INPUT_DIR (ie, where the file we are processing lives, or pwd if that is stdin) and pipes everything after this line into that file (until it reaches another command)
+#run | vitual vclod filename | runs everything from the start of stream to the first .vfs command through vclod_operation. The vitural filename here can then use the fifo files as extesion arguments
 
 # Testing
 
