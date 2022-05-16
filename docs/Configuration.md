@@ -1,4 +1,4 @@
-#Configuration -- Enviornment Variables
+# Configuration -- Enviornment Variables
 ## Scope
 Name | Used by: 
 -----|----------

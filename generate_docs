@@ -4,7 +4,7 @@ CODE_FILES='vclod* extensions/*' # NOTE: connections/* doesnt have any variables
 exclusions=$(grep -E '^[A-Z_]+=' $CODE_FILES | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
 
 cat << EOF >docs/Configuration.md
-#Configuration -- Enviornment Variables
+# Configuration -- Enviornment Variables
 ## Scope
 Name | Used by: 
 -----|----------
@@ -31,7 +31,7 @@ END {print cur"|"s()"|"d}')
 EOF
 
 cat << EOF >docs/Operation.md
-#Operation -- Dot Extensions
+# Operation -- Dot Extensions
 ## Location
 Name | Description
 -----|------------
