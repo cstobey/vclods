@@ -42,3 +42,4 @@ END {
 }
 echo '#RESET'
 grep -E -o '#(include|sync(_no_update)?) [^#]+' "$fn" | awk 'BEGIN {printf "cat <(echo)"} /^#include/ {printf " $INPUT_DIR/"$2} /^#sync/ {printf " <(sync_tbl "$2")"}' | . /dev/stdin
+#PIPE Preform advanced ETL operations. More below

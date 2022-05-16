@@ -8,3 +8,4 @@ else
   echo >&2 '[WARNING] No Shebang found, defaulting to ksh sourcing' 
   . "$TEMP_FILE"
 fi
+#ANY Respect script's first line shebang (default: source in ksh just like .sh)

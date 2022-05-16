@@ -1,11 +1,13 @@
 cd "$(dirname "$(readlink -f "$(which "$0")")")"
 
-CODE_FILES='vclod* extensions/* connections/*'  # NOTE: connections doesnt have any variables yet. Need to update the awk if I am going to force that. 
+CODE_FILES='vclod* extensions/*' # NOTE: connections/* doesnt have any variables yet. Need to update if I ever add Configuration Variables to connections.
 exclusions=$(grep -E '^[A-Z_]+=' $CODE_FILES | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
 
 cat << EOF >docs/Configuration.md
-Scope | Used by: 
-------|----------
+#Configuration -- Enviornment Variables
+## Scope
+Name | Used by: 
+-----|----------
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
 Extension | the given dot extensions
@@ -13,9 +15,10 @@ Post Process | the after action script defined in \`\$LOG_POST_PROCESS\`
 
 NOTE: Setting the variable in the config file must be of the form \`VAR_NAME=...\` otherwise it will not be exported. Enviornment Variables given on the command line will be overridden by config files unless the variable is defined in the form \`VAR_NAME=\${VAR_NAME:=value to set}\` (or left to the default). 
 
+## Recognized Variables
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. \`\$INPUT_DIR\` is the Local directory of the script.
-Variable | Scope | Defaults
----------|-------|---------
+Name | Scope | Defaults
+-----|-------|---------
 $(grep -onE '\$\{[A-Z_]+:[?=-]' $CODE_FILES | sed 's/[${:=?-]/ /g' | grep -vw $exclusions | awk '{printf $0" "} /^vclod/ {print 1 + !($1 == "vclod" || $1 == "vclod_do_dir") + 2*($1 ~ /^vclod_pp_/)} /^extension/ {print "3"}' | sort -k3,4 | while read f n v s ; do sed -n "${n}p" "$f" | grep -oE '\$\{'"$v"':[?=-]([$][{][^{]+}|[/$0-9A-Za-z_-]+)*}' | sed -r "s|^[\$][{]${v}:[?=-]||;s/[}]$//;s|^|${f#*/} $v $s |" ; done | awk '
 function concat_ws(value, sep, new) {return (value=="") ? new : value sep new} 
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret} 
@@ -25,6 +28,34 @@ $2==cur && l==3 {e=e" "$1}
 $2==cur && l==$3 && tail()!=d {print "WARNING: inconsistent definitions for "cur >"/dev/stderr"}
 $2!=cur {print cur"|"s()"|"d;cur=$2;l=$3;d=tail();e=$1}
 END {print cur"|"s()"|"d}')
+EOF
+
+cat << EOF >docs/Operation.md
+#Operation -- Dot Extensions
+## Location
+Name | Description
+-----|------------
+ANY  | Normal processing. takes stdin (or the contents of the file), does something, and leaves output for the next thing (or logging).
+TERM | ends the .extension chain by redirecting stdin somewhere else
+PIPE | Pass Through: Must be in the middle of a .extension chain
+WRAP | runs another .extension tree as a child
+
+## Option
+Many extensions have the abilty to accept one and only one option in the .extension chain. This is signified as \`<base_filename>.<other_optional_extensions>.<extension>-<option>.<more_optional_extensions>\`. All other behavior modification is handled with Configuration Variables. Options allow 2 of the same extension to be present in the same .extension chain while exhibiting different behavior. Most often, the option value is a file name (due to the nature of the .extension chain, these filenames may not themselves have a .extension). If another file is accepted, the default for the option will be \`\$base_filename\`
+## Extensions
+Name | Location | Option Default | Description
+-----|----------|----------------|------------
+$(grep -oE '( |\$(\{ext_opt(:[?=-]([$][{][^{]+}|[/$0-9A-Za-z_-]+)*)?}|ext_opt)|#(ANY|TERM|PIPE|WRAP) .*$)' extensions/* | sed -r 's|extensions/([^:]+):|\1 |;s/\$\{?ext_opt:?[?=-]?/eo /;s/}$//;s/#//' | uniq | awk '
+function concat_ws(value, sep, new) {return (value=="") ? new : value sep new} 
+function tail() {ret=""; for (i=3; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret} 
+function err(msg) {print "WARNING: "msg" for "cur >"/dev/stderr"}
+function p() {if(cur!="") {if(l=="")err("missing location");if(d=="")err("missing description");if(e=="")e="Not Used";print cur"|"l"|"e"|"d;l="";e="";d="";}}
+BEGIN {cur="";l="";e="";d=""} 
+$1!=cur {p();cur=$1}
+$1==cur && $2=="eo" && e=="" {e=tail();if(e=="") e="Used, No Default"} 
+$1==cur && $2=="eo" && e!="Used, No Default" && e!=tail() {err("inconsistent ext_opt default")}
+$1==cur && $2~/^(ANY|TERM|PIPE|WRAP)$/ {if(l!="" && l!=$2) err("inconsistent location");l=$2;d=concat_ws(d," ",tail())}
+END {p()}')
 EOF
 
 #commit -m"$@"

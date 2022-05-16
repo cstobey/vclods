@@ -4,3 +4,4 @@ TEMP_FILE=$(mktemp)
 add_file_cleanup "$TEMP_FILE"
 NFL="$LF.g-$base_filename"
 tee "$TEMP_FILE" | vclod_operation "guard_$base_filename.$ext_opt" || { ret="$?" ; cat <"$TEMP_FILE" >>"$NFL" ; return "$ret" ; }
+#WRAP Guard another extension (like in g-jq) so that its output is saved on error

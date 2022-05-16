@@ -1,1 +1,2 @@
 eval cat >&2
+#TERM Everything is an error

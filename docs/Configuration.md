@@ -1,5 +1,7 @@
-Scope | Used by: 
-------|----------
+#Configuration -- Enviornment Variables
+## Scope
+Name | Used by: 
+-----|----------
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
 Extension | the given dot extensions
@@ -7,9 +9,10 @@ Post Process | the after action script defined in `$LOG_POST_PROCESS`
 
 NOTE: Setting the variable in the config file must be of the form `VAR_NAME=...` otherwise it will not be exported. Enviornment Variables given on the command line will be overridden by config files unless the variable is defined in the form `VAR_NAME=${VAR_NAME:=value to set}` (or left to the default). 
 
+## Recognized Variables
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. `$INPUT_DIR` is the Local directory of the script.
-Variable | Scope | Defaults
----------|-------|---------
+Name | Scope | Defaults
+-----|-------|---------
 |Post Process|
 ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc

@@ -1,3 +1,4 @@
 tfn="${TEE_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}"
 tee "$tfn"
 [ -s "$tfn" ] || rm -f "$tfn"
+#PIPE Route output to file and continue

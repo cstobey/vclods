@@ -1,1 +1,2 @@
 cat - "${ADD_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}"
+#PIPE Postpend stdin with file

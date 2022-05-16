@@ -1,1 +1,2 @@
 awk -v RS="${ext_opt:-}\n" -v ORS="\n" -f "${VCLOD_BASE_DIR%/}/vclod_batcher"
+#PIPE aggregate input into batch SQL statements

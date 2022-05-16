@@ -24,3 +24,4 @@ $2 == "#run" {
   dstart=$1+1;dend=0;
   }
 END {if(dend==0){dend="$"};print "sed -n \047"dstart","dend"p\047 "f;}' | . /dev/stdin
+#WRAP pipes stdin through fifos and then runs any number of commands. Helps with large composite programs if it is easier to put them all in one file. Also useful for when using stdin to run a oneoff script

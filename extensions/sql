@@ -3,3 +3,4 @@ if [ "$(echo "$SRC" | cut -d' ' -f1)" = "mysql" ] ; then
 else
   envsubst | $SRC
 fi
+#ANY Run a SQL script with default connection (called SRC)

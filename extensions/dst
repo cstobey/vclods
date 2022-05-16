@@ -3,3 +3,4 @@ if [ "$(echo "$DST" | cut -d' ' -f1)" = "mysql" ] ; then
 else
   envsubst | $DST
 fi
+#ANY Run a SQL script with the secondary connection (called DST)

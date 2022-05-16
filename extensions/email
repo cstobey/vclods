@@ -2,3 +2,4 @@ TEMP_FILE=$(mktemp)
 add_file_cleanup "$TEMP_FILE"
 cat >"$TEMP_FILE"
 [ -s "$TEMP_FILE" ] && mail -s "${SUPPORT_SUBJECT:-${base_filename//_/ }} data" "${SUPPORT_EMAIL:-$OPERATIONS_EMAIL}" <"$TEMP_FILE"
+#TERM email stdout to SUPPORT_EMAIL. Errors still go to OPERATIONS_EMAIL
