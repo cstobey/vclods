@@ -24,7 +24,6 @@ ln -s "$(pwd)"/vclod_dir/{test,local_config_override/test_symlink}.sh
 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
 rm -f ./vclod_dir/local_config_override/test_symlink.sh
-wait ; sleep 2 ; sync # really make sure the logs have been written
 
 # tests off the previous run
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] log file check"
@@ -55,7 +54,7 @@ comm -13 <(ls -R1 vclod_dir/ | grep -E -o '[.][a-z]+' | sed 's/^.//' | sort | un
 
 # the specific one didnt work because of whitespace... and comm cant ignore whitespace... consider adding tr?
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] syslog data check"
-comm -23 <(cat expected_logs/* | sort) <(sudo tail /var/log/messages -n"$((numb_lines*5))" | sed -r 's/^[^[]+[[]/[/' | sort) || { ret="$((ret + $?))" ; echo "FAILED syslog data mismatch" >&2 ; }
+comm -23 <(cat expected_logs/* | sort) <(sudo tail /var/log/messages -n"$((numb_lines*2))" | sed -r 's/^[^[]+[[]/[/' | sort) || { ret="$((ret + $?))" ; echo "FAILED syslog data mismatch" >&2 ; }
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] syslog timing check"
 comm -23 <(cat logs/* | grep '.log$' | sed -r 's/^[0-9]{4}\-[0-9]{2}\-[0-9]{2} //;s/[]].*/]/' | sort) <(sudo tail /var/log/messages -n"$((numb_lines*5))" | awk '{print $3" "$6" "$7}' | sort) || { ret="$((ret + $?))" ; echo "FAILED syslog timing and pid mismatch" >&2 ; }
 
