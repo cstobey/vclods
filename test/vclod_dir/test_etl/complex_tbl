@@ -15,6 +15,7 @@ CREATE OR REPLACE TABLE tmp_col (
   #generate field is_active 1
 #sync field SET_NOT_PRESENT is_active=0 WHERE entity_id IN (SELECT DISTINCT entity_id FROM tmp_col)
   column_name VARCHAR(255), #unique field name
+--  column_name VARCHAR(255), #unique field name
   field_authorization VARCHAR(50), #map field field_authorization
   is_nullable INT(11), #map field is_nullable
   default_value TEXT, #map field default_value
