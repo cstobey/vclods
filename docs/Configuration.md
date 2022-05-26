@@ -17,6 +17,7 @@ ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR
+JQ_EXT_OPT|Extensions: jq|
 LF_OVERRIDE|Post Process|
 LOCK_NAME|Script|${1:?Missing a lock name}
 LOG_BASE_DIR|Global|
