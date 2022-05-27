@@ -29,9 +29,8 @@ LOG_SQL_ENGINE|Post Process|$LOG_ENGINE
 LOG_SQL_HOST|Post Process|
 LOG_SQL_PASSWORD|Post Process|$LOG_PW
 LOG_SQL_USER|Post Process|$LOG_USER
-MAIL_ELF|Script|
 MY_LOCK|Script|$LOCK_FILE
-OPERATIONS_EMAIL|Script|
+OPERATIONS_EMAIL|Global|
 OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR
 PY_EXT_DIR|Extensions: py|$INPUT_DIR
 RM_ERR_FILE|Script|1
@@ -40,6 +39,7 @@ SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL
 SUPPORT_SUBJECT|Extensions: email|${base_filename//_/ }
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR
 VCLOD_BATCH_JOBS|Script|1
+VCLOD_DIR_CONTEXT|Extensions: dir|
 VCLOD_DIR_START|Extensions: dir|
 VCLOD_ENGINE|Script|mysql
 VCLOD_ERR_DIR|Script|
