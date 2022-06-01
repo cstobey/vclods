@@ -30,7 +30,7 @@ if [ -e "$S" ]; then
   cat "$S"
 else
   cat
-fi | vclod_operation "$(basename "$S")" || { ret=$?; echo >&2 "$(basename "$S") returned $ret"; }
+fi | vclod_operation "$S" 
 
 [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo "[FINISH] returned $ret"
 exit $ret

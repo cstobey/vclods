@@ -2,7 +2,7 @@
 # helper functions
 add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } # TODO: handle spaces?
 
-vclod_connection(){
+vclod_connection() {
   CONN_PREFIX=${1:-VCLOD_OVERRIDE_}
   echo "ENGINE=\${${CONN_PREFIX}ENGINE:=${VCLOD_ENGINE:=mysql}}" | . /dev/stdin
   [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
@@ -13,7 +13,7 @@ EOF
   HOST=$HOST DB=$DB USER=$USER PWORD=$PASSWORD envsubst <"${VCLOD_BASE_DIR%/}/connections/$ENGINE" # return the connection string
 }
 
-vclod_operation(){
+vclod_op(){
   next="${1%.*}"
   [[ "$1" == "$next" ]] && cat && return # The cat connects stdin to stdout, note that the error case below does not. This should never happen.
   extension="${1##*.}"
@@ -25,7 +25,15 @@ vclod_operation(){
   if [[ "$next" == "${next%.*}" ]] ; then
     . "$op_ext_file"
   else
-    . "$op_ext_file" | vclod_operation "$next"
+    . "$op_ext_file" | vclod_op "$next"
   fi
 }
+function vclod_operation {
+  typeset exit_err_msg="${VCLOD_EXIT_ERR:-$(basename "$1")}"
+  typeset ret=0
+  unset VCLOD_EXIT_ERR # force each layer to have its own error context.
+  vclod_op "$(basename "$1")" || { ret=$?; echo >&2 "$exit_err_msg returned $ret"; }
+  return $ret
+}
+
 export add_file_cleanup vclod_connection vclod_operation

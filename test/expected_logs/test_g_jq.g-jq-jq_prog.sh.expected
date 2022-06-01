@@ -1,2 +1,3 @@
 [ERROR] parse error: Expected another key-value pair at line 1, column 56
+[ERROR] test_g_jq.g-jq-jq_prog FILE: ./logs/test_g_jq.g-jq-jq_prog.sh..log.g-test_g_jq returned 4
 [ERROR] test_g_jq.g-jq-jq_prog.sh returned 4
