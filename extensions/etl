@@ -4,7 +4,7 @@ sed 's/--.*$//' "$INPUT_DIR/${ext_opt:?}" >"$fn" # handle fifos; -- are real com
 sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
 tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')
-working_fields=$(grep -E "#(key|unique|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | grep -E "#(key|unique|sync|map|generate)")
+working_fields=$(grep -E "#(key|unique|generate_unique|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | grep -E "#(key|unique|sync|map|generate)")
 cat << EOF
 
 #RESET
@@ -27,6 +27,7 @@ $1~/^#generate$/ {odku=concat_ws(odku, ",", $3"=VALUES("$3")");}
 $2~/^#(map|unique)/ {ttc=concat_ws(ttc, ",", $1);tc=concat_ws(tc, ",", $4);}
 $2~/^#map$/      {odku=concat_ws(odku, ",", $4"=VALUES("$4")");}
 $2~/^#unique$/   {w=concat_ws(w, " AND ", tt"."$1"<=>"t"."$4);ugb=concat_ws(ugb,",",$1);ttc_uni=concat_ws(ttc_uni, ",", $1);tc_uni=concat_ws(tc_uni, ",", $4);}
+$2~/^#generate_unique$/   {w=concat_ws(w, " AND ", tt"."tail()"<=>"t"."$3);ugb=concat_ws(ugb,",",tail());ttc_uni=concat_ws(ttc_uni, ",", tail());tc_uni=concat_ws(tc_uni, ",", $3);}
 $2~/^#key$/      {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
 END {
   if (should_exit) {exit 1;}

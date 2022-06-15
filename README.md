@@ -120,9 +120,10 @@ Command | Requires preceding field ^1 | no_update Option? ^2| Positional Args ^3
 #ingest |Y|N|N| force this field to be ingested in the initial INSERT INTO tmp table
 #ignore |Y|N|N| Do not ingest this field into the initial temp table.
 #key |Y|N|Std| The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table
-#unique |Y|Y|Std| Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains)
+#unique |Y|N|Std| Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains)
 #map |Y|Y|Std| A regular field on the given table. 
-#generate |N|Y|Std + SQL statement| generate a field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table.
+#generate |N|Y|Std + SQL statement| Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation
+#generate_unique |N|N|Std + SQL statement| A logical combination of #generate and #unique
 #include |YN|N|local SQL filename| include a sql script file (with no .extension) to handle any additional reformatting or processing that is required. 
 #sync |N|Y|Destination Table + More ^4 | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order
 
