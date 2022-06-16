@@ -27,7 +27,7 @@ $1~/^#generate$/ {odku=concat_ws(odku, ",", $3"=VALUES("$3")");}
 $2~/^#(map|unique)/ {ttc=concat_ws(ttc, ",", $1);tc=concat_ws(tc, ",", $4);}
 $2~/^#map$/      {odku=concat_ws(odku, ",", $4"=VALUES("$4")");}
 $2~/^#unique$/   {w=concat_ws(w, " AND ", tt"."$1"<=>"t"."$4);ugb=concat_ws(ugb,",",$1);ttc_uni=concat_ws(ttc_uni, ",", $1);tc_uni=concat_ws(tc_uni, ",", $4);}
-$2~/^#generate_unique$/   {w=concat_ws(w, " AND ", tt"."tail()"<=>"t"."$3);ugb=concat_ws(ugb,",",tail());ttc_uni=concat_ws(ttc_uni, ",", tail());tc_uni=concat_ws(tc_uni, ",", $3);}
+$1~/^#generate_unique$/   {w=concat_ws(w, " AND ", tail()"<=>"t"."$3);ugb=concat_ws(ugb,",",tail());ttc_uni=concat_ws(ttc_uni, ",", tail());tc_uni=concat_ws(tc_uni, ",", $3);}
 $2~/^#key$/      {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
 END {
   if (should_exit) {exit 1;}

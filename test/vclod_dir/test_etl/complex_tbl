@@ -9,7 +9,8 @@ CREATE OR REPLACE TABLE tmp_col (
   filename VARCHAR(255) NOT NULL, #map entity definition_link
 #sync data_type
   data_type_id INT(11) UNSIGNED, #key data_type data_type_id #map field data_type_id
-  column_type VARCHAR(255), #unique data_type sql_type
+  column_type VARCHAR(255), #ingest
+  #generate_unique data_type sql_type LOWER(tmp_col.column_type)
   #generate_no_update data_type name SUBSTRING_INDEX(ttc.column_type,'(',1)
   #generate entity is_active 1
   #generate field is_active 1
