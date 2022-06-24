@@ -5,7 +5,7 @@ Name | Used by:
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
 Extension | the given dot extensions
-Post Process | the after action script defined in `$LOG_POST_PROCESS`
+Post Process | log processing after the script has run
 
 NOTE: Setting the variable in the config file must be of the form `VAR_NAME=...` otherwise it will not be exported. Enviornment Variables given on the command line will be overridden by config files unless the variable is defined in the form `VAR_NAME=${VAR_NAME:=value to set}` (or left to the default). 
 
@@ -16,6 +16,7 @@ Name | Scope | Defaults
 ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
+DIR_EXT_DIR|Extensions: dir|$INPUT_DIR
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR
 JQ_EXT_OPT|Extensions: jq|
@@ -24,7 +25,7 @@ LOCK_NAME|Script|${1:?Missing a lock name}
 LOG_BASE_DIR|Global|
 LOG_FILE|Script|${1:?Missing a log file name}
 LOG_FILE_OVERRIDE|Post Process|
-LOG_POST_PROCESS|Script|
+LOG_POST_PROCESS|Post Process|
 LOG_SQL_DB|Post Process|
 LOG_SQL_ENGINE|Post Process|$LOG_ENGINE
 LOG_SQL_HOST|Post Process|

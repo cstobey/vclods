@@ -58,7 +58,7 @@ comm -23 <(cat logs/*.log | sed -r 's/^[^[]* ([0-9]+ [[])/\1/' | sort) <(sudo ta
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] test_single_file"
 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_single_file.diff.sh || { ret="$((ret + $?))" ; echo "FAILED single file should render without the directory $ret" ; }
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] stdin"
-cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_stdin.diff-test_single_file.sh || { ret="$((ret + $?))" ; echo "FAILED single file should render without the directory $ret" ; }
+cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_stdin.diff-test_single_file.sh || { ret="$((ret + $?))" ; echo "FAILED virtual single file should render without the directory $ret" ; }
 echo A single file needs to work by itself
 EOF
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] sh_only"

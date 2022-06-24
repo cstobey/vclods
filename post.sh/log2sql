@@ -5,9 +5,10 @@
 # This script fulfills the VCLOD logger contract, but could technically work with any properly structured log file.
 
 # Argument validation: LF is the actual log file. NOTE: most arguments have multiple names for legacy purposes.
-: ${LOG_FILE:=${LOG_FILE_OVERRIDE:?}} ${LF:=${LF_OVERRIDE:?}} ${LOG_SQL_HOST:?} ${LOG_SQL_USER:=$LOG_USER} ${LOG_SQL_PASSWORD:=$LOG_PW} ${LOG_SQL_DB:?} ${LOG_SQL_ENGINE:=$LOG_ENGINE} ${SHOULD_PP_LOG2SQL:=1}
+: ${LOG_FILE:=${LOG_FILE_OVERRIDE:?}} ${LF:=${LF_OVERRIDE:?}} ${LOG_SQL_HOST:=} ${LOG_SQL_USER:=$LOG_USER} ${LOG_SQL_PASSWORD:=$LOG_PW} ${LOG_SQL_DB:=} ${LOG_SQL_ENGINE:=$LOG_ENGINE} ${SHOULD_PP_LOG2SQL:=1}
 [ -s "$LF" ] || return  # if the output file is empty, dont try to store it
 [ -z "$LOG_SQL_HOST" ] && return  # only continue if we have somewhere to go
+[ -z "$LOG_SQL_DB" ] && return  # only continue if we have somewhere to go
 [ "$SHOULD_PP_LOG2SQL" -eq 0 ] && return  # escape hatch
 
 SRC="$(vclod_connection LOG_SQL_)"; ETL_EXT_DIR="$VCLOD_BASE_DIR" # NOTE: on same line for autodocs
