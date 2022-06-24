@@ -8,7 +8,6 @@ VCLOD_MYSQL_PASSWORD=mypass
 VCLOD_MYSQL_DB=information_schema
 LOG_SQL_HOST=localhost
 LOG_SQL_DB=test
-LOG_POST_PROCESS=${VCLOD_BASE_DIR}/vclod_pp_log2sql
 
 LOG_BASE_DIR=./logs/
 TEE_EXT_DIR=./files/

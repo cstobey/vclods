@@ -18,6 +18,7 @@ CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR
+EXTRA_ERROR_EMAIL|Post Process|
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR
 JQ_EXT_OPT|Extensions: jq|
 LF_OVERRIDE|Post Process|
