@@ -1,0 +1,9 @@
+: "${ELF:?Needs to be called after vclod_stdio}" "${S:?Must be run as part of VCLODs}"
+[ -s "${ELF:=}" ] || return # it must exist to run it
+[ -z "${SLACK_API_URL:=}" ] && return # must have an endpoint to send the logs to
+# TODO: should I add a retry?
+# TODO: make the emoji configurable?
+[ ! -t 1 ] && curl -sS -m 15 --data-urlencode "$(cat << EOF
+payload={"channel": "${SLACK_CHANNEL:=vclod_errors}", "username": "$(hostname -s)", "text": "$S : $ELF", "icon_emoji": "${SLACK_EMOJI:=:robot_face:}", "attachments": [ { "text": "$(awk -v m="$(wc -l "$ELF")" 'BEGIN {t=m-10;e=1} NR <= 10 || NR >= t {print} NR > 10 && NR < t && e {print "---"; e=0}' "$ELF")", "mrkdwn_in": ["text", "pretext"] } ] }
+EOF
+)" "$SLACK_API_URL"

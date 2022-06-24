@@ -38,6 +38,9 @@ OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR
 PY_EXT_DIR|Extensions: py|$INPUT_DIR
 RM_ERR_FILE|Script|1
 SH_EXT_DIR|Extensions: sh|$INPUT_DIR
+SLACK_API_URL|Post Process|
+SLACK_CHANNEL|Post Process|vclod_errors
+SLACK_EMOJI|Post Process|:robot_face:
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL
 SUPPORT_SUBJECT|Extensions: email|${base_filename//_/ }
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR
