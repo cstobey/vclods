@@ -16,6 +16,7 @@ Name | Scope | Defaults
 ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
+DIR_ERR_SHOULD_EXIT|Extensions: dir|1
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR
 EXTRA_ERROR_EMAIL|Post Process|

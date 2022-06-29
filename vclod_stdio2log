@@ -57,7 +57,7 @@ logger_leave () {
   [ -n "$OUT_PID" ] && wait $OUT_PID
   [ -n "$ERR_PID" ] && wait $ERR_PID
   rm -f $LOG_FIFO $ERR_FIFO
-  DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post
+  DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post
   exec >&- 2>&-
   [ "$RM_ERR_FILE" == 1 ] && rm -f "$ELF"
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
