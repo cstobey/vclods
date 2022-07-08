@@ -12,6 +12,10 @@ numb_lines="$(cat expected_logs/* | wc -l)"
 # setup the test logging database.
 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir "${LOCAL_DIR}/setup_test_pp_db.sh"
 
+# setup web server
+(cd test_webserver ; python3 -m http.server 9000 2>/dev/null) &
+trap "kill $!" EXIT # need to cleanup
+
 # allows you to run one test and see the output.. helpful for dev...
 # NOTE: you need to specify the test in relation to the test/ directory.
 if [ -n "$1" ] ; then
@@ -50,8 +54,9 @@ STMT
 EOF
 
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] untested extentions"
-comm -13 <(ls -R1 vclod_dir/ | grep -E -o '[.][a-z]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) || { ret="$((ret + $?))" ; echo "UNTESTED EXTENTIONS" >&2 ; }
+comm -13 <(ls -R1 vclod_dir/ | grep -E -o '[.][a-z]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) | sed 's/^/UNTESTED EXTENSION /' >&2
 
+# TODO: comm doesnt error, so need to get creative with error text.. might use awk
 [ -z "$DEBUG_WHERE" ] || echo "[WHERE] syslog data and pid check -- skip time because syslog tends to be off by a second or so"
 comm -23 <(cat logs/*.log | sed -r 's/^[^[]* ([0-9]+ [[])/\1/' | sort) <(sudo tail /var/log/messages -n"$((numb_lines*2))" | sed -r 's/^([^ \t]+[ \t]+){5}//' | sort) || { ret="$((ret + $?))" ; echo "FAILED syslog data and pid mismatch" >&2 ; }
 

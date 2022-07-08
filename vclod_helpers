@@ -2,6 +2,16 @@
 # helper functions
 add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } # TODO: handle spaces?
 
+literate_source () {
+  # envsubst only does variable substitution
+  # heredocs do variable substitution, variable expansion, and process substitution
+  # source (.) does the above and treats everything else as code too.
+  # this function allows heredoc-level substitutions for any string.
+  # the name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
+  : "${HEREDOC_DELIMITER:=MSG}"
+  eval "cat << $HEREDOC_DELIMITER"$'\n'"$(<"${1:-/dev/stdin}")"$'\n'"$HEREDOC_DELIMITER"
+}
+
 vclod_connection() {
   CONN_PREFIX=${1:-VCLOD_OVERRIDE_}
   echo "ENGINE=\${${CONN_PREFIX}ENGINE:=${VCLOD_ENGINE:=mysql}}" | . /dev/stdin
@@ -36,4 +46,4 @@ function vclod_operation {
   return $ret
 }
 
-export add_file_cleanup vclod_connection vclod_operation
+export add_file_cleanup literate_source vclod_connection vclod_operation
