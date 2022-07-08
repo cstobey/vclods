@@ -24,12 +24,13 @@
 #LOCK_NAME=`basename $LOCK_NAME`
 LOCK_NAME="$(stat -c '%h %i' "$LOCK_NAME" 2>/dev/null | awk -v a="$(basename "$LOCK_NAME")" -v b="${LOCK_NAME//\//_}" '{n=$1;i=$2} END {if (n==1) print a"-"i; else print b;}')"
 
+MY_LOCK=''
 for i in 1 $(seq 2 $VCLOD_BATCH_JOBS) ; do
   LOCK_FILE="${VCLOD_LOCK_DIR%/}/${LOCK_NAME}.${i}.LCK"
   if [ -f "$LOCK_FILE" ] ; then
     ps -p "$(<"$LOCK_FILE")" >/dev/null && continue || { echo "Removing apparently false lock $LOCK_FILE"; rm -f "$LOCK_FILE"; }
   fi
-  : ${MY_LOCK:=$LOCK_FILE}
+  MY_LOCK="$LOCK_FILE"
 done
 [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $$ >"$MY_LOCK" || exit 1
 

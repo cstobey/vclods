@@ -33,3 +33,4 @@ sql|ANY|BNArc|Run a SQL script with default connection (called SRC)
 tee|PIPE|$base_filename|Route output to file and continue
 teea|PIPE|$base_filename|Route output to file (appended) and continue
 vfs|WRAP|Not Used|pipes stdin through fifos and then runs any number of commands. Helps with large composite programs if it is easier to put them all in one file. Also useful for when using stdin to run a oneoff script
+wrap|PIPE|$base_filename|Wrap stdin with files like .add and .end, but using filenames ending in __beg and __end

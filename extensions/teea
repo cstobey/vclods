@@ -1,4 +1,4 @@
-tfn="${TEE_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}-$(date +%F)"
+tfn="${TEE_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}-${TEE_EXT_FILE_SHARD:-$(date +%F)}"
 tee -a "$tfn"
 [ -s "$tfn" ] || rm -f "$tfn"
 #PIPE Route output to file (appended) and continue

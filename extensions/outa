@@ -1,2 +1,2 @@
-cat >> "${OUT_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}-$(date +%F)"
+cat >> "${OUT_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}-${OUT_EXT_FILE_SHARD:-$(date +%F)}"
 #TERM Append to file; stop

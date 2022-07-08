@@ -13,9 +13,10 @@ NOTE: Setting the variable in the config file must be of the form `VAR_NAME=...`
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. `$INPUT_DIR` is the Local directory of the script.
 Name | Scope | Defaults
 -----|-------|---------
-ADD_EXT_DIR|Extensions: add end|$INPUT_DIR
+ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
+DEBUG_SHOULD_TIME_IT|Script|$([ -t 1 ] && echo 1 || echo 0)
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR
@@ -33,9 +34,9 @@ LOG_SQL_ENGINE|Post Process|$LOG_ENGINE
 LOG_SQL_HOST|Post Process|
 LOG_SQL_PASSWORD|Post Process|$LOG_PW
 LOG_SQL_USER|Post Process|$LOG_USER
-MY_LOCK|Script|$LOCK_FILE
 OPERATIONS_EMAIL|Global|
 OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR
+OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)
 PY_EXT_DIR|Extensions: py|$INPUT_DIR
 RM_ERR_FILE|Script|1
 SH_EXT_DIR|Extensions: sh|$INPUT_DIR
@@ -45,11 +46,13 @@ SLACK_EMOJI|Post Process|:robot_face:
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL
 SUPPORT_SUBJECT|Extensions: email|${base_filename//_/ }
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR
+TEE_EXT_FILE_SHARD|Extensions: teea|$(date +%F)
 VCLOD_BATCH_JOBS|Script|1
 VCLOD_DIR_CONTEXT|Extensions: dir|
 VCLOD_DIR_START|Extensions: dir|
 VCLOD_ENGINE|Script|mysql
 VCLOD_ERR_DIR|Script|
+VCLOD_EXIT_ERR|Script|$(basename "$1")
 VCLOD_FORCE_SETUP_SQL|Script|0
 VCLOD_JOBS|Global|10
 VCLOD_LOCK_DIR|Script|
