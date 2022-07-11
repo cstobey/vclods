@@ -1,15 +1,15 @@
-: "${CURL_EXT_OPT:=-s}" "${CURL_EXT_URL:?}" "${CURL_EXT_JQ_PAGE_PROG:=}" "${CURL_EXT_NUMB_PAGES:=1}"
+: "${CURL_EXT_OPT:=-sSf}" "${CURL_EXT_URL:?}" "${CURL_EXT_JQ_PAGE_PROG:=}" "${CURL_EXT_NUMB_PAGES:=1}"
 
 export CURL_EXT_LOOP_CNT=1
-if [ ! -z "${CURL_EXT_JQ_PAGE_PROG:=}" ] ; then
+if [ ! -z "$CURL_EXT_JQ_PAGE_PROG" ] ; then
   TEMP_FILE=$(mktemp)
   add_file_cleanup "$TEMP_FILE"
-  curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" | tee "$TEMP_FILE"
+  curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" | tee "$TEMP_FILE" || return $?
   CURL_EXT_NUMB_PAGES="$(JQ_EXT_PROG="$CURL_EXT_JQ_PAGE_PROG" vclod_operation get_curl_numb_pages.g-jq <"$TEMP_FILE")"
   export CURL_EXT_LOOP_CNT=2
 fi
 while [ "$CURL_EXT_LOOP_CNT" -le "$CURL_EXT_NUMB_PAGES" ] ; do
-  curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" # This one will allow for date math
+  curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" || return $?
   export CURL_EXT_LOOP_CNT=$((CURL_EXT_LOOP_CNT + 1))
 done
 #ANY cURL wrapper with optional batching using .jq

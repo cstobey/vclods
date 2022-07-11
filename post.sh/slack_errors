@@ -3,8 +3,9 @@
 [ -s "${LF:=}" ] || return # it must exist to run it
 [ -z "${SLACK_API_URL:=}" ] && return # must have an endpoint to send the logs to
 # TODO: should I add a retry?
-# TODO: make the emoji configurable?
-[ ! -t 1 ] && curl -sS -m 15 --data-urlencode "$(cat << EOF
-payload={"channel": "${SLACK_CHANNEL:=vclod_errors}", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "${SLACK_EMOJI:=:robot_face:}", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": "$(awk -v m="$(wc -l "$ELF")" 'BEGIN {t=m-10;e=1;l=0} l <= 2996 && (NR <= 10 || NR >= t) {l=l + length;if(l >= 2996) {e=0;print "..."} else print} NR > 10 && NR < t && e {print "---"; e=0}' "$ELF")" } }] }] }
+[ -t 1 ] && return # stop if terminal
+payload="$(cat << EOF
+payload={"channel": "${SLACK_CHANNEL:=vclod_errors}", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "${SLACK_EMOJI:=:robot_face:}", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": $(awk -v m="$(wc -l "$ELF")" 'BEGIN {t=m-10;e=1;l=0} l <= 2996 && (NR <= 10 || NR >= t) {l=l + length;if(l >= 2996) {e=0;print "..."} else print} NR > 10 && NR < t && e {print "---"; e=0}' "$ELF" | jq -Rs '.') } }] }] }
 EOF
-)" "$SLACK_API_URL"
+)"
+curl -sSf -m15 --data-urlencode "$payload" "$SLACK_API_URL" >/dev/null || echo "$payload"
