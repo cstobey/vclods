@@ -1,5 +1,13 @@
-TEMP_FILE=$(mktemp)
-add_file_cleanup "$TEMP_FILE"
-cat >"$TEMP_FILE"
-[ -s "$TEMP_FILE" ] && mail -s "${SUPPORT_SUBJECT:-${base_filename//_/ }} data" "${SUPPORT_EMAIL:-$OPERATIONS_EMAIL}" <"$TEMP_FILE"
+: "${EMAIL_EXT_FILE:=$(mktemp)}"
+add_file_cleanup "$EMAIL_EXT_FILE" # TODO: will this cause mail to sometimes fail after the fact?
+cat >"$EMAIL_EXT_FILE"
+[ -s "$EMAIL_EXT_FILE" ] || return 1 # need something to send.
+REPORT_ROWS="$(wc -l "$EMAIL_EXT_FILE")"
+: "${EMAIL_EXT_SUBJECT:=${base_filename//_/ }}" "${SUPPORT_EMAIL:=$OPERATIONS_EMAIL}" "${EMAIL_EXT_MSG_BODY:=Report attached containing $REPORT_ROWS entries}"
+
+if [ "${EMAIL_EXT_INLINE_REPORT:-0}" -eq 1 ] ; then
+  mail -s "$EMAIL_EXT_SUBJECT" "$SUPPORT_EMAIL" <"$EMAIL_EXT_FILE"
+else
+  echo "$EMAIL_EXT_MSG_BODY" | literate_source | mail -E -s "$EMAIL_EXT_SUBJECT" -a "$EMAIL_EXT_FILE" "$SUPPORT_EMAIL"
+fi
 #TERM email stdout to SUPPORT_EMAIL. Errors still go to OPERATIONS_EMAIL

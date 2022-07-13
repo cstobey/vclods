@@ -23,6 +23,10 @@ CURL_EXT_URL|Extensions: curl|
 DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR
+EMAIL_EXT_FILE|Extensions: email|$(mktemp)
+EMAIL_EXT_INLINE_REPORT|Extensions: email|0
+EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries
+EMAIL_EXT_SUBJECT|Extensions: email|${base_filename//_/ }
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR
 EXTRA_ERROR_EMAIL|Post Process|
 HEREDOC_DELIMITER|Script|MSG
@@ -49,7 +53,6 @@ SLACK_API_URL|Post Process|
 SLACK_CHANNEL|Post Process|vclod_errors
 SLACK_EMOJI|Post Process|:robot_face:
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL
-SUPPORT_SUBJECT|Extensions: email|${base_filename//_/ }
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR
 TEE_EXT_FILE_SHARD|Extensions: teea|$(date +%F)
 VCLOD_BATCH_JOBS|Script|1
