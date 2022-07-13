@@ -15,6 +15,7 @@ Name | Location | Option Default | Description
 add|PIPE|$base_filename|Prepend stdin with file
 awk|PIPE|Used, No Default|run stdout through awk file
 batch|PIPE|Used, No Default|aggregate input into batch SQL statements
+curl|ANY|Not Used|cURL wrapper with optional batching using .jq
 diff|TERM|$base_filename|diff stdout:file
 dir|WRAP|${VCLOD_DIR_START:?}|Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions of their own).
 dst|ANY|BNArc|Run a SQL script with the secondary connection (called DST)

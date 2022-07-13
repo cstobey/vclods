@@ -12,7 +12,8 @@
 [ -f "$CONFIG_FILE" ] || { echo "CONFIG_FILE must exist - default of /etc/vclods - current $CONFIG_FILE" ; exit 1; }
 set -a
 VCLOD_BASE_DIR="${VCLOD_BASE_DIR:=$(dirname "$(readlink -f "$(which "$0")")")}"
-DEBUG_SHOULD_TIME_IT=${DEBUG_SHOULD_TIME_IT:=$([ -t 1 ] && echo 1 || echo 0)}
+IS_TERMINAL=$([ -t 1 ] && echo 1 || echo 0)
+DEBUG_SHOULD_TIME_IT=${DEBUG_SHOULD_TIME_IT:=$IS_TERMINAL}
 VCLOD_FORCE_SETUP_SQL=${VCLOD_FORCE_SETUP_SQL:=0}
 . "$CONFIG_FILE"
 VCLOD_FILE_REGEX='^.*[^.]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+$'

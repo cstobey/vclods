@@ -16,11 +16,16 @@ Name | Scope | Defaults
 ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR
 CONFIG_ENV_PATH|Script|/etc
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods
-DEBUG_SHOULD_TIME_IT|Script|$([ -t 1 ] && echo 1 || echo 0)
+CURL_EXT_JQ_PAGE_PROG|Extensions: curl|
+CURL_EXT_NUMB_PAGES|Extensions: curl|1
+CURL_EXT_OPT|Extensions: curl|-sSf
+CURL_EXT_URL|Extensions: curl|
+DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR
 EXTRA_ERROR_EMAIL|Post Process|
+HEREDOC_DELIMITER|Script|MSG
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR
 JQ_EXT_OPT|Extensions: jq|
 LF_OVERRIDE|Post Process|

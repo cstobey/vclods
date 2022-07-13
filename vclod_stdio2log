@@ -22,7 +22,7 @@
 LF="${LOG_BASE_DIR%/}/$(basename "$LOG_FILE").$$.log"   # Log File
 ELF="${VCLOD_ERR_DIR%/}/$(basename "$LOG_FILE").$$.err"  # Error Log File
 PELF="${LOG_BASE_DIR%/}/logging_post_process.$$.err" # Post Processing Error Log File
-TLF=$([ -t 1 ] && printf '/dev/stdout' || printf '/dev/null')
+TLF=$([ "$IS_TERMINAL" -eq 1 ] && printf '/dev/stdout' || printf '/dev/null')
 LOG_FIFO="/dev/shm/log.$$.fifo"
 ERR_FIFO="/dev/shm/err.$$.fifo"
 mkfifo "$LOG_FIFO" "$ERR_FIFO"

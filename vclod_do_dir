@@ -21,5 +21,5 @@ else
   . "${VCLOD_BASE_DIR%/}/vclod_run_script" 
 fi
 ret=$?
-[ -s "$MAIL_ELF" ] && [ ! -t 1 ] && mail -s "Script error digest on $(hostname)" "$OPERATIONS_EMAIL" <"$MAIL_ELF"
+[ -s "$MAIL_ELF" ] && [ "$IS_TERMINAL" -eq 0 ] && mail -s "Script error digest on $(hostname)" "$OPERATIONS_EMAIL" <"$MAIL_ELF"
 exit $ret
