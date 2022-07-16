@@ -8,7 +8,7 @@ literate_source () {
   # source (.) does the above and treats everything else as code too.
   # this function allows heredoc-level substitutions for any string.
   # the name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
-  : "${HEREDOC_DELIMITER:=MSG}"
+  : "${HEREDOC_DELIMITER:=MSG}" # If multiple literate_source layers deep, use this to override the heredoc delimiter
   eval "cat << $HEREDOC_DELIMITER"$'\n'"$(<"${1:-/dev/stdin}")"$'\n'"$HEREDOC_DELIMITER"
 }
 

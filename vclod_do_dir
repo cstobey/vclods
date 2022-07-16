@@ -9,10 +9,13 @@
 [ -z "$VCLOD_BASE_DIR" ] && . "$(dirname "$(readlink -f "$(which "$0")")")/vclod_loadenv"
 
 # Argument validation
-: "${VCLOD_BASE_DIR:?} ${VCLOD_JOBS:=10} ${1:?Missing a directory or file to process} ${OPERATIONS_EMAIL:?}"
+: "${VCLOD_BASE_DIR:?}" "${1:?Missing a directory or file to process}"
+: "${VCLOD_JOBS:=10}" # How many sripts to run in parallel
+: "${OPERATIONS_EMAIL:?}" # Email address list to send error output to
 [ -d "$VCLOD_BASE_DIR" ] || { echo VCLOD_BASE_DIR must be an existing directory; exit; }
 [ -d "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be an existing directory; exit; }
-MAIL_ELF="${LOG_BASE_DIR:?}/$$.err"
+# NOTE: Below comment is for LOG_BASE_DIR auto_docs; MAIL_ELF is used to send batched errors
+MAIL_ELF="${LOG_BASE_DIR:?}/$$.err" # Where to store log files (will also store error output)
 export MAIL_ELF
 
 if [ -e "$1" ]; then

@@ -1,13 +1,16 @@
-: "${EMAIL_EXT_FILE:=$(mktemp)}"
+#TERM email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
+: "${EMAIL_EXT_FILE:=$(mktemp)}" # Absolute path of filename to put stdin into before sending it. Deleted after use.
 add_file_cleanup "$EMAIL_EXT_FILE" # TODO: will this cause mail to sometimes fail after the fact?
 cat >"$EMAIL_EXT_FILE"
 [ -s "$EMAIL_EXT_FILE" ] || return 1 # need something to send.
 REPORT_ROWS="$(wc -l "$EMAIL_EXT_FILE")"
-: "${EMAIL_EXT_SUBJECT:=${base_filename//_/ }}" "${SUPPORT_EMAIL:=$OPERATIONS_EMAIL}" "${EMAIL_EXT_MSG_BODY:=Report attached containing $REPORT_ROWS entries}"
+: "${EMAIL_EXT_SUBJECT:=${base_filename//_/ }}"
+: "${SUPPORT_EMAIL:=$OPERATIONS_EMAIL}" # Email address to send to. Errors still go to OPERATIONS_EMAIL
+: "${EMAIL_EXT_MSG_BODY:=Report attached containing $REPORT_ROWS entries}" # If sending as an attachment, This defines the body of the email pre-literate_source
+: "${EMAIL_EXT_INLINE_REPORT:=0}" # 1 inlines the extension pipe into the email body; 0 sends it as an attachment
 
-if [ "${EMAIL_EXT_INLINE_REPORT:-0}" -eq 1 ] ; then
+if [ "$EMAIL_EXT_INLINE_REPORT" -eq 1 ] ; then
   mail -s "$EMAIL_EXT_SUBJECT" "$SUPPORT_EMAIL" <"$EMAIL_EXT_FILE"
 else
   echo "$EMAIL_EXT_MSG_BODY" | literate_source | mail -E -s "$EMAIL_EXT_SUBJECT" -a "$EMAIL_EXT_FILE" "$SUPPORT_EMAIL"
 fi
-#TERM email stdout to SUPPORT_EMAIL. Errors still go to OPERATIONS_EMAIL

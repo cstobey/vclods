@@ -1,2 +1,2 @@
-awk -f"$INPUT_DIR/${ext_opt}"
-#PIPE run stdout through awk file
+#PIPE Run awk program
+awk -f"$INPUT_DIR/$ext_opt"

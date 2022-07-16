@@ -1,6 +1,6 @@
+#ANY Run a SQL script with default connection (configured with VCLOD_SRC_)
 if [ "$(echo "$SRC" | cut -d' ' -f1)" = "mysql" ] ; then
   envsubst | $SRC -"${ext_opt:-BNArc}"
 else
   envsubst | $SRC
 fi
-#ANY Run a SQL script with default connection (called SRC)

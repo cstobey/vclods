@@ -1,9 +1,8 @@
-# g for guard -- usage .g-jq.sh or a.g-sql.batch.sql
-# it is expected to only use this once per pipe chain, per ext_opt...
-# so if using vclod_operation, vary the base_filename that you give to that function.
-# (the guard will still work, the streams just wont be isolated).
+#WRAP Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
+# It is expected to only use this once per pipe chain, per ext_opt...
+# So if using vclod_operation, vary the base_filename that you give to that function.
+# (The guard will still work, the streams just won't be isolated).
 TEMP_FILE=$(mktemp)
 add_file_cleanup "$TEMP_FILE"
 NFL="$LF.g-$base_filename"
 tee "$TEMP_FILE" | VCLOD_EXIT_ERR="$base_filename.g-$ext_opt FILE: $NFL" vclod_operation "g_$base_filename.$ext_opt" || { ret="$?" ; cat <"$TEMP_FILE" >>"$NFL" ; return "$ret" ; }
-#WRAP Guard another extension (like in g-jq) so that its output is saved on error

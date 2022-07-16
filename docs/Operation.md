@@ -12,26 +12,26 @@ Many extensions have the abilty to accept one and only one option in the .extens
 ## Extensions
 Name | Location | Option Default | Description
 -----|----------|----------------|------------
-add|PIPE|$base_filename|Prepend stdin with file
-awk|PIPE|Used, No Default|run stdout through awk file
+add|PIPE|$base_filename|Prepend a file's contents to the extension pipe
+awk|PIPE|Used, No Default|Run awk program
 batch|PIPE|Used, No Default|aggregate input into batch SQL statements
 curl|ANY|Not Used|cURL wrapper with optional batching using .jq
 diff|TERM|$base_filename|diff stdout:file
-dir|WRAP|${VCLOD_DIR_START:?}|Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions of their own).
-dst|ANY|BNArc|Run a SQL script with the secondary connection (called DST)
-email|TERM|Not Used|email stdout to SUPPORT_EMAIL. Errors still go to OPERATIONS_EMAIL
-end|PIPE|$base_filename|Postpend stdin with file
-err|TERM|Not Used|Everything is an error
-etl|PIPE|Used, No Default|Preform advanced ETL operations. More below
-g|WRAP|Used, No Default|Guard another extension (like in g-jq) so that its output is saved on error
+dir|WRAP|${DIR_EXT_START:?}|Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions of their own).
+dst|ANY|BNArc|Run a SQL script with the secondary connection (configured with VCLOD_DST_)
+email|TERM|Not Used|email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
+end|PIPE|$base_filename|Postpend a file's contents to the extension pipe
+err|TERM|Not Used|Everything to this point is an error. Great for DB tests.
+etl|PIPE|Used, No Default|Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .batch.(sql|dst).
+g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
 jq|PIPE|Used, No Default|Run stdin through the jq utility to parse JSON
 out|TERM|$base_filename|Write to file; stop
 outa|TERM|$base_filename|Append to file; stop
-py|ANY|Used, No Default|Run either stdin or Option file as python3
+py|ANY|Used, No Default|Run either stdin or ext_opt file as python3
 sh|ANY|Used, No Default|Source a ksh script
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
-sql|ANY|BNArc|Run a SQL script with default connection (called SRC)
-tee|PIPE|$base_filename|Route output to file and continue
-teea|PIPE|$base_filename|Route output to file (appended) and continue
-vfs|WRAP|Not Used|pipes stdin through fifos and then runs any number of commands. Helps with large composite programs if it is easier to put them all in one file. Also useful for when using stdin to run a oneoff script
+sql|ANY|BNArc|Run a SQL script with default connection (configured with VCLOD_SRC_)
+tee|PIPE|$base_filename|Route output to file and the remaining extension pipe
+teea|PIPE|$base_filename|Route output to file (appended) and the remaining extension pipe
+vfs|WRAP|Not Used|virtual file system: use #fifo to generate virtual files and #run to use those files inside a VCLOD context. You can only use each virtual file once per run. Helps with large composite programs with many small files. Especially useful for running oneoff scripts from stdin
 wrap|PIPE|$base_filename|Wrap stdin with files like .add and .end, but using filenames ending in __beg and __end

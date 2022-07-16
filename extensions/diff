@@ -1,2 +1,2 @@
-diff -w "$INPUT_DIR/${ext_opt:-$base_filename}" -
 #TERM diff stdout:file
+diff -w "$INPUT_DIR/${ext_opt:-$base_filename}" -

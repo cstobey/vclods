@@ -16,8 +16,9 @@
 # 3) explicitly define a LOCK_NAME as a positional argument:
 # . <dir>/vclod_get_semaphore "<some lock name, possibley $0>"
 
-# Argument validation
-: ${VCLOD_LOCK_DIR:?} ${LOCK_NAME:=${1:?Missing a lock name}} ${VCLOD_BATCH_JOBS:=1}
+: "${VCLOD_LOCK_DIR:?}" # Where to put lock files. Generally /dev/shm
+: "${LOCK_NAME:=${1:?Missing a lock name}}" # Only override if you want multiple scripts to lock each other out and you know what you are doing
+: "${VCLOD_BATCH_JOBS:=1}" # How many instances of one script can be run at the same time
 [ -d "$VCLOD_LOCK_DIR" ] || { echo VCLOD_LOCK_DIR must be an existing directory; exit; }
 [ -w "$VCLOD_LOCK_DIR" ] || { echo VCLOD_LOCK_DIR must be a writable directory; exit; }
 # LOCK_NAME can be explicitly defined, or be used as the first argument of the sourcing script. It is always basenamed.

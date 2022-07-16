@@ -1,6 +1,10 @@
-if [[ -z $ext_opt ]] ; then 
-  jq ${JQ_EXT_OPT:-} "$JQ_EXT_PROG"
-else 
-  jq ${JQ_EXT_OPT:-} -f "${JQ_EXT_DIR:-$INPUT_DIR}/${ext_opt}"
-fi
 #PIPE Run stdin through the jq utility to parse JSON
+: "${JQ_EXT_OPT:=}" # jq command options, generally -cMr
+: "${JQ_EXT_PROG:=}" # if not using ext_opt, the jq program to use, simplest is '.'
+: "${JQ_EXT_DIR:=$INPUT_DIR}" # What directory to look for ext_opt jq programs in.
+
+if [[ -z "$ext_opt" ]] ; then
+  jq $JQ_EXT_OPT "$JQ_EXT_PROG"
+else 
+  jq $JQ_EXT_OPT -f "$JQ_EXT_DIR/$ext_opt"
+fi

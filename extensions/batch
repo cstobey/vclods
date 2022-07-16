@@ -1,3 +1,4 @@
+#PIPE aggregate input into batch SQL statements
 awk -v RS="${ext_opt:-}\n" -v ORS="\n" '
 function concat_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=2; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret}
@@ -26,5 +27,3 @@ BEGIN {reset();offset=0}
 /^[^#]/ && del_start != "" {print tail(); del_ids=concat_ws(del_ids, del_sep, $1)}
 
 END {if((NR - offset) > 0) print end del_start del_ids del_end;}'
-
-#PIPE aggregate input into batch SQL statements

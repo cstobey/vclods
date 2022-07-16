@@ -1,4 +1,6 @@
-tfn="${TEE_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}-${TEE_EXT_FILE_SHARD:-$(date +%F)}"
+#PIPE Route output to file (appended) and the remaining extension pipe
+: "${TEE_EXT_DIR:=$INPUT_DIR}" # Directory to put program output
+: "${TEE_EXT_FILE_SHARD:=$(date +%F)}" # A way to save and distinguish between different runs
+tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD"
 tee -a "$tfn"
 [ -s "$tfn" ] || rm -f "$tfn"
-#PIPE Route output to file (appended) and continue

@@ -13,8 +13,8 @@
 set -a
 VCLOD_BASE_DIR="${VCLOD_BASE_DIR:=$(dirname "$(readlink -f "$(which "$0")")")}"
 IS_TERMINAL=$([ -t 1 ] && echo 1 || echo 0)
-DEBUG_SHOULD_TIME_IT=${DEBUG_SHOULD_TIME_IT:=$IS_TERMINAL}
-VCLOD_FORCE_SETUP_SQL=${VCLOD_FORCE_SETUP_SQL:=0}
+DEBUG_SHOULD_TIME_IT=${DEBUG_SHOULD_TIME_IT:=$IS_TERMINAL} # 1 prints [START] and [END] log lines at the begining and end of the extension pipe; 0 does not
+VCLOD_FORCE_SETUP_SQL=${VCLOD_FORCE_SETUP_SQL:=0} # Force .sql and .dst connection to be generated even if not on in the top level extension pipe
 . "$CONFIG_FILE"
 VCLOD_FILE_REGEX='^.*[^.]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+$'
 VCLOD_DIR_REGEX='^.*/[^./]+(\.('$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|' )')(-[^.]+)?)+/[^.]+$' # this allows for sub-directories to be run with dynamic dot extentions for the .dir extension.

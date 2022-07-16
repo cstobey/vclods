@@ -17,9 +17,9 @@ NOTE: Setting the variable in the config file must be of the form \`VAR_NAME=...
 
 ## Recognized Variables
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. \`\$INPUT_DIR\` is the Local directory of the script.
-Name | Scope | Defaults
------|-------|---------
-$(grep -onE '\$\{[A-Z_]+:[?=-]' $CODE_FILES | sed 's/[${:=?-]/ /g' | grep -vw $exclusions | awk '{printf $0" "} /^vclod/ {print 1 + !($1 == "vclod" || $1 == "vclod_do_dir")} /^extension/ {print "3"} /^post/ {print "4"}' | sort -k3,4 | while read f n v s ; do sed -n "${n}p" "$f" | grep -oE '\$\{'"$v"':[?=-]([$][{][^{}]+}|[^{}]+)*}' | sed -r "s#^[\$][{]${v}:[?=-]##;s/[}]$//;s|^|${f#*/} $v $s |" ; done | uniq | awk '
+Name | Scope | Defaults | Description
+-----|-------|----------|------------
+$(grep -onE '\$\{[A-Z_]+:[?=-]' $CODE_FILES | sed 's/[${:=?-]/ /g' | grep -vw $exclusions | awk '{printf $0" "} /^vclod/ {print 1 + !($1 == "vclod" || $1 == "vclod_do_dir")} /^extension/ {print "3"} /^post/ {print "4"}' | sort -k3,4 | while read f n v s ; do echo "$(sed -n "${n}p" "$f" | grep -oE '\$\{'"$v"':[?=-]([$][{][^{}]+}|[^{}]+)*}' | sed -r "s#^[\$][{]${v}:[?=-]##;s/[}]$//;s|^|${f#*/} $v $s |")|$(sed -n "${n}p" "$f" | grep -oE '#.*$' | sed 's/^# *//')" ; done | uniq | awk '
 function concat_ws(value, sep, new) {return (value=="") ? new : value sep new} 
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret} 
 function s() {if(l==1) return "Global"; if(l==2) return "Script"; if(l==3) return "Extensions: "e; return "Post Process"}
@@ -53,7 +53,7 @@ function p() {if(cur!="") {if(l=="")err("missing location");if(d=="")err("missin
 BEGIN {cur="";l="";e="";d=""} 
 $1!=cur {p();cur=$1}
 $1==cur && $2=="eo" && e=="" {e=tail();if(e=="") e="Used, No Default"} 
-$1==cur && $2=="eo" && e!="Used, No Default" && e!=tail() {err("inconsistent ext_opt default")}
+$1==cur && $2=="eo" && e!="Used, No Default" && e!=tail() && tail()!="" {err("inconsistent ext_opt default")}
 $1==cur && $2~/^(ANY|TERM|PIPE|WRAP)$/ {if(l!="" && l!=$2) err("inconsistent location");l=$2;d=concat_ws(d," ",tail())}
 END {p()}')
 EOF

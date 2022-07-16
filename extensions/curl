@@ -1,4 +1,8 @@
-: "${CURL_EXT_OPT:=-sSf}" "${CURL_EXT_URL:?}" "${CURL_EXT_JQ_PAGE_PROG:=}" "${CURL_EXT_NUMB_PAGES:=1}"
+#ANY cURL wrapper with optional batching using .jq
+: "${CURL_EXT_OPT:=-sSf}" # cURL options as seen in the man page.
+: "${CURL_EXT_URL:?}" # The URL to call, uses literate_source to qualify variables. $CURL_EXT_LOOP_CNT is the default variable used for batching
+: "${CURL_EXT_JQ_PAGE_PROG:=}" # The jq program to use for batching
+: "${CURL_EXT_NUMB_PAGES:=1}" # Used to force how many batchs to use when not using jq (like for date based batches)
 
 export CURL_EXT_LOOP_CNT=1
 if [ ! -z "$CURL_EXT_JQ_PAGE_PROG" ] ; then
@@ -12,4 +16,3 @@ while [ "$CURL_EXT_LOOP_CNT" -le "$CURL_EXT_NUMB_PAGES" ] ; do
   curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" || return $?
   export CURL_EXT_LOOP_CNT=$((CURL_EXT_LOOP_CNT + 1))
 done
-#ANY cURL wrapper with optional batching using .jq
