@@ -12,5 +12,5 @@ REPORT_ROWS="$(wc -l "$EMAIL_EXT_FILE")"
 if [ "$EMAIL_EXT_INLINE_REPORT" -eq 1 ] ; then
   mail -s "$EMAIL_EXT_SUBJECT" "$SUPPORT_EMAIL" <"$EMAIL_EXT_FILE"
 else
-  echo "$EMAIL_EXT_MSG_BODY" | literate_source | mail -E -s "$EMAIL_EXT_SUBJECT" -a "$EMAIL_EXT_FILE" "$SUPPORT_EMAIL"
+  literate_source "$EMAIL_EXT_MSG_BODY" | mail -E -s "$EMAIL_EXT_SUBJECT" -a "$EMAIL_EXT_FILE" "$SUPPORT_EMAIL"
 fi

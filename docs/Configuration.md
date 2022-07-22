@@ -36,6 +36,7 @@ JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq progr
 JQ_EXT_OPT|Extensions: jq||jq command options, generally -cMr
 JQ_EXT_PROG|Extensions: jq||if not using ext_opt, the jq program to use, simplest is '.'
 LF_OVERRIDE|Post Process||Only use these if you know what you are doing
+LITSH_EXT_BATCH_SIZE|Extensions: litsh|100|Number of rows to process at a time... NOTE: each line should be standalone.
 LOCK_NAME|Script|${1:?Missing a lock name}|Only override if you want multiple scripts to lock each other out and you know what you are doing
 LOG_BASE_DIR|Global||Where to store log files (will also store error output)
 LOG_FILE|Script|${1:?Missing a log file name}|If you really want to give the logs a special name, you can use this, but it is not recommended

@@ -9,18 +9,19 @@ literate_source () {
   # this function allows heredoc-level substitutions for any string.
   # the name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
   : "${HEREDOC_DELIMITER:=MSG}" # If multiple literate_source layers deep, use this to override the heredoc delimiter
-  eval "cat << $HEREDOC_DELIMITER"$'\n'"$(<"${1:-/dev/stdin}")"$'\n'"$HEREDOC_DELIMITER"
+  eval "cat << $HEREDOC_DELIMITER"$'\n'"${@:-$(</dev/stdin)}"$'\n'"$HEREDOC_DELIMITER"
 }
 
+# TODO: to make error messages useful, need to make a function to find evn variables that are missing so as to not use the :? shortcut
 vclod_connection() {
-  CONN_PREFIX=${1:-VCLOD_OVERRIDE_}
-  echo "ENGINE=\${${CONN_PREFIX}ENGINE:=${VCLOD_ENGINE:=mysql}}" | . /dev/stdin
+  CONN_PREFIX=${1:=VCLOD_OVERRIDE_}
+  ENGINE="$(printf 'echo ${%sENGINE:-${VCLOD_ENGINE:-mysql}}' "${CONN_PREFIX}" | . /dev/stdin | tr '[:upper:]' '[:lower:]')"
+  ENGINE_U="$(echo "$ENGINE" | tr '[:lower:]' '[:upper:]')"
   [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
 
-  for v in HOST DB USER PASSWORD; do cat << EOF | . /dev/stdin ; done
-$v=\${${CONN_PREFIX}${v}:-\${VCLOD_$(echo "$ENGINE" | tr '[:lower:]' '[:upper:]')_$v:-\${VCLOD_$v:?}}}
-EOF
-  HOST=$HOST DB=$DB USER=$USER PWORD=$PASSWORD envsubst <"${VCLOD_BASE_DIR%/}/connections/$ENGINE" # return the connection string
+  printf '%s envsubst <"%s/connections/%s"' "$(for v in HOST DB USER PASSWORD; do 
+   printf $'%s=\'${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}}\' ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
+  done)" "${VCLOD_BASE_DIR%/}" "$ENGINE" | . /dev/stdin # return the connection string
 }
 
 vclod_op(){

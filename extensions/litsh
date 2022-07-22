@@ -1,0 +1,3 @@
+#PIPE literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose.
+: "${LITSH_EXT_BATCH_SIZE:=100}" # Number of rows to process at a time... NOTE: each line should be standalone.
+awk -v r="$LITSH_EXT_BATCH_SIZE" -v t="${ext_opt:=${HEREDOC_DELIMITER:=MSG}}" 'BEGIN {s="cat<<"t;print s} END {print t} NR > 1 && NR % r == 1 {print t"\n"s} 1' | . /dev/stdin

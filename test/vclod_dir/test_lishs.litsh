@@ -1,0 +1,1 @@
+LOG_BASE_DIR $LOG_BASE_DIR ${LOG_BASE_DIR/./} $(env | grep ^LOG_BASE_DIR)

@@ -1,1 +1,1 @@
-eval sqlcmd -y 0 -S$HOST -d$DB -U$USER -P$PWORD | grep -E -v '[(][0-9]+ rows affected[])]' | grep -v 'Sqlcmd: Warning: The last operation was terminated because the user pressed CTRL+C.' | sed -r 's/\x00+$//'
+eval sqlcmd -y 0 -S$HOST -d$DB -U$USER -P$PASSWORD | grep -E -v '[(][0-9]+ rows affected[])]' | grep -v 'Sqlcmd: Warning: The last operation was terminated because the user pressed CTRL+C.' | sed -r 's/\x00+$//'

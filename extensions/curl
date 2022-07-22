@@ -8,11 +8,12 @@ export CURL_EXT_LOOP_CNT=1
 if [ ! -z "$CURL_EXT_JQ_PAGE_PROG" ] ; then
   TEMP_FILE=$(mktemp)
   add_file_cleanup "$TEMP_FILE"
-  curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" | tee "$TEMP_FILE" || return $?
-  CURL_EXT_NUMB_PAGES="$(JQ_EXT_PROG="$CURL_EXT_JQ_PAGE_PROG" vclod_operation get_curl_numb_pages.g-jq <"$TEMP_FILE")"
+  curl $CURL_EXT_OPT "$(literate_source "$CURL_EXT_URL")" >"$TEMP_FILE" || return $?
+  CURL_EXT_NUMB_PAGES="$(JQ_EXT_PROG="$CURL_EXT_JQ_PAGE_PROG" vclod_operation get_curl_numb_pages.g-jq <"$TEMP_FILE" || exit $?)"
+  cat "$TEMP_FILE"
   export CURL_EXT_LOOP_CNT=2
 fi
 while [ "$CURL_EXT_LOOP_CNT" -le "$CURL_EXT_NUMB_PAGES" ] ; do
-  curl $CURL_EXT_OPT "$(echo "$CURL_EXT_URL" | literate_source)" || return $?
+  curl $CURL_EXT_OPT "$(literate_source "$CURL_EXT_URL")" || return $?
   export CURL_EXT_LOOP_CNT=$((CURL_EXT_LOOP_CNT + 1))
 done
