@@ -17,6 +17,7 @@
 # NOTE: Below comment is for LOG_BASE_DIR auto_docs; MAIL_ELF is used to send batched errors
 MAIL_ELF="${LOG_BASE_DIR:?}/$$.err" # Where to store log files (will also store error output)
 export MAIL_ELF
+[ -s "$MAIL_ELF" ] && : >"$MAIL_ELF" # force it to start empty
 
 if [ -e "$1" ]; then
   find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort | xargs -n1 -r -P"$VCLOD_JOBS" "${VCLOD_BASE_DIR%/}/vclod_run_script"

@@ -31,6 +31,9 @@ mkfifo "$LOG_FIFO" "$ERR_FIFO"
 export LF ELF LOG_FILE
 let FIRST_ERROR=1
 
+# make sure old runs dont get misattributed to now.
+[ -s "$LF" ] && : >"$LF"
+[ -s "$ELF" ] && : >"$ELF"
 ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
 
 # The conditionals in there allows for application specific tagging of normal output
