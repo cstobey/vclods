@@ -16,7 +16,7 @@ add|PIPE|$base_filename|Prepend a file's contents to the extension pipe
 awk|PIPE|Used, No Default|Run awk program
 batch|PIPE|Used, No Default|aggregate input into batch SQL statements
 curl|ANY|Not Used|cURL wrapper with optional batching using .jq
-diff|TERM|$base_filename|diff stdout:file
+diff|TERM|Not Used|diff extension pipe with a "static" file (or generate output based on provided operation)
 dir|WRAP|${DIR_EXT_START:?}|Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions of their own).
 dst|ANY|Not Used|Run a SQL script with the secondary connection (configured with VCLOD_DST_)
 email|TERM|Not Used|email extension pipe to SUPPORT_EMAIL either as an attachment or inline.

@@ -21,6 +21,10 @@ CURL_EXT_NUMB_PAGES|Extensions: curl|1|Used to force how many batchs to use when
 CURL_EXT_OPT|Extensions: curl|-sSf|cURL options as seen in the man page.
 CURL_EXT_URL|Extensions: curl||The URL to call, uses literate_source to qualify variables. $CURL_EXT_LOOP_CNT is the default variable used for batching
 DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL|1 prints [START] and [END] log lines at the begining and end of the extension pipe; 0 does not
+DIFF_EXT_CMD|Extensions: diff|diff -w|what diff program to use (maybe try comm -13)
+DIFF_EXT_DIR|Extensions: diff|$INPUT_DIR|What directory to look for "static"
+DIFF_EXT_FILE|Extensions: diff|${ext_opt:-$(basename $S)}|What to use as the "static" file. defaults to self.
+DIFF_EXT_OPERATION|Extensions: diff||vclod_operation to optionally process "static" file
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1|1 means halt on error, 0 means continue even if there are errors
 DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts

@@ -1,2 +1,12 @@
-#TERM diff stdout:file
-diff -w "$INPUT_DIR/${ext_opt:-$base_filename}" -
+#TERM diff extension pipe with a "static" file (or generate output based on provided operation)
+: "${DIFF_EXT_OPERATION:-}" # vclod_operation to optionally process "static" file
+: "${DIFF_EXT_CMD:=diff -w}" # what diff program to use (maybe try comm -13)
+: "${DIFF_EXT_DIR:=$INPUT_DIR}" # What directory to look for "static"
+: "${DIFF_EXT_FILE:=${ext_opt:-$(basename $S)}}" # What to use as the "static" file. defaults to self.
+the_file="$DIFF_EXT_DIR/$DIFF_EXT_FILE"
+
+if [ -z "$DIFF_EXT_OPERATION" ] ; then
+  diff -w "$the_file" -
+else 
+  diff -w <(cat "$the_file" | vclod_operation "$DIFF_EXT_OPERATION") -
+fi

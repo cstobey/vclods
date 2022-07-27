@@ -1,0 +1,3 @@
+[LOG] 1a2
+[LOG] > diff should not be the same
+[ERROR] test_diff.diff-test_diff.sh returned 1
