@@ -1,7 +1,7 @@
-#ANY Run either stdin or ext_opt file as python3
+#ANY Run either stdin or ext_opt file (with any optional ending) as python3
 : "${PY_EXT_DIR:=$INPUT_DIR}" # directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
 if [[ -z $ext_opt ]] ; then 
   cat | python3 
 else
-  cat | python3 "$(ls -1 $PY_EXT_DIR/${ext_opt}* | sort | head -1)" # * allows for optional .py ending
+  cat | python3 "$(find $PY_EXT_DIR/${ext_opt}* ! -empty | sort | head -1)" # * allows filename with optional .py (or other) ending
 fi

@@ -28,7 +28,7 @@ jq|PIPE|Used, No Default|Run stdin through the jq utility to parse JSON
 litsh|PIPE|${HEREDOC_DELIMITER:=MSG}|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose.
 out|TERM|$base_filename|Write to file; stop
 outa|TERM|$base_filename|Append to file; stop
-py|ANY|Used, No Default|Run either stdin or ext_opt file as python3
+py|ANY|Used, No Default|Run either stdin or ext_opt file (with any optional ending) as python3
 sh|ANY|Used, No Default|Source a ksh script
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
 sql|ANY|Not Used|Run a SQL script with default connection (configured with VCLOD_SRC_)

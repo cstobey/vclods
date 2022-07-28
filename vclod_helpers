@@ -12,7 +12,7 @@ literate_source () {
   eval "cat << $HEREDOC_DELIMITER"$'\n'"${@:-$(</dev/stdin)}"$'\n'"$HEREDOC_DELIMITER"
 }
 
-# TODO: to make error messages useful, need to make a function to find evn variables that are missing so as to not use the :? shortcut
+### TODO: ${:?} error messages expose too much of VCLODS internals and obfuscate the actual error. come up with a way to make them more readable.
 vclod_connection() {
   CONN_PREFIX=${1:=VCLOD_OVERRIDE_}
   ENGINE="$(printf 'echo ${%sENGINE:-${VCLOD_ENGINE:-mysql}}' "${CONN_PREFIX}" | . /dev/stdin | tr '[:upper:]' '[:lower:]')"
@@ -20,8 +20,10 @@ vclod_connection() {
   [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
 
   printf '%s envsubst <"%s/connections/%s"' "$(for v in HOST DB USER PASSWORD; do 
-   printf $'%s=\'${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}}\' ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
-  done)" "${VCLOD_BASE_DIR%/}" "$ENGINE" | . /dev/stdin # return the connection string
+    ## TODO: for some reason, high volumes of delayed resolving end up with random errors claiming unmatched {. Need to resolve this to allow on demand connection resolution... could be a fault with literate_source?
+    #printf $'%s=\'${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}}\' ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
+    printf '%s=${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}} ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
+  done)" "${VCLOD_BASE_DIR%/}" "$ENGINE" | . /dev/stdin # return connection string
 }
 
 vclod_op(){

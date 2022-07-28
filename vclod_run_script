@@ -16,6 +16,7 @@ set +a
 . "${VCLOD_BASE_DIR%/}/vclod_get_semaphore"
 . "${VCLOD_BASE_DIR%/}/vclod_stdio2log"
 
+# TODO: get rid of VCLOD_FORCE_SETUP_SQL. requires better ${:?} messaging and fixing the high volume issue. 
 conn () { [[ $S =~ .*\.$1(\..*)? || $VCLOD_FORCE_SETUP_SQL != 0 ]] && vclod_connection $2 || echo 'eval echo >&2 VCLOD_FORCE_SETUP_SQL required to use connections not indicated in the extension path; exit 1;'; }
 SRC="$(conn sql VCLOD_SRC_)"
 DST="$(conn dst VCLOD_DST_)"

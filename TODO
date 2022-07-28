@@ -1,0 +1,30 @@
+
+extensions/email Line 3:add_file_cleanup "$EMAIL_EXT_FILE" 
+will this cause mail to sometimes fail after the fact?
+
+extensions/etl Line 7:tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') 
+ensure there is only one
+
+post.sh/slack_errors Line 7:
+should I add a retry?
+
+pp_etl_log2sql_compute_variables Line 1:
+should I validate that tag is surrounded by `[]`s?
+
+run_tests.sh Line 59:
+comm doesnt error, so need to get creative with error text.. might use awk
+
+run_tests.sh Line 72:diff <(find $VCLOD_ERR_DIR $LOCAL_DIR -type p) <(printf "") || { ret="$((ret + $?))" ; echo "FAILED to clean up fifo files: find $VCLOD_ERR_DIR $LOCAL_DIR -type p -delete>&2" >&2; } 
+should I just delete them?
+
+vclod_helpers Line 3:add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } 
+handle spaces?
+
+vclod_run_script Line 19:
+get rid of VCLOD_FORCE_SETUP_SQL. requires better ${:?} messaging and fixing the high volume issue. 
+
+vclod_helpers Line 23:    #
+for some reason, high volumes of delayed resolving end up with random errors claiming unmatched {. Need to resolve this to allow on demand connection resolution... could be a fault with literate_source?
+
+vclod_helpers Line 15:##
+${:?} error messages expose too much of VCLODS internals and obfuscate the actual error. come up with a way to make them more readable.
