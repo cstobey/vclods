@@ -9,7 +9,7 @@ literate_source () {
   # this function allows heredoc-level substitutions for any string.
   # the name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
   : "${HEREDOC_DELIMITER:=MSG}" # If multiple literate_source layers deep, use this to override the heredoc delimiter
-  eval "cat << $HEREDOC_DELIMITER"$'\n'"${@:-$(</dev/stdin)}"$'\n'"$HEREDOC_DELIMITER"
+  echo "cat << $HEREDOC_DELIMITER"$'\n'"${@:-$(</dev/stdin)}"$'\n'"$HEREDOC_DELIMITER" | . /dev/stdin
 }
 
 ### TODO: ${:?} error messages expose too much of VCLODS internals and obfuscate the actual error. come up with a way to make them more readable.
