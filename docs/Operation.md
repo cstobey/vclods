@@ -25,7 +25,7 @@ err|TERM|Not Used|Everything to this point is an error. Great for DB tests.
 etl|PIPE|Used, No Default|Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .batch.(sql|dst).
 g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
 jq|PIPE|Used, No Default|Run stdin through the jq utility to parse JSON
-litsh|PIPE|${HEREDOC_DELIMITER:=MSG}|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose.
+litsh|PIPE|$HEREDOC_DELIMITER|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose. Use with caution!
 out|TERM|$base_filename|Write to file; stop
 outa|TERM|$base_filename|Append to file; stop
 py|ANY|Used, No Default|Run either stdin or ext_opt file (with any optional ending) as python3

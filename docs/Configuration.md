@@ -35,7 +35,7 @@ EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS ent
 EMAIL_EXT_SUBJECT|Extensions: email|${base_filename//_/ }|
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR|Directory to look for etl temp table definition files
 EXTRA_ERROR_EMAIL|Post Process||must have an email to send to
-HEREDOC_DELIMITER|Script|MSG|If multiple literate_source layers deep, use this to override the heredoc delimiter
+HEREDOC_DELIMITER|Extensions: litsh|MSG|If multiple literate_source layers deep, use this to override the heredoc delimiter
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq programs in.
 JQ_EXT_OPT|Extensions: jq||jq command options, generally -cMr
 JQ_EXT_PROG|Extensions: jq||if not using ext_opt, the jq program to use, simplest is '.'

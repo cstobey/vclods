@@ -4,12 +4,11 @@ add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;
 
 literate_source () {
   # envsubst only does variable substitution
-  # heredocs do variable substitution, variable expansion, and process substitution
+  # heredocs and quotes do variable substitution/expansion and process substitution
   # source (.) does the above and treats everything else as code too.
   # this function allows heredoc-level substitutions for any string.
   # the name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
-  : "${HEREDOC_DELIMITER:=MSG}" # If multiple literate_source layers deep, use this to override the heredoc delimiter
-  echo "cat << $HEREDOC_DELIMITER"$'\n'"${@:-$(</dev/stdin)}"$'\n'"$HEREDOC_DELIMITER" | . /dev/stdin
+  printf 'echo "%s"' "${@:-$(</dev/stdin)}" | . /dev/stdin
 }
 
 ### TODO: ${:?} error messages expose too much of VCLODS internals and obfuscate the actual error. come up with a way to make them more readable.
@@ -20,9 +19,7 @@ vclod_connection() {
   [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
 
   printf '%s envsubst <"%s/connections/%s"' "$(for v in HOST DB USER PASSWORD; do 
-    ## TODO: for some reason, high volumes of delayed resolving end up with random errors claiming unmatched {. Need to resolve this to allow on demand connection resolution... could be a fault with literate_source?
-    #printf $'%s=\'${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}}\' ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
-    printf '%s=${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}} ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
+    printf $'%s=\'${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}}\' ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
   done)" "${VCLOD_BASE_DIR%/}" "$ENGINE" | . /dev/stdin # return connection string
 }
 

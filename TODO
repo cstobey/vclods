@@ -23,8 +23,5 @@ handle spaces?
 vclod_run_script Line 19:
 get rid of VCLOD_FORCE_SETUP_SQL. requires better ${:?} messaging and fixing the high volume issue. 
 
-vclod_helpers Line 23:    #
-for some reason, high volumes of delayed resolving end up with random errors claiming unmatched {. Need to resolve this to allow on demand connection resolution... could be a fault with literate_source?
-
-vclod_helpers Line 15:##
+vclod_helpers Line 14:##
 ${:?} error messages expose too much of VCLODS internals and obfuscate the actual error. come up with a way to make them more readable.
