@@ -1,0 +1,16 @@
+#TERM push stdin to slack channel. Will propogate all data on.
+: "${SLACK_EXT_CHANNEL:=vclod_logs}" # Thus this only works if the bot is configured for multichannel use
+: "${SLACK_EXT_EMOJI:=:robot_face:}" # Give it some style ;)
+: "${SLACK_API_URL:?}" # must have an endpoint to send the logs to -- same one that errors use
+
+TEMP_FILE=$(mktemp)
+add_file_cleanup "$TEMP_FILE"
+cat >"$TEMP_FILE"
+
+# TODO: if the data is too big, need to either shorten it, or batch it.
+payload="$(cat << EOF
+payload={"channel": "$SLACK_EXT_CHANNEL", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "$SLACK_EXT_EMOJI", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": "$(cat "$TEMP_FILE")" } }] }] }
+EOF
+)"
+[ -z "$query_data" ] || (curl -sSf -m15 --data-urlencode "$payload" "$SLACK_API_URL" >/dev/null || echo "[ERROR] slack: $payload")
+cat "$TEMP_FILE"  # make it go to the logs as well?

@@ -5,6 +5,12 @@ will this cause mail to sometimes fail after the fact?
 extensions/etl Line 7:tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') 
 ensure there is only one
 
+extensions/slack Line 10:
+if the data is too big, need to either shorten it, or batch it.
+
+generate_docs Line 6:
+post.sh/slack_errors is showing up as an extension for $SLACK_API_URL because it is used in extensions/slack... need to fix that.
+
 post.sh/slack_errors Line 7:
 should I add a retry?
 

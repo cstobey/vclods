@@ -57,9 +57,11 @@ OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguis
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
 RM_ERR_FILE|Script|1|1 will detele error files after they post processing; 0 will leave them around. The default is recommended since Error files are redundant
 SH_EXT_DIR|Extensions: sh|$INPUT_DIR|
-SLACK_API_URL|Post Process||must have an endpoint to send the logs to
+SLACK_API_URL|Extensions: slack slack_errors||must have an endpoint to send the logs to -- same one that errors use
 SLACK_CHANNEL|Post Process|vclod_errors|Thus this only works if the bot is configured for multichannel use
 SLACK_EMOJI|Post Process|:robot_face:|Give it some style ;)
+SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot is configured for multichannel use
+SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Errors still go to OPERATIONS_EMAIL
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
 TEE_EXT_FILE_SHARD|Extensions: tee teea|$(date +%F)|A way to save and distinguish between different runs

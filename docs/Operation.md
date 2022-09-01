@@ -21,16 +21,18 @@ dir|WRAP|${DIR_EXT_START:?}|Run a subdirectory where the last directory name hol
 dst|ANY|Not Used|Run a SQL script with the secondary connection (configured with VCLOD_DST_)
 email|TERM|Not Used|email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
 end|PIPE|$base_filename|Postpend a file's contents to the extension pipe
-err|TERM|Not Used|Everything to this point is an error. Great for DB tests.
+err|TERM|Not Used|Everything to this point is an error. Great for Data tests.
 etl|PIPE|Used, No Default|Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .batch.(sql|dst).
 g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
 jq|PIPE|Used, No Default|Run stdin through the jq utility to parse JSON
 litsh|PIPE|$HEREDOC_DELIMITER|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose. Use with caution!
+null|TERM|Not Used|dump stdout to /dev/null, effectively silencing output.
 out|TERM|$base_filename|Write to file; stop
 outa|TERM|$base_filename|Append to file; stop
 py|ANY|Used, No Default|Run either stdin or ext_opt file (with any optional ending) as python3
 sh|ANY|Used, No Default|Source a ksh script
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
+slack|TERM|Not Used|push stdin to slack channel. Will propogate all data on.
 sql|ANY|Not Used|Run a SQL script with default connection (configured with VCLOD_SRC_)
 tee|PIPE|$base_filename|Route output to file and the remaining extension pipe
 teea|PIPE|$base_filename|Route output to file (appended) and the remaining extension pipe

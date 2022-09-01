@@ -1,2 +1,2 @@
-#TERM Everything to this point is an error. Great for DB tests.
-eval cat >&2
+#TERM Everything to this point is an error. Great for Data tests.
+cat >&2

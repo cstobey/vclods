@@ -1,0 +1,2 @@
+#TERM dump stdout to /dev/null, effectively silencing output.
+cat >/dev/null

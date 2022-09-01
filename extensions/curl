@@ -4,16 +4,22 @@
 : "${CURL_EXT_JQ_PAGE_PROG:=}" # The jq program to use for batching
 : "${CURL_EXT_NUMB_PAGES:=1}" # Used to force how many batchs to use when not using jq (like for date based batches)
 
+IN_TEMP_FILE=$(mktemp)
+add_file_cleanup "$IN_TEMP_FILE"
+cat >"$IN_TEMP_FILE"
+
 export CURL_EXT_LOOP_CNT=1
 if [ ! -z "$CURL_EXT_JQ_PAGE_PROG" ] ; then
   TEMP_FILE=$(mktemp)
   add_file_cleanup "$TEMP_FILE"
-  curl $CURL_EXT_OPT "$(literate_source "$CURL_EXT_URL")" >"$TEMP_FILE" || return $?
+  CMD="curl $CURL_EXT_OPT $CURL_EXT_URL"
+  $CMD <"$IN_TEMP_FILE" >"$TEMP_FILE" || return $?
   CURL_EXT_NUMB_PAGES="$(JQ_EXT_PROG="$CURL_EXT_JQ_PAGE_PROG" vclod_operation get_curl_numb_pages.g-jq <"$TEMP_FILE" || exit $?)"
   cat "$TEMP_FILE"
   export CURL_EXT_LOOP_CNT=2
 fi
 while [ "$CURL_EXT_LOOP_CNT" -le "$CURL_EXT_NUMB_PAGES" ] ; do
-  curl $CURL_EXT_OPT "$(literate_source "$CURL_EXT_URL")" || return $?
+  CMD="curl $CURL_EXT_OPT $CURL_EXT_URL"
+  $CMD <"$IN_TEMP_FILE" >"$TEMP_FILE" || return $?
   export CURL_EXT_LOOP_CNT=$((CURL_EXT_LOOP_CNT + 1))
 done
