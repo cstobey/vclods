@@ -6,7 +6,7 @@ extensions/etl Line 7:tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE'
 ensure there is only one
 
 extensions/slack Line 10:
-if the data is too big, need to either shorten it, or batch it.
+if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 
 generate_docs Line 6:
 post.sh/slack_errors is showing up as an extension for $SLACK_API_URL because it is used in extensions/slack... need to fix that.
