@@ -1,5 +1,5 @@
 #ANY Run a SQL script with the secondary connection (configured with VCLOD_DST_)
-: "${ext_opt:-BNArc if using mysql}"
+: "${ext_opt:-BNAwrc if using mysql}" # TODO: this and the .sql ext should dynamically be in sync with the connection... but that might be hard?
 CMD="$(literate_source "$DST")"
 [ "$?" -eq 0 ] || exit 1
 [ ! -z "$CMD" ] || exit 1

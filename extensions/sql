@@ -1,5 +1,5 @@
 #ANY Run a SQL script with default connection (configured with VCLOD_SRC_)
-: "${ext_opt:-BNArc if using mysql}"
+: "${ext_opt:-BNAwrc if using mysql}" # TODO: this isnt showing up in the docs
 CMD="$(literate_source "$SRC")"
 [ "$?" -eq 0 ] || exit 1
 [ ! -z "$CMD" ] || exit 1

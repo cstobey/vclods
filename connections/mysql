@@ -1,1 +1,1 @@
-mysql -h$HOST -u$USER -p$PASSWORD $DB -${ext_opt:-BNArc}
+mysql -h$HOST -u$USER -p$PASSWORD $DB -${ext_opt:-BNAwrc}
