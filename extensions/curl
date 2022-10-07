@@ -20,6 +20,6 @@ if [ ! -z "$CURL_EXT_JQ_PAGE_PROG" ] ; then
 fi
 while [ "$CURL_EXT_LOOP_CNT" -le "$CURL_EXT_NUMB_PAGES" ] ; do
   CMD="curl $CURL_EXT_OPT $CURL_EXT_URL"
-  $CMD <"$IN_TEMP_FILE" >"$TEMP_FILE" || return $?
+  $CMD <"$IN_TEMP_FILE" || return $?
   export CURL_EXT_LOOP_CNT=$((CURL_EXT_LOOP_CNT + 1))
 done
