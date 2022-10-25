@@ -1,3 +1,3 @@
-[ -s "${LOG_POST_PROCESS:=}" ] || return # it must exist to run it
-[[ $LOG_POST_PROCESS =~ ^$VCLOD_BASE_DIR ]] && return # do not run vclod system files
+[ -s "${LOG_POST_PROCESS:=}" ] || return 0 # it must exist to run it
+[[ $LOG_POST_PROCESS =~ ^$VCLOD_BASE_DIR ]] && return 0 # do not run vclod system files
 . "$LOG_POST_PROCESS"

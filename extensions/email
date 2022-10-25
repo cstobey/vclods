@@ -1,6 +1,6 @@
 #TERM email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
 : "${EMAIL_EXT_FILE:=$(mktemp)}" # Absolute path of filename to put stdin into before sending it. Deleted after use.
-add_file_cleanup "$EMAIL_EXT_FILE" # TODO: will this cause mail to sometimes fail after the fact?
+add_file_cleanup "$EMAIL_EXT_FILE"
 cat >"$EMAIL_EXT_FILE"
 [ -s "$EMAIL_EXT_FILE" ] || return 1 # need something to send.
 REPORT_ROWS="$(wc -l "$EMAIL_EXT_FILE")"

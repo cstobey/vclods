@@ -1,11 +1,11 @@
 : "${ELF:?Needs to be called after vclod_stdio}" "${LF:?Needs to be called after vclod_stdio}" "${S:?Must be run as part of VCLODs}"
 : "${SLACK_CHANNEL:=vclod_errors}" # Thus this only works if the bot is configured for multichannel use
 : "${SLACK_EMOJI:=:robot_face:}" # Give it some style ;)
-[ -s "${ELF:=}" ] || return # it must exist to run it
-[ -s "${LF:=}" ] || return # it must exist to run it
-[ -z "${SLACK_API_URL:=}" ] && return # must have an endpoint to send the logs to
+[ -s "${ELF:=}" ] || return 0 # it must exist to run it
+[ -s "${LF:=}" ] || return 0 # it must exist to run it
+[ -z "${SLACK_API_URL:=}" ] && return 0 # must have an endpoint to send the logs to
 # TODO: should I add a retry?
-[ "$IS_TERMINAL" -eq 1 ] && return # stop if terminal
+[ "$IS_TERMINAL" -eq 1 ] && return 0 # stop if terminal
 payload="$(cat << EOF
 payload={"channel": "$SLACK_CHANNEL", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "$SLACK_EMOJI", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": $(awk -v m="$(wc -l "$ELF")" 'BEGIN {t=m-10;e=1;l=0} l <= 2996 && (NR <= 10 || NR >= t) {l=l + length;if(l >= 2996) {e=0;print "..."} else print} NR > 10 && NR < t && e {print "---"; e=0}' "$ELF" | jq -Rs '.') } }] }] }
 EOF

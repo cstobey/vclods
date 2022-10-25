@@ -25,7 +25,7 @@ vclod_connection() {
 
 vclod_op(){
   next="${1%.*}"
-  [[ "$1" == "$next" ]] && cat && return # The cat connects stdin to stdout, note that the error case below does not. This should never happen.
+  [[ "$1" == "$next" ]] && cat && return 0 # The cat connects stdin to stdout, note that the error case below does not. This should never happen.
   extension="${1##*.}"
   ext="${extension%%-*}"
   ext_opt="$([ "$extension" = "$ext" ] || echo "${extension#*-}")"
@@ -46,4 +46,4 @@ function vclod_operation {
   return $ret
 }
 
-export add_file_cleanup literate_source vclod_connection vclod_operation
+export add_file_cleanup literate_source vclod_connection vclod_operation vclod_op
