@@ -29,6 +29,7 @@ DIR_ERR_SHOULD_EXIT|Extensions: dir|1|1 means halt on error, 0 means continue ev
 DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
 DIR_EXT_START|Extensions: dir||Begining regex to find subscripts. Overridden by ext_opt
+DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
 EMAIL_EXT_FILE|Extensions: email|$(mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
 EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body; 0 sends it as an attachment
 EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, This defines the body of the email pre-literate_source
@@ -62,6 +63,7 @@ SLACK_CHANNEL|Post Process|vclod_errors|Thus this only works if the bot is confi
 SLACK_EMOJI|Post Process|:robot_face:|Give it some style ;)
 SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot is configured for multichannel use
 SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
+SRC|Extensions: sql|VCLOD_SRC_|Overrides the connection naming prefix.
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Errors still go to OPERATIONS_EMAIL
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
 TEE_EXT_FILE_SHARD|Extensions: tee teea|$(date +%F)|A way to save and distinguish between different runs

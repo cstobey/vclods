@@ -42,7 +42,7 @@ diff -wr expected_files tmp_files || { ret="$((ret + $?))" ; echo "FAILED to ren
 
 # ensure that the post process log2sql process works in all ways.
 cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_pp_logger.sh || { ret="$((ret + $?))" ; echo "FAILED to export log2sql" >&2 ; }
-export SRC="$(vclod_connection LOG_SQL_)"
+export SRC=LOG_SQL_
 diff -w <(cat << 'STMT' | vclod_operation get_sql.sql | sed 's/\t/ /g' | sort
 SELECT
   SUBSTRING_INDEX(log_file, '/', -1) AS base_file, 

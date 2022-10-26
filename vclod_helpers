@@ -11,17 +11,25 @@ literate_source () {
   printf 'echo "%s"' "${@:-$(</dev/stdin)}" | . /dev/stdin
 }
 
-### TODO: ${:?} error messages expose too much of VCLODS internals and obfuscate the actual error. come up with a way to make them more readable.
 vclod_connection() {
+  echo >&2 '[WARNING] vclod_connection is deprecated'
+  echo $1
+}
+vclod_conn() {
   CONN_PREFIX=${1:=VCLOD_OVERRIDE_}
   ENGINE="$(printf 'echo ${%sENGINE:-${VCLOD_ENGINE:-mysql}}' "${CONN_PREFIX}" | . /dev/stdin | tr '[:upper:]' '[:lower:]')"
-  ENGINE_U="$(echo "$ENGINE" | tr '[:lower:]' '[:upper:]')"
   [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
-
-  printf '%s envsubst <"%s/connections/%s"' "$(for v in HOST DB USER PASSWORD; do 
-    printf $'%s=\'${%s%s:-${VCLOD_%s_%s:-${VCLOD_%s:?Missing %s/%s conn arguments}}}\' ' "$v" "$CONN_PREFIX" "$v" "$ENGINE_U" "$v" "$v" "$CONN_PREFIX" "$ENGINE_U"; 
-  done)" "${VCLOD_BASE_DIR%/}" "$ENGINE" | . /dev/stdin # return connection string
+  CMD=$(printf "vclod_%s_connection %s\n" "$ENGINE" "$CONN_PREFIX")
+  $CMD
 }
+vclod_conn_arg() {
+  : ${1:?Need a Connection_Prefix} ${2:?Need an Engine} ${3:?Need to have an argument to generate in HOST, DB, USER, PASSWORD}
+
+  ret_var=$(printf 'printf "%%s\n" "${%s%s:=${VCLOD_%s_%s:=$VCLOD_%s}}"\n' "$1" "$3" "$2" "$3" "$3" | . /dev/stdin)
+  [ -z "$ret_var" ] && { echo >&2 "A $3 connection argument is required to use the .$ext extension (see docs for details)"; exit 1; }
+  printf "$ret_var"
+}
+
 
 vclod_op(){
   next="${1%.*}"
@@ -46,4 +54,4 @@ function vclod_operation {
   return $ret
 }
 
-export add_file_cleanup literate_source vclod_connection vclod_operation vclod_op
+export add_file_cleanup literate_source vclod_conn vclod_conn_arg vclod_operation vclod_op

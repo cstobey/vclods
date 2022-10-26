@@ -10,7 +10,6 @@ PATH=/usr/local/bin/vclods:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin # m
 #: ${LOG_POST_PROCESS:=vclod_pp_log2sql} # a script to run after the script finishes running. Uncomment this (or put it in a local config) to auto log to SQL. Dont forget to uncomment the LOG_SQL connection parameters
 
 #### SQL connection:
-#: ${VCLOD_FORCE_SETUP_SQL:=0} # forces SRC and DST SQL connection strings to be setup for use in scripts that dont have .sql and .dst in the path (useful for .sh scripts).
 
 #: ${VCLOD_ENGINE:=mysql} # currently the only option
 : ${VCLOD_MYSQL_HOST:=}

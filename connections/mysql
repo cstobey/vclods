@@ -1,1 +1,6 @@
-mysql -h$HOST -u$USER -p$PASSWORD $DB -${ext_opt:-BNAwrc}
+vclod_mysql_connection() {
+  : ${1:?Need a Connection_Prefix}
+  h="$(vclod_conn_arg $1 MYSQL HOST)" && u="$(vclod_conn_arg $1 MYSQL USER)" && p="$(vclod_conn_arg $1 MYSQL PASSWORD)" && d="$(vclod_conn_arg $1 MYSQL DB)" || exit $?
+  mysql -h"$h" -u"$u" -p"$p" "$d" -${ext_opt:-BNAwrc}
+}
+export vclod_mysql_connection

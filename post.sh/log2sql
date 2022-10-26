@@ -13,8 +13,7 @@
 [ -z "$LOG_SQL_DB" ] && return 0 # only continue if we have somewhere to go
 [ "$SHOULD_PP_LOG2SQL" -eq 0 ] && return 0 # escape hatch
 
-SRC="$(vclod_connection LOG_SQL_)"; ETL_EXT_DIR="$VCLOD_BASE_DIR" # NOTE: on same line for autodocs
-export SRC ETL_EXT_DIR
+export SRC=LOG_SQL_ ETL_EXT_DIR="$VCLOD_BASE_DIR"
 
 # Parse each line of a log file and ingest into the .etl_format. Expected format:
 # (<date> <time>) <pid> [<tag>] (<message>... <optional_value>)

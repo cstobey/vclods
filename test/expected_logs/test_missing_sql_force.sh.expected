@@ -1,2 +1,2 @@
-[ERROR] VCLOD_FORCE_SETUP_SQL required to use connections not indicated in the extension path
-[ERROR] VCLOD_FORCE_SETUP_SQL required to use connections not indicated in the extension path
+[ERROR] A HOST connection argument is required to use the .dst extension (see docs for details)
+[ERROR] A HOST connection argument is required to use the .sql extension (see docs for details)
