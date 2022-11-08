@@ -6,7 +6,7 @@ sed 's/--.*$//' "$ETL_EXT_DIR/${ext_opt:?}" >"$fn" # handle fifos; -- are real c
 sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
 tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')
-working_fields=$(grep -E "#(key|unique|generate_unique|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | grep -E "#(key|unique|sync|map|generate)")
+working_fields=$(grep -E "#(key|unique|generate_unique|mode|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | grep -E "#(key|unique|sync|map|generate|mode)")
 cat << EOF
 
 #RESET
@@ -18,29 +18,68 @@ function sync_tbl { # TODO: get rid of the ALTER...AUTO_INCREMENT by decomposing
   tbl=$1
   shift
   echo "$working_fields" | grep -E "#[^ ]+ $tbl( |$)" | awk -v t="$tbl" -v tt="$tmp_tbl" '
-function concat_ws(value, sep, new) {return (value=="") ? new : value sep new}
-function tail() {ret=""; for (i=4; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret}
+function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
+function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function p(value) {if(value){print value;}}
 function ext(msg) {should_exit=1; print msg > "/dev/stderr"; exit 1;}
-$1~/^#sync/ && $3=="SET_NOT_PRESENT"    {snp=1;snp_c=tail();if(snp_c ~ /WHERE/){snp_c=snp_c" AND "}else{snp_c=snp_c" WHERE "};} 
-$1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=1;dnp_c=tail();if(dnp_c)dnp_c=dnp_c" AND "} 
+
+function all(tt_f, t_f) {
+  tc=cc_ws(tc, ",", t_f); 
+  ttc=cc_ws(ttc, ",", tt_f);}
+function all_uni(tt_f, t_f, use_tt) {
+  tc_uni=cc_ws(tc_uni, ",", t_f); 
+  ttc_uni=cc_ws(ttc_uni, ",", tt_f);
+  ugb=cc_ws(ugb, ",", tt_f);
+  w=cc_ws(w, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
+function updatable(tt_f, t_f, use_tt) {
+  odku=cc_ws(odku, ",", t_f"=VALUES("t_f")");
+  uset=cc_ws(uset, ",", t"."t_f"=" (use_tt ? tt"." : "") tt_f);}
+
+$1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
+$1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail(),1," AND ","")"\n  ";} 
 $1~/^#sync_no_update$/ {no_update=1;}
-$1~/^#generate/ {tc=concat_ws(tc, ",", $3);ttc=concat_ws(ttc, ",", tail());} 
-$1~/^#generate$/ {odku=concat_ws(odku, ",", $3"=VALUES("$3")");} 
-$2~/^#(map|unique)/ {ttc=concat_ws(ttc, ",", $1);tc=concat_ws(tc, ",", $4);}
-$2~/^#map$/      {odku=concat_ws(odku, ",", $4"=VALUES("$4")");}
-$2~/^#unique$/   {w=concat_ws(w, " AND ", tt"."$1"<=>"t"."$4);ugb=concat_ws(ugb,",",$1);ttc_uni=concat_ws(ttc_uni, ",", $1);tc_uni=concat_ws(tc_uni, ",", $4);}
-$1~/^#generate_unique$/   {w=concat_ws(w, " AND ", tail()"<=>"t"."$3);ugb=concat_ws(ugb,",",tail());ttc_uni=concat_ws(ttc_uni, ",", tail());tc_uni=concat_ws(tc_uni, ",", $3);}
-$2~/^#key$/      {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
+
+$1~/^#mode$/ && $3~/^(odku_ai|ui_split)$/ {mode=$3}
+
+$1~/^#generate/ {all(tail(), $3);} # include _no_update and _unique
+$2~/^#(map|unique)/ {all($1, $4);} # include _no_update
+$1~/^#generate$/ {updatable(tail(), $3, 0);}
+$2~/^#map$/ {updatable($1, $4, 1);}
+$2~/^#unique$/ {all_uni($1, $4, 1);}
+$1~/^#generate_unique$/ {all_uni(tail(), $3, 0);}
+
+$2~/^#key$/ {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
+
 END {
   if (should_exit) {exit 1;}
-  if (ugb) {ugb="\n GROUP BY "ugb;}
-  if (odku) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";}
-  if (no_update && f) {print "UPDATE "t" JOIN "tt" ON "w" SET "tt"."nf"="t"."f";";w_no_update="\n  WHERE "nf" IS NULL";}
-  print "INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_no_update ugb odku";";
-  print "ALTER TABLE "t" AUTO_INCREMENT = 1;";
-  if (f) {print "UPDATE "t" JOIN "tt" ON "w" SET "tt"."nf"="t"."f";";row_not_in=f" NOT IN (SELECT "nf" FROM "tt");"} else {row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt");";}
-  if(snp) {print "UPDATE "t" SET "snp_c row_not_in;};
-  if(dnp) {print "DELETE FROM "t" WHERE "dnp_c row_not_in;};
+  if (ugb) {ugb="\n  GROUP BY "ugb;}
+  if (odku && !no_update) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";odku="";}
+  u_to_on="UPDATE "t" JOIN "tt" ON ";
+  if (f) {
+    join_on=tt"."nf"="t"."f;
+    u_get_f="UPDATE "t" JOIN "tt" ON "w" SET "join_on";";
+    w_not_key="\n  WHERE "nf" IS NULL";
+    row_not_in=f" NOT IN (SELECT "nf" FROM "tt");";
+  } else {
+    join_on=w;
+    if (tc_uni) {
+      row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt");";
+      w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t");";}
+  }
+  uset=(!no_update && uset) ? u_to_on join_on" SET "uset";" : "";
+  if (mode == "ui_split") {
+    p(u_get_f);
+    p(uset);
+    p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_not_key ugb ";");
+  } else { # odku_ai
+    if(no_update) {p(u_get_f);} else {w_not_key="";}
+    p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_not_key ugb odku";");
+    p("ALTER TABLE "t" AUTO_INCREMENT = 1;");
+  }
+  p(u_get_f);
+  if(snp && row_not_in) {print "UPDATE "t" SET "snp row_not_in;};
+  if(dnp && row_not_in) {print "DELETE FROM "t" WHERE "dnp row_not_in;};
 }'
 }
 echo '#RESET'

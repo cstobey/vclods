@@ -11,6 +11,8 @@ literate_source () {
   printf 'echo "%s"' "${@:-$(</dev/stdin)}" | . /dev/stdin
 }
 
+function urlen { while IFS='' read -n 1 c ; do [[ "$c" =~ [A-Za-z0-9.~_-] ]] && printf "$c" || printf '%%%02X' "'$c" ; done }
+
 vclod_connection() {
   echo >&2 '[WARNING] vclod_connection is deprecated'
   echo $1
@@ -54,4 +56,4 @@ function vclod_operation {
   return $ret
 }
 
-export add_file_cleanup literate_source vclod_conn vclod_conn_arg vclod_operation vclod_op
+export add_file_cleanup literate_source urlen vclod_conn vclod_conn_arg vclod_operation vclod_op

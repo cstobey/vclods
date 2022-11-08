@@ -1,0 +1,6 @@
+vclod_postgres_connection() {
+  : ${1:?Need a Connection_Prefix}
+  h="$(vclod_conn_arg $1 POSTGRES HOST | urlen)" && u="$(vclod_conn_arg $1 POSTGRES USER | urlen)" && p="$(vclod_conn_arg $1 POSTGRES PASSWORD | urlen)" && d="$(vclod_conn_arg $1 POSTGRES DB | urlen)" || exit $?
+  psql -AXtwq --set ON_ERROR_STOP=on "postgresql://$u:$p@$h/$d"
+}
+export vclod_postgres_connection

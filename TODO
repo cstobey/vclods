@@ -1,7 +1,4 @@
 
-connections/postgres Line 1:
-make this real
-
 extensions/dst Line 2:: "${ext_opt:-BNAwrc if using mysql}" 
 this and the .sql ext should dynamically be in sync with the connection... but that might be hard?
 
