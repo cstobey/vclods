@@ -1,11 +1,11 @@
 CREATE OR REPLACE TABLE tmp_col (
-  entity_type_id INT(11) UNSIGNED NULL, #include get_entity_type #map entity entity_type_id
+  entity_type_id INT(11) UNSIGNED NULL, #include get_entity_type #map_no_update entity entity_type_id
   table_type VARCHAR(255), #ingest
-#sync_no_update entity SET_NOT_PRESENT is_active=0 WHERE master_location_id=${ml_id}
+#sync entity SET_NOT_PRESENT is_active=0 WHERE master_location_id=${ml_id}
   entity_id INT(11) UNSIGNED NULL, #key entity entity_id #unique field entity_id
   master_location_id INT(11) UNSIGNED NOT NULL DEFAULT ${ml_id}, #unique entity master_location_id #ignore
   table_name VARCHAR(255) NOT NULL, #unique entity name
-  table_comment VARCHAR(2048), #map entity description
+  table_comment VARCHAR(2048), #map_no_update entity description
   filename VARCHAR(255) NOT NULL, #map entity definition_link
 #sync data_type
   data_type_id INT(11) UNSIGNED, #key data_type data_type_id #map field data_type_id

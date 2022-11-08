@@ -126,7 +126,7 @@ Command | Requires preceding field ^1 | no_update Option? ^2| Positional Args ^3
 #generate_unique |N|N|Std + SQL statement| A logical combination of #generate and #unique
 #include |YN|N|local SQL filename| include a sql script file (with no .extension) to handle any additional reformatting or processing that is required. 
 #sync |N|Y|Destination Table + More ^4 | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order
-#mode|N|N|Destincation Table + odku_ai or ui_split|odku_ai is the default mode: it will force primary keys not to bloat; ui_split tries its best to not bloat Autoinc keys, but doesn't force an ALTER TABLE. Use it with lower cardinality tables.
+#mode|N|N|Destination Table + odku_ai or ui_split|odku_ai is the default mode: it will force primary keys not to bloat; ui_split tries its best to not bloat Autoinc keys, but doesn't force an ALTER TABLE. Use it with lower cardinality tables.
 
 1. If Y, add the command after the temp table field definition. If N, then put it on its own line as a stand alone command. If YN (ie for `#include`), if the command is on a temp table field line, it acts as both `#include` AND `#ignore`.
 1. on_update means the field will not be updated when it changes (ie, will not be in the ON DUPLICATE KEY UPDATE list). It is annotated by updating the command name, for instance `#sync` becomes `#sync_no_update`.

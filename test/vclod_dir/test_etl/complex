@@ -24,13 +24,11 @@ INSERT INTO tmp_col (table_type,table_name,table_comment,filename,column_type,co
 UPDATE tmp_col AS t # start added from get_entity_type
 JOIN entity_type AS et ON t.table_name LIKE et.name_like AND t.table_type = et.physical_type 
 SET t.entity_type_id = et.entity_type_id; # end added from get_entity_type
-UPDATE entity JOIN tmp_col ON tmp_col.master_location_id<=>entity.master_location_id AND tmp_col.table_name<=>entity.name SET tmp_col.entity_id=entity.entity_id;
 INSERT INTO entity (entity_type_id,master_location_id,name,description,definition_link,is_active)
   SELECT entity_type_id,master_location_id,table_name,table_comment,filename,1
   FROM tmp_col
-  WHERE entity_id IS NULL
   GROUP BY master_location_id,table_name
-  ON DUPLICATE KEY UPDATE entity_type_id=VALUES(entity_type_id),description=VALUES(description),definition_link=VALUES(definition_link),is_active=VALUES(is_active);
+  ON DUPLICATE KEY UPDATE definition_link=VALUES(definition_link),is_active=VALUES(is_active);
 ALTER TABLE entity AUTO_INCREMENT = 1;
 UPDATE entity JOIN tmp_col ON tmp_col.master_location_id<=>entity.master_location_id AND tmp_col.table_name<=>entity.name SET tmp_col.entity_id=entity.entity_id;
 UPDATE entity SET is_active=0 WHERE master_location_id=${ml_id} AND entity_id NOT IN (SELECT entity_id FROM tmp_col);
