@@ -17,4 +17,7 @@ OPERATIONS_EMAIL=noop@noop.com
 CURL_EXT_URL='http://localhost:9000/page_${CURL_EXT_LOOP_CNT}.json'
 CURL_EXT_JQ_PAGE_PROG='.total'
 
+SHARD_EXT_COUNT=2
+SPLIT_EXT_COUNT=2
+
 . ${LOCAL_DIR}/secure_config  # so you can override the HOST, USER, and PASSWORD without accidentally putting it in version control

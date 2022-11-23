@@ -1,0 +1,21 @@
+#FLOW Running a stdin with the given operation $SHARD_EXT_COUNT times. Optional run batches in series, sleep a set interval, or go full for parallelity.
+: "${SHARD_EXT_OPERATION:=${ext_opt:-sh}}" # what vclod_operation to use to process stdin
+: "${SHARD_EXT_COUNT:?}" # the number of times to loop
+: "${SHARD_EXT_SLEEP_INTERVAL:=0}" # positive integer if you want to to sleep some between backgrounded process invocations. -1 to run in series. 0 to run in series. Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
+
+TEMP_FILE=$(mktemp)
+add_file_cleanup "$TEMP_FILE"
+cat >"$TEMP_FILE"
+
+pids=''
+for SHARD_NUMBER in $(seq 0 $((SHARD_EXT_COUNT - 1)) ) ; do
+  cat "$TEMP_FILE" | vclod_operation "s${SHARD_NUMBER}_$base_filename.$SHARD_EXT_OPERATION" &
+  pids="$pids $!"
+  case "$SHARD_EXT_SLEEP_INTERVAL" in
+    0) : ;;
+    -1) wait $pids ; pids='' ;;
+    [0-9]+) sleep "$SHARD_EXT_SLEEP_INTERVAL" ;;
+    *) echo "$SHARD_EXT_SLEEP_INTERVAL" | . /dev/stdin ;;
+  esac
+done
+wait $pids

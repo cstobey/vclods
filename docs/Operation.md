@@ -3,9 +3,10 @@
 Name | Description
 -----|------------
 ANY  | Normal processing. takes stdin (or the contents of the file), does something, and leaves output for the next thing (or logging).
-TERM | ends the .extension chain by redirecting stdin somewhere else
+TERM | Ends the .extension chain by redirecting stdin somewhere else
 PIPE | Pass Through: Must be in the middle of a .extension chain
-WRAP | runs another .extension tree as a child
+WRAP | Runs another .extension tree as a child
+FLOW | Controls the flow of the application, allowing for branches
 
 ## Option
 Many extensions have the abilty to accept one and only one option in the .extension chain. This is signified as `<base_filename>.<other_optional_extensions>.<extension>-<option>.<more_optional_extensions>`. All other behavior modification is handled with Configuration Variables. Options allow 2 of the same extension to be present in the same .extension chain while exhibiting different behavior. Most often, the option value is a file name (due to the nature of the .extension chain, these filenames may not themselves have a .extension). If another file is accepted, the default for the option will be `$base_filename`
@@ -31,10 +32,13 @@ out|TERM|$base_filename|Write to file; stop
 outa|TERM|$base_filename|Append to file; stop
 py|ANY|Used, No Default|Run either stdin or ext_opt file (with any optional ending) as python3
 sh|ANY|Used, No Default|Source a ksh script
+shard|FLOW|sh|Running a stdin with the given operation $SHARD_EXT_COUNT times. Optional run batches in series, sleep a set interval, or go full for parallelity.
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
 slack|TERM|Not Used|push stdin to slack channel. Will propogate all data on.
+split|FLOW|sh|Split records into batched operations... running the same operation for every $SPLIT_EXT_COUNT rows
 sql|ANY|Not Used|Run a SQL script with default connection (configured with VCLOD_SRC_)
 tee|PIPE|$base_filename|Route output to file and the remaining extension pipe
 teea|PIPE|$base_filename|Route output to file (appended) and the remaining extension pipe
 vfs|WRAP|Not Used|virtual file system: use #fifo to generate virtual files and #run to use those files inside a VCLOD context. You can only use each virtual file once per run. Helps with large composite programs with many small files. Especially useful for running oneoff scripts from stdin
+while|FLOW|sh|Keep running stdin with the given operation until it returns a non-zero exit code (and optionally stops producing output)
 wrap|PIPE|$base_filename|Wrap stdin with files like .add and .end, but using filenames ending in __beg and __end

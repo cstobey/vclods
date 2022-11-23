@@ -57,12 +57,17 @@ OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR|Directory to put program output
 OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguish between different runs
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
 RM_ERR_FILE|Script|1|1 will detele error files after they post processing; 0 will leave them around. The default is recommended since Error files are redundant
+SHARD_EXT_COUNT|Extensions: shard||the number of times to loop
+SHARD_EXT_OPERATION|Extensions: shard|${ext_opt:-sh}|what vclod_operation to use to process stdin
+SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations. -1 to run in series. 0 to run in series. Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
 SH_EXT_DIR|Extensions: sh|$INPUT_DIR|
 SLACK_API_URL|Extensions: slack slack_errors||must have an endpoint to send the logs to -- same one that errors use
 SLACK_CHANNEL|Post Process|vclod_errors|Thus this only works if the bot is configured for multichannel use
 SLACK_EMOJI|Post Process|:robot_face:|Give it some style ;)
 SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot is configured for multichannel use
 SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
+SPLIT_EXT_COUNT|Extensions: split|10000|how many lines to process in each batch
+SPLIT_EXT_OPERATION|Extensions: split|${ext_opt:-sh}|what vclod_operation to use to process stdin
 SRC|Extensions: sql|VCLOD_SRC_|Overrides the connection naming prefix.
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Errors still go to OPERATIONS_EMAIL
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
@@ -74,3 +79,5 @@ VCLOD_EXIT_ERR|Script|$(basename "$1")|
 VCLOD_FORCE_SETUP_SQL|Script|0|Force .sql and .dst connection to be generated even if not on in the top level extension pipe
 VCLOD_JOBS|Global|10|How many sripts to run in parallel
 VCLOD_LOCK_DIR|Script||Where to put lock files. Generally /dev/shm
+WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin
+WHILE_EXT_REQUIRE_OUTPUT|Extensions: while|0|if true, operation must return something to stdout to continue running

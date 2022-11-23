@@ -11,7 +11,11 @@ CREATE TEMPORARY TABLE tmp_log (
   value INT NULL DEFAULT NULL #ignore #map_no_update log_line value
 #include pp_etl_log2sql_compute_variables
 #sync_no_update log_tag
+#mode log_tag ui_split
 #sync_no_update log_message
+#mode log_message ui_split
 #sync_no_update log_file
+#mode log_file ui_split
 #sync_no_update log_line
+#mode log_line ui_split
 );

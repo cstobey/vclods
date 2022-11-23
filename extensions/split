@@ -1,0 +1,21 @@
+#FLOW Split records into batched operations... running the same operation for every $SPLIT_EXT_COUNT rows
+: "${SPLIT_EXT_COUNT:=10000}" # how many lines to process in each batch
+: "${SPLIT_EXT_OPERATION:=${ext_opt:-sh}}" # what vclod_operation to use to process stdin
+
+TEMP_FILE=$(mktemp)
+add_file_cleanup "$TEMP_FILE"
+
+remaining_extensions="$base_filename.$SPLIT_EXT_OPERATION"
+
+i=0
+while read line ; do
+  if [ -s "$TEMP_FILE" ] && [ "$((i%SPLIT_EXT_COUNT))" -eq 0 ] ; then
+    vclod_op "n$((i/SPLIT_EXT_COUNT))_$remaining_extensions" <"$TEMP_FILE"
+    : >"$TEMP_FILE"
+  fi
+  echo "$line" >>"$TEMP_FILE"
+  i=$((i + 1))
+done
+if [ -s "$TEMP_FILE" ] ; then
+  vclod_op "last_$remaining_extensions" <"$TEMP_FILE"
+fi
