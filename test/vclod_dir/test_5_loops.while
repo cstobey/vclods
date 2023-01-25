@@ -1,0 +1,9 @@
+TEMPFILE=$INPUT_DIR/tmp_while_test
+if [ -s "$TEMPFILE" ] ; then
+  COUNTER=$(($(cat $TEMPFILE) - 1))
+else
+  COUNTER=5
+fi
+echo "$COUNTER" >"$TEMPFILE"
+echo "while loop $COUNTER"
+[ "$COUNTER" == "0" ] && rm "$TEMPFILE" && return 1 || return 0

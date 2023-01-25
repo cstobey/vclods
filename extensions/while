@@ -8,7 +8,10 @@ cat >"$TEMP_FILE"
 if [ "$WHILE_EXT_REQUIRE_OUTPUT" == "0" ] ; then
   while true ; do vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" || return 0 ; done # force a 0 exit status to continue
 else
-  while { { { { vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" ; printf $? >&3; } | grep . >&4; printf $? >&3; } 3>&1; } | { read xs; exit $xs; } } 4>&1 ; do
+  while { { { { 
+      vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" ; 
+      printf $? >&3; 
+    } | grep . >&4; printf $? >&3; } 3>&1; } | ( read xs; return $xs; ) } 4>&1 ; do
     :
  done # force both a 0 exit status and log data to continue
 fi
