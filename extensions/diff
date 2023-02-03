@@ -1,12 +1,14 @@
 #TERM diff extension pipe with a "static" file (or generate output based on provided operation)
-: "${DIFF_EXT_OPERATION:-}" # vclod_operation to optionally process "static" file
+: "${DIFF_EXT_OPERATION:=$ext_opt}" # vclod_operation to optionally process "static" file
 : "${DIFF_EXT_CMD:=diff -w}" # what diff program to use (maybe try comm -13)
 : "${DIFF_EXT_DIR:=$INPUT_DIR}" # What directory to look for "static"
-: "${DIFF_EXT_FILE:=${ext_opt:-$(basename $S)}}" # What to use as the "static" file. defaults to self.
-the_file="$DIFF_EXT_DIR/$DIFF_EXT_FILE"
+ext_opt="${ext_opt%%.*}" # NOTE: order of operations is important here
+: "${DIFF_EXT_FILE:=${ext_opt:-$base_filename}}" # What to use as the "static" file. defaults to self if the base_filename of either ext_opt or self doesn't exist.
+THE_FILE="$DIFF_EXT_DIR/$DIFF_EXT_FILE"
+[ -e "$THE_FILE" ] || THE_FILE="$pIN_FILE" # must be -e or fifos break in .vfs
 
-if [ -z "$DIFF_EXT_OPERATION" ] ; then
-  diff -w "$the_file" -
-else 
-  diff -w <(cat "$the_file" | vclod_operation "$DIFF_EXT_OPERATION") -
+if [[ "$DIFF_EXT_OPERATION" =~ [.] ]] ; then
+  diff -w <(vclod_operation "$DIFF_EXT_OPERATION" <"$THE_FILE") -
+else
+  diff -w "$THE_FILE" -
 fi

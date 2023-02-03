@@ -23,13 +23,14 @@ CURL_EXT_URL|Extensions: curl||The URL to call, uses literate_source to qualify 
 DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL|1 prints [START] and [END] log lines at the begining and end of the extension pipe; 0 does not
 DIFF_EXT_CMD|Extensions: diff|diff -w|what diff program to use (maybe try comm -13)
 DIFF_EXT_DIR|Extensions: diff|$INPUT_DIR|What directory to look for "static"
-DIFF_EXT_FILE|Extensions: diff|${ext_opt:-$(basename $S)}|What to use as the "static" file. defaults to self.
-DIFF_EXT_OPERATION|Extensions: diff||vclod_operation to optionally process "static" file
+DIFF_EXT_FILE|Extensions: diff|${ext_opt:-$base_filename}|What to use as the "static" file. defaults to self if the base_filename of either ext_opt or self doesn't exist.
+DIFF_EXT_OPERATION|Extensions: diff|$ext_opt|vclod_operation to optionally process "static" file
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1|1 means halt on error, 0 means continue even if there are errors
 DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
 DIR_EXT_START|Extensions: dir||Begining regex to find subscripts. Overridden by ext_opt
 DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
+DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
 EMAIL_EXT_FILE|Extensions: email|$(mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
 EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body; 0 sends it as an attachment
 EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, This defines the body of the email pre-literate_source
@@ -68,15 +69,16 @@ SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot i
 SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
 SPLIT_EXT_COUNT|Extensions: split|10000|how many lines to process in each batch
 SPLIT_EXT_OPERATION|Extensions: split|${ext_opt:-sh}|what vclod_operation to use to process stdin
+SQL_EXT_IGNORE_NO_CONNECT|Extensions: sql|0|if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
 SRC|Extensions: sql|VCLOD_SRC_|Overrides the connection naming prefix.
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Errors still go to OPERATIONS_EMAIL
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
 TEE_EXT_FILE_SHARD|Extensions: tee teea|$(date +%F)|A way to save and distinguish between different runs
+TEE_EXT_OPERATION|Extensions: tee|$ext_opt|vclod_operation to optionally process "static" file. Must not output anything
 VCLOD_BATCH_JOBS|Script|1|How many instances of one script can be run at the same time
 VCLOD_ENGINE|Script|mysql|
 VCLOD_ERR_DIR|Script||Where to store error files (/dev/shm is a good option)
 VCLOD_EXIT_ERR|Script|$(basename "$1")|
-VCLOD_FORCE_SETUP_SQL|Script|0|Force .sql and .dst connection to be generated even if not on in the top level extension pipe
 VCLOD_JOBS|Global|10|How many sripts to run in parallel
 VCLOD_LOCK_DIR|Script||Where to put lock files. Generally /dev/shm
 WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin

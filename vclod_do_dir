@@ -22,7 +22,11 @@ export MAIL_ELF
 if [ -e "$1" ]; then
   find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort | xargs -n1 -r -P"$VCLOD_JOBS" "${VCLOD_BASE_DIR%/}/vclod_run_script"
 else
-  . "${VCLOD_BASE_DIR%/}/vclod_run_script" 
+  . "${VCLOD_BASE_DIR%/}/vclod_helpers" || exit $?
+  export pIN_FILE="$(mktemp)" # the p stands for private and prevents it from showing up in the doco
+  add_file_cleanup "$pIN_FILE"
+  cat >"$pIN_FILE" # not sure why this works here but not in run_script
+  . "${VCLOD_BASE_DIR%/}/vclod_run_script" <"$pIN_FILE" 
 fi
 ret=$?
 [ -s "$MAIL_ELF" ] && [ "$IS_TERMINAL" -eq 0 ] && mail -s "Script error digest on $(hostname)" "$OPERATIONS_EMAIL" <"$MAIL_ELF"

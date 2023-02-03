@@ -6,7 +6,7 @@ extensions/etl Line 17:function sync_tbl {
 get rid of the ALTER...AUTO_INCREMENT by decomposing ODKU so that the UPDATE is its own statement.
 
 extensions/etl Line 7:tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') 
-ensure there is only one
+ensure there is only one or handle multiple appropriately
 
 extensions/slack Line 10:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
@@ -22,12 +22,6 @@ should I add a retry?
 
 pp_etl_log2sql_compute_variables Line 1:
 should I validate that tag is surrounded by `[]`s?
-
-run_tests.sh Line 59:
-comm doesnt error, so need to get creative with error text.. might use awk
-
-run_tests.sh Line 72:diff <(find $VCLOD_ERR_DIR $LOCAL_DIR -type p) <(printf "") || { ret="$((ret + $?))" ; echo "FAILED to clean up fifo files: find $VCLOD_ERR_DIR $LOCAL_DIR -type p -delete>&2" >&2; } 
-should I just delete them?
 
 vclod_helpers Line 3:add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } 
 handle spaces?

@@ -29,19 +29,25 @@ CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir ./vclod_dir/
 ret=$? # run the primary test
 rm -f ./vclod_dir/local_config_override/test_symlink.sh
 
+echo 'echo $VCLOD_JOBS' | O_VCLOD_JOBS=200 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_cli_override_env.sh
+ret="$((ret + $?))" # test env override and stdin streams. 
+
 # tests off the previous run
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] log file check"
-diff -w <(ls -1 expected_logs/ | sed 's/.expected//' | sort) <(ls -1 logs/ | grep '.log$' | sed -r 's/\.[0-9]+\.log$//' | sort) || { ret="$((ret + $?))"; echo "FAILED to render the right log files" >&2 ; }
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] log file content check"
-for f in expected_logs/*.expected ; do diff -w <(sort "$f") <(sed -r 's/^[^[]+[[]/[/;s/[.][0-9]+[.]log/..log/' "logs/$(basename "${f%expected}")"[0-9]*.log | sort) || { ret="$((ret + $?))" ; echo "FAILED $f content mismatch" >&2 ; } ; done
+
+# syslog
+comm -23 <(cat logs/*.log | sed -r 's/^[^[]* ([0-9]+ [[])/\1/' | sort) <(sudo tail /var/log/messages -n"$((numb_lines*2))" | sed -r 's/^([^ \t]+[ \t]+){5}//' | sort) | grep . && echo "FAILED syslog data and pid mismatch" >&2
+# log file check
+find expected_logs/*.expected logs/*.log | sed -r 's/(^expected_|.expected$)//g;s/[.][0-9]+[.]log$//' | sort | uniq -c | grep -Ev '^ +2 ' && echo >&2 "FAILED to render the right log files"
+# log file content check : 2 methods, I think I like the second way
+#find expected_logs/*.expected | sed -r 's#^(expected)_(.+).expected$#diff -w <(sort \1_\2.\1) <(sed -r '"'"'s/^[^[]+[[]/[/;s/[.][0-9]+[.]log/..log/'"'"' \2.[0-9]*.log | sort) || echo >\&2 "FAILED content \2 mismatch"#' | . /dev/stdin
+for f in expected_logs/*.expected ; do diff -w <(sort "$f") <(sed -r 's/^[^[]+[[]/[/;s/[.][0-9]+[.]log/..log/' "logs/$(basename "${f%expected}")"[0-9]*.log | sort) || echo "FAILED $f content mismatch" >&2 ; done
 # test the outfiles... cant test the append, since they put date parts on the ends of the filenames... need to think more about that.
 for f in files/* ; do cp "$f" "tmp_files/$(basename "${f/-"$(date +%F)"/}")" ; done
 for f in $(ls -1 logs/*.g-* | grep -E '[.]g-[^.]*$') ; do cp "$f" "tmp_files/$(basename "${f}" | sed -r 's/\.[0-9]+\.log//')" ; done
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] diff files"
-diff -wr expected_files tmp_files || { ret="$((ret + $?))" ; echo "FAILED to render the right output files with the right content" >&2 ; }
+diff -wr expected_files tmp_files || echo "FAILED to render the right output files with the right content" >&2
 
 # ensure that the post process log2sql process works in all ways.
-cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_pp_logger.sh || { ret="$((ret + $?))" ; echo "FAILED to export log2sql" >&2 ; }
+cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_pp_logger.sh || echo "FAILED to export log2sql" >&2
 export SRC=LOG_SQL_
 diff -w <(cat << 'STMT' | vclod_operation get_sql.sql | sed 's/\t/ /g' | sort
 SELECT
@@ -53,22 +59,20 @@ STMT
 ) <(find logs/* ! -empty -xtype f -regextype posix-egrep -regex '.*[.]log$' | xargs grep ^ -n | sed -r 's#^logs/(.*)[.][0-9]+[.]log:([0-9]+):#\1 \2 #' | sort)
 EOF
 
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] untested extentions"
-comm -13 <(ls -R1 vclod_dir/ | grep -E -o '[.][a-z]+' | sed 's/^.//' | sort | uniq) <(ls -1 ../extensions/) | sed 's/^/UNTESTED EXTENSION /' >&2
+# untested extentions
+comm -13 <(find vclod_dir/ | grep -Eo '[.][a-z]+' | sort -u | sed 's/.//') <(find ../extensions/* | grep -Eo '[^/]+$') | sed 's/^/UNTESTED EXTENSION /' >&2
 
-# TODO: comm doesnt error, so need to get creative with error text.. might use awk
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] syslog data and pid check -- skip time because syslog tends to be off by a second or so"
-comm -23 <(cat logs/*.log | sed -r 's/^[^[]* ([0-9]+ [[])/\1/' | sort) <(sudo tail /var/log/messages -n"$((numb_lines*2))" | sed -r 's/^([^ \t]+[ \t]+){5}//' | sort) || { ret="$((ret + $?))" ; echo "FAILED syslog data and pid mismatch" >&2 ; }
+# extra tests
 
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] test_single_file"
-CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_single_file.diff.sh || { ret="$((ret + $?))" ; echo "FAILED single file should render without the directory $ret" ; }
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] stdin"
-cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_stdin.diff-test_single_file.sh || { ret="$((ret + $?))" ; echo "FAILED virtual single file should render without the directory $ret" ; }
+# test single file
+CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_single_file.diff.sh || echo "FAILED single file should render without the directory $?"
+# stdin
+cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir test_stdin.diff-test_single_file.sh || echo "FAILED virtual single file should render without the directory $?"
 echo A single file needs to work by itself
 EOF
-[ -z "$DEBUG_WHERE" ] || echo "[WHERE] sh_only"
-CONFIG_FILE="${LOCAL_DIR}/sh_only/config" ../vclod_do_dir ./sh_only/ || { ret="$((ret + $?))" ; echo "FAILED mysql should not be required when not used $ret" ; }
+# sh_only
+CONFIG_FILE="${LOCAL_DIR}/sh_only/config" ../vclod_do_dir ./sh_only/ || echo "FAILED mysql should not be required when not used $?"
 
-diff <(find $VCLOD_ERR_DIR $LOCAL_DIR -type p) <(printf "") || { ret="$((ret + $?))" ; echo "FAILED to clean up fifo files: find $VCLOD_ERR_DIR $LOCAL_DIR -type p -delete>&2" >&2; } # TODO: should I just delete them?
+diff <(find $VCLOD_ERR_DIR $LOCAL_DIR -type p) <(printf "") || echo "FAILED to clean up fifo files: find $VCLOD_ERR_DIR $LOCAL_DIR -type p -delete>&2" >&2
 
 exit $ret

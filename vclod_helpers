@@ -39,6 +39,7 @@ vclod_op(){
   extension="${1##*.}"
   ext="${extension%%-*}"
   ext_opt="$([ "$extension" = "$ext" ] || echo "${extension#*-}")"
+  ext_opt="${ext_opt//+/.}" ; ext_opt="${ext_opt//\.\./+}"
   base_filename="${1%%.*}"
   op_ext_file="${VCLOD_BASE_DIR%/}/extensions/$ext"
   test -f "$op_ext_file" || { echo "Unknown file type $ext" >&2 ; exit 99 ; }

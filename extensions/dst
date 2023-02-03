@@ -1,3 +1,9 @@
 #ANY Run a SQL script with the secondary connection (configured with VCLOD_DST_)
 : "${ext_opt:-BNAwrc if using mysql}" # TODO: this and the .sql ext should dynamically be in sync with the connection... but that might be hard?
-envsubst | vclod_conn "${DST:=VCLOD_DST_}" # Overrides the connection naming prefix.
+: "${DST_EXT_IGNORE_NO_CONNECT:=0}" # if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
+: "${DST:=VCLOD_DST_}" # Overrides the connection naming prefix.
+
+if [ "$DST_EXT_IGNORE_NO_CONNECT" -ne 0 ] ; then
+  echo 'SELECT NULL;' | vclod_conn "$DST" || return 0
+fi
+envsubst | vclod_conn "$DST"

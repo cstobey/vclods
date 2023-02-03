@@ -4,12 +4,14 @@
 
 # Argument validation -- Most is elsewhere
 : ${VCLOD_BASE_DIR:?} ${1:?The full path of a file (or pseudofile) to process is a required positional argument}
+: "${pIN_FILE:=$1}"
 S=$([ "$(basename $1)" != "$1" ] && [[ $1 =~ ^/.* ]] && echo "$1" || echo "$(cd $(dirname "$1"); echo "$(pwd)/$(basename "$1")")") # get the absolute path
 
 # respect local config file
 set -a
 INPUT_DIR="$(dirname "$S")"
 [ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
+env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
 set +a
 
 . "${VCLOD_BASE_DIR%/}/vclod_helpers" || exit $?

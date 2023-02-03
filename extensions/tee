@@ -1,6 +1,11 @@
-#PIPE Route output to file and the remaining extension pipe
+#PIPE Route output to a file or sub_pipe and the remaining extension pipe
 : "${TEE_EXT_DIR:=$INPUT_DIR}" # Directory to put program output
 : "${TEE_EXT_FILE_SHARD:=$(date +%F)}" # A way to save and distinguish between different runs
-tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD"
-tee "$tfn"
-[ -s "$tfn" ] || rm -f "$tfn"
+: "${TEE_EXT_OPERATION:=$ext_opt}" # vclod_operation to optionally process "static" file. Must not output anything
+if [[ "$TEE_EXT_OPERATION" =~ [.] ]] ; then
+  tee >(vclod_operation "$TEE_EXT_OPERATION")
+else
+  tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD"
+  tee "$tfn"
+  [ -s "$tfn" ] || rm -f "$tfn"
+fi

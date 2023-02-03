@@ -4,7 +4,7 @@ add_file_cleanup "$fn"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for etl temp table definition files
 sed 's/--.*$//' "$ETL_EXT_DIR/${ext_opt:?}" >"$fn" # handle fifos; -- are real comments
 sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
-tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one
+tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one or handle multiple appropriately
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')
 working_fields=$(grep -E "#(key|unique|generate_unique|mode|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | grep -E "#(key|unique|sync|map|generate|mode)")
 cat << EOF
