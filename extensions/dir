@@ -1,6 +1,6 @@
 #WRAP Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions of their own).
 : "${DIR_EXT_DIR:=$INPUT_DIR}" # Directory to look for subscripts
-: "${ext_opt:=${DIR_EXT_START:?}}" # Begining regex to find subscripts. Overridden by ext_opt
+: "${ext_opt:=${DIR_EXT_START:=$base_filename}}" # Begining regex to find subscripts. Overridden by ext_opt
 : "${DIR_EXT_CONTEXT:=}" # Any information you want displayed on error
 : "${DIR_ERR_SHOULD_EXIT:=1}" # 1 means halt on error, 0 means continue even if there are errors
 err_opt="$([ "$DIR_ERR_SHOULD_EXIT" -eq 1 ] && echo " || exit 1")"

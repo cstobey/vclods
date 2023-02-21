@@ -1,2 +1,5 @@
 #PIPE Run awk program
-awk -f"$INPUT_DIR/$ext_opt"
+: "${AWK_EXT_DIR:=$INPUT_DIR}" # directory to find awk files.
+: "${ext_opt:=${AWK_EXT_FILE:=$base_filename}}" # filename of awk file to run. Overridden by ext_opt.
+
+awk -f"$AWK_EXT_DIR/$ext_opt"

@@ -2,10 +2,10 @@
 extensions/dst Line 2:: "${ext_opt:-BNAwrc if using mysql}" 
 this and the .sql ext should dynamically be in sync with the connection... but that might be hard?
 
-extensions/etl Line 17:function sync_tbl { 
+extensions/etl Line 19:function sync_tbl { 
 get rid of the ALTER...AUTO_INCREMENT by decomposing ODKU so that the UPDATE is its own statement.
 
-extensions/etl Line 7:tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') 
+extensions/etl Line 9:tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') 
 ensure there is only one or handle multiple appropriately
 
 extensions/slack Line 10:

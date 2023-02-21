@@ -13,7 +13,10 @@ NOTE: Setting the variable in the config file must be of the form `VAR_NAME=...`
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. `$INPUT_DIR` is the Local directory of the script.
 Name | Scope | Defaults | Description
 -----|-------|----------|------------
-ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR|
+ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR|directory to find files.
+ADD_EXT_FILE|Extensions: add end wrap|$base_filename|the filename. Overridden by ext_opt.
+AWK_EXT_DIR|Extensions: awk|$INPUT_DIR|directory to find awk files.
+AWK_EXT_FILE|Extensions: awk|$base_filename|filename of awk file to run. Overridden by ext_opt.
 CONFIG_ENV_PATH|Script|/etc|
 CONFIG_FILE|Script|${CONFIG_ENV_PATH:-/etc}/vclods|
 CURL_EXT_JQ_PAGE_PROG|Extensions: curl||The jq program to use for batching
@@ -28,14 +31,15 @@ DIFF_EXT_OPERATION|Extensions: diff|$ext_opt|vclod_operation to optionally proce
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1|1 means halt on error, 0 means continue even if there are errors
 DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
-DIR_EXT_START|Extensions: dir||Begining regex to find subscripts. Overridden by ext_opt
+DIR_EXT_START|Extensions: dir|$base_filename|Begining regex to find subscripts. Overridden by ext_opt
 DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
 DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
 EMAIL_EXT_FILE|Extensions: email|$(mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
 EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body; 0 sends it as an attachment
 EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, This defines the body of the email pre-literate_source
 EMAIL_EXT_SUBJECT|Extensions: email|${base_filename//_/ }|
-ETL_EXT_DIR|Extensions: etl|$INPUT_DIR|Directory to look for etl temp table definition files
+ETL_EXT_DIR|Extensions: etl|$INPUT_DIR|Directory to look for .etl temp table definition files
+ETL_EXT_FILE|Extensions: etl|$base_filename|temp table definition filename.
 EXTRA_ERROR_EMAIL|Post Process||must have an email to send to
 HEREDOC_DELIMITER|Extensions: litsh|MSG|If multiple literate_source layers deep, use this to override the heredoc delimiter
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq programs in.
@@ -55,6 +59,7 @@ LOG_SQL_PASSWORD|Post Process|$LOG_PW|Defines log2sql Post Processing db connect
 LOG_SQL_USER|Post Process|$LOG_USER|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 OPERATIONS_EMAIL|Global||Email address list to send error output to
 OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR|Directory to put program output
+OUT_EXT_FILE|Extensions: out outa|$base_filename|the filename. Overridden by ext_opt.
 OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguish between different runs
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
 RM_ERR_FILE|Script|1|1 will detele error files after they post processing; 0 will leave them around. The default is recommended since Error files are redundant

@@ -2,6 +2,7 @@
 : "${JQ_EXT_OPT:=}" # jq command options, generally -cMr
 : "${JQ_EXT_PROG:=}" # if not using ext_opt, the jq program to use, simplest is '.'
 : "${JQ_EXT_DIR:=$INPUT_DIR}" # What directory to look for ext_opt jq programs in.
+[ -z "$JQ_EXT_PROG" ] && : "${ext_opt:=$base_filename}" # if neither JQ_EXT_PROG or ext_opt are defined, default to using base_filename to find the JQ program
 
 if [[ -z "$ext_opt" ]] ; then
   jq $JQ_EXT_OPT "$JQ_EXT_PROG"

@@ -1,4 +1,6 @@
 #TERM Append to file; stop
 : "${OUT_EXT_DIR:=$INPUT_DIR}" # Directory to put program output
 : "${OUT_EXT_FILE_SHARD:=$(date +%F)}" # A way to save and distinguish between different runs
-cat >> "$OUT_EXT_DIR/${ext_opt:-$base_filename}-$OUT_EXT_FILE_SHARD"
+: "${ext_opt:=${OUT_EXT_FILE:=$base_filename}}" # the filename. Overridden by ext_opt.
+
+cat >> "$OUT_EXT_DIR/$ext_opt-$OUT_EXT_FILE_SHARD"

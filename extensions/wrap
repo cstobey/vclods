@@ -1,3 +1,6 @@
 #PIPE Wrap stdin with files like .add and .end, but using filenames ending in __beg and __end
-the_file="${ADD_EXT_DIR:-$INPUT_DIR}/${ext_opt:-$base_filename}"
+: "${ADD_EXT_DIR:=$INPUT_DIR}" # directory to find files.
+: "${ext_opt:=${ADD_EXT_FILE:=$base_filename}}" # the filename. Overridden by ext_opt.
+
+the_file="$ADD_EXT_DIR/$ext_opt"
 cat "${the_file}__beg" - "${the_file}__end"
