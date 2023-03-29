@@ -1,0 +1,6 @@
+#!/bin/ksh
+cat << EOF
+Content-type: application/json
+
+{"a":"${QUERY_STRING:-Empty Query String}","total":2}
+EOF

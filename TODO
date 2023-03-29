@@ -25,6 +25,3 @@ should I validate that tag is surrounded by `[]`s?
 
 vclod_helpers Line 3:add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } 
 handle spaces?
-
-test/secure_config Line 3:##
-setup custom test_vclod user credentials

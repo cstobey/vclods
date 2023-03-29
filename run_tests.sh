@@ -13,7 +13,7 @@ numb_lines="$(cat expected_logs/* | wc -l)"
 CONFIG_FILE="${LOCAL_DIR}/config" ../vclod_do_dir "${LOCAL_DIR}/setup_test_pp_db.sh"
 
 # setup web server
-(cd test_webserver ; python3 -m http.server 9000 2>/dev/null) &
+(cd test_webserver ; python3 -m http.server 9000 --cgi 2>/dev/null) &
 trap "kill $!" EXIT # need to cleanup
 
 # allows you to run one test and see the output.. helpful for dev...

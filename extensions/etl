@@ -33,9 +33,10 @@ function all_uni(tt_f, t_f, use_tt) {
   tc_uni=cc_ws(tc_uni, ",", t_f); 
   ttc_uni=cc_ws(ttc_uni, ",", tt_f);
   ugb=cc_ws(ugb, ",", tt_f);
+  w_s=cc_ws(w_s,""," AND "tt_f" IS NOT NULL");
   w=cc_ws(w, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
 function updatable(tt_f, t_f, use_tt) {
-  odku=cc_ws(odku, ",", t_f"=VALUES("t_f")");
+  odku=cc_ws(odku, ",", t_f"=IFNULL(VALUES("t_f"),"t_f")");
   uset=cc_ws(uset, ",", t"."t_f"=" (use_tt ? tt"." : "") tt_f);}
 
 $1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
@@ -43,6 +44,7 @@ $1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail(),1," AND ","")"\n  ";}
 $1~/^#sync_no_update$/ {no_update=1;}
 
 $1~/^#mode$/ && $3~/^(odku_ai|ui_split)$/ {mode=$3}
+$1~/^#mode$/ && $3~/^sparse$/ {use_sparse=1}
 
 $1~/^#generate/ {all(tail(), $3);} # include _no_update and _unique
 $2~/^#(map|unique)/ {all($1, $4);} # include _no_update
@@ -58,16 +60,17 @@ END {
   if (ugb) {ugb="\n  GROUP BY "ugb;}
   if (odku && !no_update) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";odku="";}
   u_to_on="UPDATE "t" JOIN "tt" ON ";
+  if(!use_sparse) {w_s="";}
   if (f) {
     join_on=tt"."nf"="t"."f;
     u_get_f="UPDATE "t" JOIN "tt" ON "w" SET "join_on";";
-    w_not_key="\n  WHERE "nf" IS NULL";
+    w_not_key="\n  WHERE "nf" IS NULL"w_s;
     row_not_in=f" NOT IN (SELECT "nf" FROM "tt");";
   } else {
     join_on=w;
     if (tc_uni) {
       row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt");";
-      w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t");";}
+      w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
   }
   uset=(!no_update && uset) ? u_to_on join_on" SET "uset";" : "";
   if (mode == "ui_split") {

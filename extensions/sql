@@ -4,6 +4,6 @@
 : "${SRC:=VCLOD_SRC_}" # Overrides the connection naming prefix.
 
 if [ "$SQL_EXT_IGNORE_NO_CONNECT" -ne 0 ] ; then 
-  echo 'SELECT NULL;' | vclod_conn "$SRC" || return 0
+  echo 'SELECT NULL;' | vclod_conn "$SRC" 2>/dev/null || { cat >/dev/null; return 0; }
 fi
 envsubst | vclod_conn "$SRC"

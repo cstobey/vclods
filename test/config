@@ -14,7 +14,8 @@ TEE_EXT_DIR=./files/
 OUT_EXT_DIR=./files/
 OPERATIONS_EMAIL=noop@noop.com
 
-CURL_EXT_URL='http://localhost:9000/page_${CURL_EXT_LOOP_CNT}.json'
+CURL_EXT_URL='http://localhost:9000/cgi-bin/query?cnt=${CURL_EXT_LOOP_CNT}&funny=man'
+#CURL_EXT_URL='http://localhost:9000/page_${CURL_EXT_LOOP_CNT}.json'
 CURL_EXT_JQ_PAGE_PROG='.total'
 
 SHARD_EXT_COUNT=2
