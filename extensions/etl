@@ -78,7 +78,7 @@ END {
     p(uset);
     p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_not_key ugb ";");
   } else { # odku_ai
-    if(no_update) {p(u_get_f);} else {w_not_key="";}
+    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE 1=1"w_s;} else {w_not_key="";}}
     p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_not_key ugb odku";");
     p("ALTER TABLE "t" AUTO_INCREMENT = 1;");
   }
