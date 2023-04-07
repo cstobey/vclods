@@ -48,7 +48,7 @@ Many extensions have the abilty to accept one and only one option in the .extens
 ## Extensions
 Name | Location | Option Default | Description
 -----|----------|----------------|------------
-$(grep -oE '( |\$(\{ext_opt(:[?=-]([$][{][^{]+}|[/$0-9A-Za-z_-]+)*)?}|ext_opt)|#(ANY|TERM|PIPE|WRAP|FLOW) .*$)' extensions/* | sed -r 's|extensions/([^:]+):|\1 |;s/\$\{?ext_opt:?[?=-]?/eo /;s/}$//;s/#//' | uniq | awk '
+$(grep -oE '( |\$(\{ext_opt(:[?=-]([$][{][^{]+}|[/$0-9A-Za-z_-]+)*)?}|ext_opt)|#(ANY|TERM|PIPE|WRAP|FLOW|CMD) .*$)' extensions/* | sed -r 's|extensions/([^:]+):|\1 |;s/\$\{?ext_opt:?[?=-]?/eo /;s/}$//;s/#//' | uniq | awk '
 function concat_ws(value, sep, new) {return (value=="") ? new : value sep new} 
 function tail() {ret=""; for (i=3; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret} 
 function err(msg) {print "WARNING: "msg" for "cur >"/dev/stderr"}
@@ -58,8 +58,17 @@ $1!=cur {p();cur=$1}
 $1==cur && $2=="eo" && e=="" {e=tail();if(e=="") e="Used, No Default"} 
 $1==cur && $2=="eo" && e!="Used, No Default" && e!=tail() && tail()!="" {err("inconsistent ext_opt default")}
 $1==cur && $2~/^(ANY|TERM|PIPE|WRAP|FLOW)$/ {if(l!="" && l!=$2) err("inconsistent location");l=$2;d=concat_ws(d," ",tail())}
+$1==cur && $2=="CMD" {d=concat_ws(d," ","[See more](/docs/"cur".md)")}
 END {p()}')
 EOF
+
+for f in $(grep -l '^#CMD' extensions/*) ; do
+  cat << EOF > docs/"$(basename "$f")".md
+# .$(basename "$f") Extension Details and Commands
+
+$(grep '^#CMD' -A100 "$f" | awk '{print} /^#TBL/{n="--";for (i=3; i<=NF; i++)if($i=="|")n=n"|--"; print n}' | sed -r 's/^#(CMD|TBL) *//;s/^# //')
+EOF
+done
 
 grep -rn TODO * | awk '/[^#]# *TODO/ {print 1" "$0} /[^#]## *TODO/ {print 2" "$0} /[^#]### *TODO/ {print 3" "$0} /#### *TODO/ {print 4" "$0}' | sort | sed -r 's/^([0-9]+) ([^:]+):([0-9]+):(.*)# *TODO:? *(.*)$/\n\2 Line \3:\4\n\5/' >TODO
 

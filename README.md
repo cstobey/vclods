@@ -97,49 +97,6 @@ Specify when you want which directories to run and then everything in them run
     /vclod/nightly/server_database/script3.dst.sql
     ...
 
-# Commands
-specialized stream commands for a few of the dot extensions:
-
-## .batch Commands:
-
-Command | default if start exists | description
---------|-------------------------|------------
-#batch | 1000 | Number of lines to put in each batch
-#start | | Start of statement (like INSERT INTO .... VALUES )
-#sep | ',' | how to separate lines
-#end | ';' | how to end lines
-#del_start | | if desired, the start of a delete statement to be used in archiving data
-#del_sep | ',' | delete statement separator
-#del_end | ');' | delete statement end
-#RESET | | reset to start state so you can start a new batch in the same pipe
-
-## .etl Commands:
-Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in and extension option file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
-Command | Requires preceding field ^1 | no_update Option? ^2| Positional Args ^3 | Description
---------|-----------------------------|---------------------|--------------------|------------
-#ingest |Y|N|N| force this field to be ingested in the initial INSERT INTO tmp table
-#ignore |Y|N|N| Do not ingest this field into the initial temp table.
-#key |Y|N|Std| The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table
-#unique |Y|N|Std| Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains)
-#map |Y|Y|Std| A regular field on the given table. 
-#generate |N|Y|Std + SQL statement| Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation
-#generate_unique |N|N|Std + SQL statement| A logical combination of #generate and #unique
-#include |YN|N|local SQL filename| include a sql script file (with no .extension) to handle any additional reformatting or processing that is required. 
-#sync |N|Y|Destination Table + More ^4 | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order
-#mode|N|N|Destination Table + odku_ai or ui_split|odku_ai is the default mode: it will force primary keys not to bloat; ui_split tries its best to not bloat Autoinc keys, but doesn't force an ALTER TABLE. Use it with lower cardinality tables.
-
-1. If Y, add the command after the temp table field definition. If N, then put it on its own line as a stand alone command. If YN (ie for `#include`), if the command is on a temp table field line, it acts as both `#include` AND `#ignore`.
-1. on_update means the field will not be updated when it changes (ie, will not be in the ON DUPLICATE KEY UPDATE list). It is annotated by updating the command name, for instance `#sync` becomes `#sync_no_update`.
-1. N means there are no Positional Arguments after the command. Std means the standard ones are required (destination table name followed by the destiniation field name -- spaces not allowed).
-1. #sync extra options are either `SET_NOT_PRESENT` followed by whatever you would put in an UPDATE SET clause for any rows that are not in the temp table followed by an optional WHERE clause to indicate additional cohort constraints, or `DELETE_NOT_PRESENT` followed by an optional WHERE clause that acts the same way. (In the SET version, the WHERE is a requied delimiter; in the DELETE version, the WHERE keyword may not be present.)
-
-## .vfs Commands:
-Only 1 Positional Argument is used. everything else is a comment
-Command | Argument | Description
---------|----------|------------
-#fifo | filename | creates a fifo (a virtual file) in the INPUT_DIR (ie, where the file we are processing lives, or pwd if that is stdin) and pipes everything after this line into that file (until it reaches another command)
-#run | vitual vclod filename | runs everything from the start of stream to the first .vfs command through vclod_operation. The vitural filename here can then use the fifo files as extesion arguments
-
 # Testing
 
 First setup the `./test/secure_config` file to have the right mysql permissions.

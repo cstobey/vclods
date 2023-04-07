@@ -1,4 +1,4 @@
-#PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .batch.(sql|dst).
+#PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch.
 fn=$(mktemp)
 add_file_cleanup "$fn"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
@@ -22,9 +22,15 @@ function sync_tbl { # TODO: get rid of the ALTER...AUTO_INCREMENT by decomposing
   echo "$working_fields" | grep -E "#[^ ]+ $tbl( |$)" | awk -v t="$tbl" -v tt="$tmp_tbl" '
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
+function if_or(v, d) {return (v=="") ? d : v}
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
 function p(value) {if(value){print value;}}
 function ext(msg) {should_exit=1; print msg > "/dev/stderr"; exit 1;}
+
+function greatest(t_f, tt_f) {return t_f"=GREATEST(IFNULL("tt_f","t_f"), IFNULL("t_f", "tt_f"))"}
+function least(t_f, tt_f) {return t_f"=LEAST(IFNULL("tt_f","t_f"), IFNULL("t_f", "tt_f"))"}
+function ifnull(t_f, tt_f) {return t_f"=IFNULL("tt_f","t_f")"}
+function always(t_f, tt_f) {return t_f"="tt_f}
 
 function all(tt_f, t_f) {
   tc=cc_ws(tc, ",", t_f); 
@@ -35,9 +41,10 @@ function all_uni(tt_f, t_f, use_tt) {
   ugb=cc_ws(ugb, ",", tt_f);
   w_s=cc_ws(w_s,""," AND "tt_f" IS NOT NULL");
   w=cc_ws(w, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
-function updatable(tt_f, t_f, use_tt) {
-  odku=cc_ws(odku, ",", t_f"=IFNULL(VALUES("t_f"),"t_f")");
-  uset=cc_ws(uset, ",", t"."t_f"=" (use_tt ? tt"." : "") tt_f);}
+function updatable(tt_f, t_f, use_tt, f_start) {
+  f_end=if_or(gensub(/^#[^_]+_?(.*)?$/, "\\1", "g", f_start),"ifnull");
+  odku=cc_ws(odku, ",", @f_end(t_f, "VALUES("t_f")"));
+  uset=cc_ws(uset, ",", @f_end(t"."t_f, (use_tt ? tt"." : "") tt_f));}
 
 $1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
 $1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail(),1," AND ","")"\n  ";} 
@@ -48,8 +55,8 @@ $1~/^#mode$/ && $3~/^sparse$/ {use_sparse=1}
 
 $1~/^#generate/ {all(tail(), $3);} # include _no_update and _unique
 $2~/^#(map|unique)/ {all($1, $4);} # include _no_update
-$1~/^#generate$/ {updatable(tail(), $3, 0);}
-$2~/^#map$/ {updatable($1, $4, 1);}
+$1~/^#generate(_(ifnull|always|greatest|least))?$/ {updatable(tail(), $3, 0, $1)}
+$2~/^#map(_(ifnull|always|greatest|least))?$/ {updatable($1, $4, 1, $2)}
 $2~/^#unique$/ {all_uni($1, $4, 1);}
 $1~/^#generate_unique$/ {all_uni(tail(), $3, 0);}
 
@@ -89,3 +96,42 @@ END {
 }
 echo '#RESET'
 grep -E -o '#(include|sync(_no_update)?) [^#]+' "$fn" | awk 'BEGIN {printf "cat <(echo)"} /^#include/ {printf " $ETL_EXT_DIR/"$2} /^#sync/ {printf " <(sync_tbl "$2")"}' | . /dev/stdin
+
+#CMD Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
+
+## Stand-Alone Commands
+#TBL Command | Description
+#mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
+#sync | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
+#include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
+#generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
+#generate_unique | A logical combination of #generate and #unique
+
+## Commands after a field definition
+# Unless specified, the following commands take the destination table and field name as parameters. Spaces are not allowed in table and field names. #generate follows the same format but is not attached to a field.
+#TBL Command | Description
+#ingest | Force this field to be ingested in the initial INSERT INTO tmp table. Takes not parameters.
+#ignore | Do not ingest this field into the initial temp table. Takes not parameters.
+#key | The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table.
+#unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
+#map | A regular field on the given destination table. See Modifiers below.
+
+## #mode Options
+#TBL Option | Description
+# odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE
+# ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+
+## #sync Optional Parameters
+# These follow a destination table name
+#TBL Option | Format | Description
+# SET_NOT_PRESENT | <SET clause without the SET><Optional WHERE clause> | UPDATEs any rows in the destination table that are not found in the temp table in the provided way.
+# DELETE_NOT_PRESENT | <Optional WHERE clause without the WHERE> | DELETEs any rows in the destination table that are not found in the temp table and conform to the where clause.
+
+## Modifiers for #map and #generate
+# These are appened directly to the Command that they modify, so #map + _no_update would be #map_no_update.
+#TBL Modifier | Description
+# _no_update | Exclude this field from being updated if it otherwise would have been.
+# _ifnull | The default: This field will be updated if the temp table value IS NOT NULL.
+# _always | Update the field even if the temp table value IS NULL.
+# _greatest | Update the field to the GREATEST value between the destination and temp tables. NULL safe.
+# _least | Update the field to the LEAST value between the destination and temp tables. NULL safe.
