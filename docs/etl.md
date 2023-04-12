@@ -3,11 +3,13 @@
 Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
 ## Stand-Alone Commands
+Order between #sync, #append, and #include commands indicates execution order. 
 Command | Description
 --|--
 #mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
-#sync | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
+#sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
+#append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
 

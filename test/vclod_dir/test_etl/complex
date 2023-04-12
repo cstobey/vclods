@@ -45,4 +45,5 @@ INSERT INTO field (entity_id,data_type_id,is_active,name,field_authorization,is_
   ON DUPLICATE KEY UPDATE data_type_id=IFNULL(VALUES(data_type_id),data_type_id),is_active=IFNULL(VALUES(is_active),is_active),field_authorization=IFNULL(VALUES(field_authorization),field_authorization),is_nullable=IFNULL(VALUES(is_nullable),is_nullable),default_value=IFNULL(VALUES(default_value),default_value),order_by=IFNULL(VALUES(order_by),order_by);
 ALTER TABLE field AUTO_INCREMENT = 1;
 UPDATE field SET is_active=0 WHERE entity_id IN (SELECT DISTINCT entity_id FROM tmp_col) AND ROW(entity_id,name) NOT IN (SELECT entity_id,column_name FROM tmp_col);
+UPDATE tmp_col SET entity_id = NULL WHERE entity_id IS NULL;
 

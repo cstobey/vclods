@@ -7,7 +7,7 @@ add_file_cleanup "$fn"
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$fn" # handle fifos; -- are real comments
 sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
 tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one or handle multiple appropriately
-ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include)' | awk '{print $1}' | paste -sd',')
+ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
 working_fields=$(grep -E "#(key|unique|generate_unique|mode|(sync|map|generate)(_no_update)?) " "$fn" | sed -r 's/^ +//;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} 1' | grep -E "#(key|unique|sync|map|generate|mode)")
 cat << EOF
 
@@ -95,15 +95,23 @@ END {
 }'
 }
 echo '#RESET'
-grep -E -o '#(include|sync(_no_update)?) [^#]+' "$fn" | awk 'BEGIN {printf "cat <(echo)"} /^#include/ {printf " $ETL_EXT_DIR/"$2} /^#sync/ {printf " <(sync_tbl "$2")"}' | . /dev/stdin
+grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$fn" | awk '
+function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function tail() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+BEGIN {printf "cat <(echo)"} 
+/^#include/ {printf " $ETL_EXT_DIR/"$2} 
+/^#append/ {printf " <(echo \x22"tail()"\x22)";} 
+/^#sync/ {printf " <(sync_tbl "$2")"}' | . /dev/stdin
 
 #CMD Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
 ## Stand-Alone Commands
+# Order between #sync, #append, and #include commands indicates execution order. 
 #TBL Command | Description
 #mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
-#sync | Command to sync the temp table with the destination table. Order between #sync and #include commands indicates execution order. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
+#sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
+#append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
 

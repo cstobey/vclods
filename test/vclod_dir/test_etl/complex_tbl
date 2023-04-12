@@ -23,3 +23,4 @@ CREATE OR REPLACE TABLE tmp_col (
   column_comment VARCHAR(2048), #map_no_update field description
   column_position INT(11) #map field order_by
 );
+#append UPDATE tmp_col SET entity_id = NULL WHERE entity_id IS NULL; # no-op just to test #append 
