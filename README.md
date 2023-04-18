@@ -97,7 +97,12 @@ Specify when you want which directories to run and then everything in them run
     /vclod/nightly/server_database/script3.dst.sql
     ...
 
-# Testing
+## Installation
+
+* Docker https://github.com/joshurbain/vclods-docker 
+* Raw: clone to /usr/local/bin/vlcods (or whereever, but then need to specify the path later) ; cd vclods ; ./install 
+
+## Testing
 
 First setup the `./test/secure_config` file to have the right mysql permissions.
 `./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; check post_process log2sql; prints all output to the terminal
