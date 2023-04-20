@@ -6,7 +6,7 @@ add_file_cleanup "$fn"
 
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$fn" # handle fifos; -- are real comments
 sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
-tmp_tbl=$(grep -E '^CREATE (TEMPORARY |OR REPLACE )?TABLE' "$fn" | awk '$2~/^OR$/ {print $5} $2~/^TEMPORARY$/ {print $4} $2~/^TABLE$/ {print $3}') # TODO: ensure there is only one or handle multiple appropriately
+tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$fn" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
 working_fields=$(grep -E "#(key|unique|generate_unique|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) " "$fn" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} /^[#]/ {gsub(/#/, "\n#", $0)} 1' | grep -E "#(key|unique|sync|map|generate|mode)")
 cat << EOF
@@ -16,7 +16,7 @@ cat << EOF
 EOF
 cat # include the previous pipe's data
 
-function sync_tbl { # TODO: get rid of the ALTER...AUTO_INCREMENT by decomposing ODKU so that the UPDATE is its own statement.
+function sync_tbl {
   tbl=$1
   shift
   echo "$working_fields" | grep -E "#[^ ]+ $tbl( |$)" | awk -v t="$tbl" -v tt="$tmp_tbl" '

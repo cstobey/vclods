@@ -1,6 +1,6 @@
 vclod_mysql_connection() {
   : ${1:?Need a Connection_Prefix}
   h="$(vclod_conn_arg $1 MYSQL HOST)" && u="$(vclod_conn_arg $1 MYSQL USER)" && p="$(vclod_conn_arg $1 MYSQL PASSWORD)" && d="$(vclod_conn_arg $1 MYSQL DB)" || exit $?
-  mysql -h"$h" -u"$u" -p"$p" "$d" -${ext_opt:-BNAwrc}
+  mysql -h"$h" -u"$u" -p"$p" "$d" -${ext_opt:-BNAwrc} --init-command="SET NAMES utf8mb4;"
 }
 export vclod_mysql_connection
