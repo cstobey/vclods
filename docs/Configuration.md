@@ -66,7 +66,7 @@ RM_ERR_FILE|Script|1|1 will detele error files after they post processing; 0 wil
 SHARD_EXT_COUNT|Extensions: shard||the number of times to loop
 SHARD_EXT_OPERATION|Extensions: shard|${ext_opt:-sh}|what vclod_operation to use to process stdin
 SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations. -1 to run in series. 0 to run in series. Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
-SH_EXT_DIR|Extensions: sh|$INPUT_DIR|
+SH_EXT_DIR|Extensions: sh|$INPUT_DIR|Directory to look for files referenced by ext_opt
 SLACK_API_URL|Extensions: slack slack_errors||must have an endpoint to send the logs to -- same one that errors use
 SLACK_CHANNEL|Post Process|vclod_errors|Thus this only works if the bot is configured for multichannel use
 SLACK_EMOJI|Post Process|:robot_face:|Give it some style ;)

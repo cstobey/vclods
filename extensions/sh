@@ -1,6 +1,9 @@
-#ANY Source a ksh script
+#ANY Source a ksh script from the pipe or an external file (referenced through ext_opt -- 1 means use the base_filename)
+: "${SH_EXT_DIR:=$INPUT_DIR}" # Directory to look for files referenced by ext_opt
+[ "${ext_opt}" == "1" ] && ext_opt="$base_filename" # sentinal value
+
 if [[ -z $ext_opt ]] ; then
   . /dev/stdin
 else
-  . "${SH_EXT_DIR:-$INPUT_DIR}/${ext_opt}"
+  . "$SH_EXT_DIR/$ext_opt"
 fi

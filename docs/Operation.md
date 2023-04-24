@@ -31,7 +31,7 @@ null|TERM|Not Used|dump stdout to /dev/null, effectively silencing output.
 out|TERM|${OUT_EXT_FILE:=$base_filename}|Write to file; stop
 outa|TERM|${OUT_EXT_FILE:=$base_filename}|Append to file; stop
 py|ANY|Used, No Default|Run either stdin or ext_opt file (with any optional ending) as python3
-sh|ANY|Used, No Default|Source a ksh script
+sh|ANY|Used, No Default|Source a ksh script from the pipe or an external file (referenced through ext_opt -- 1 means use the base_filename)
 shard|FLOW|sh|Running a stdin with the given operation $SHARD_EXT_COUNT times. Optional run batches in series, sleep a set interval, or go full for parallelity.
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
 slack|TERM|Not Used|push stdin to slack channel. Will propogate all data on.
