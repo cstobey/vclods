@@ -1,6 +1,6 @@
 # VCLODs: Variable Configuration Locking Operation Destination Scripts
 ## What are VCLODs?
-An open-source directory based ksh framework to productionize programs from component scripts
+An open-source directory based ksh framework to productionize programs from component scripts using dot extension lists as a functional pipe specification. Especially useful for data pipelines.
 
 ## What are the benefits?
 * Build from simple scripts
@@ -31,6 +31,9 @@ An open-source directory based ksh framework to productionize programs from comp
 ![discriptive diagram of how VCLODs works](/VCLODs.png)  
 
 # VCLODs Detailed How it Works
+## Variable
+The goal is to have everything be tunable. As a Framework, VCLODs trys to be permissive instead of opinionated, allowing for overriding behavior at every level as much as possible. You can even use stdin to simulate a script file (or use .vfs to simulate multiple files) as needed and every Configuration variable can be overridden at the command line by prepending it with `O_`. This allows you to use the same tool for development and one-off scripts that you use for automated daemons.
+
 ## Configuration
 There is a global config file to make life easier (`/etc/vclods`), then each directory has its own configs to fine tune what all the scripts in a given directory will do. [Here is a list of all the Configuration Variables](/docs/Configuration.md).
 
@@ -41,28 +44,33 @@ Each script file automatically locks out redundant execution (or allows up to `V
 Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. [Here is a list of all the .extension Operations](/docs/Operation.md).
 
 ## Destination
-Log output (anything in stdout at pipe's end) can go to 5 locations: 
+Log output (anything in stdout at pipe's end) can go to the following locations: 
 Control | Where | Description
 --------|-------|------------
 Always | log files | in $LOG_BASE_DIR and $VCLOD_ERR_DIR
 Always | syslog | This can be pulled in by systems like graylog and datadog
+Conditional | stdout | if you are manually running the script in a terminal
 Conditional | email | stderr goes to email ($OPERATIONS_EMAIL) for alerting
-Optional | stdout | if you are manually running the script in a terminal
-Optional | post process script | As defined in $LOG_POST_PROCESS. The provided post process script (vclod_pp_log2sql) logs to SQL for relational querying
+Optional | Slack | stderr goes to slack when configured for alerting
+Optional | SQL database | Use the provided DDL (pp_log2sql_table.sql) to setup the tables, then configure the LOG_DB_ connection to store all logs for relational querying
+Optional | post process script | As defined in $LOG_POST_PROCESS
 
+# Sales Pitch
 ## What is the Strategy?
 * Accomidating lazy Database Programmers ;)
 * Prioriting work done over copy paste boilerplate
+* Adds data pipelining power tools (especially .etl)
 
 ## What are the Objections?
 * Unnecessary!! I don't need this brain pain!!
-  * Copy and paste is always an option. As well as re-debugging
-  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement then every time you add a new language to your tech stack
+  * Copy and paste is always an option, but requires re-debugging
+  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement them every time you add a new language to your tech stack
   
 * ksh < python3
   * ok, so use python inside VCLODs. Productionization is free
   * Shell scripting is the universal languge
 
+# Examples
 ## Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self descriptive
 * For more examples, look in this repo's test directory. Output is compared to `test/expected`
 * script.sh: run a script in directory context (VCLODs handles Timing, Configuration, Locking, Logging, ...)
@@ -97,12 +105,12 @@ Specify when you want which directories to run and then everything in them run
     /vclod/nightly/server_database/script3.dst.sql
     ...
 
-## Installation
+# Installation
 
 * Docker https://github.com/joshurbain/vclods-docker 
 * Raw: clone to /usr/local/bin/vlcods (or whereever, but then need to specify the path later) ; cd vclods ; ./install 
 
-## Testing
+# Testing
 
 First setup the `./test/secure_config` file to have the right mysql permissions.
 `./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; check post_process log2sql; prints all output to the terminal
