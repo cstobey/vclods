@@ -75,9 +75,12 @@ END {
     row_not_in=f" NOT IN (SELECT "nf" FROM "tt");";
   } else {
     join_on=w;
-    if (tc_uni) {
+    if (tc_uni~/^[^,]+,/) {
       row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt");";
-      w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
+      w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")"w_s;
+    } else if (tc_uni~/^[^,]+$/) {
+      row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt");";
+      w_not_key="\n  WHERE "ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
   }
   uset=(!no_update && uset) ? u_to_on join_on" SET "uset";" : "";
   if (mode == "ui_split") {
@@ -126,8 +129,9 @@ BEGIN {printf "cat <(echo)"}
 
 ## #mode Options
 #TBL Option | Description
-# odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE
-# ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+# odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE. Overrides ui_split
+# ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables. Overrides odku_ai
+# sparse | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables. Independent of other modes.
 
 ## #sync Optional Parameters
 # These follow a destination table name

@@ -26,8 +26,9 @@ Command | Description
 ## #mode Options
 Option | Description
 --|--
-odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE
-ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE. Overrides ui_split
+ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables. Overrides odku_ai
+sparse | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables. Independent of other modes.
 
 ## #sync Optional Parameters
 These follow a destination table name

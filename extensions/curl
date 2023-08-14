@@ -1,4 +1,4 @@
-#ANY cURL wrapper with optional batching using .jq
+#ANY cURL wrapper with optional batching using .jq. (be careful, this extension is going to be prone to breakage as I dont think I did it right).
 : "${CURL_EXT_OPT:=-sSf}" # cURL options as seen in the man page.
 : "${CURL_EXT_URL:?}" # The URL to call, uses literate_source to qualify variables. $CURL_EXT_LOOP_CNT is the default variable used for batching
 : "${CURL_EXT_JQ_PAGE_PROG:=}" # The jq program to use for batching
