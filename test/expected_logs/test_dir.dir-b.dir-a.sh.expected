@@ -1,3 +1,4 @@
 [LOG] base dir called
 [LOG] a called
 [LOG] b called
+[LOG] c should be called as a .sql.sh even though it is deep

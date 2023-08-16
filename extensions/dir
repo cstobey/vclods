@@ -1,4 +1,4 @@
-#WRAP Run a subdirectory where the last directory name holds the .extension on how to process the files (the files may not have .extensions of their own).
+#WRAP Runs all scripts in any subdirectory that starts with $DIR_EXT_START where the .extensions are mined from all directory names between $DIR_EXT_DIR and the filename and disallowed on the filename.
 : "${DIR_EXT_DIR:=$INPUT_DIR}" # Directory to look for subscripts
 : "${ext_opt:=${DIR_EXT_START:=$base_filename}}" # Begining regex to find subscripts. Overridden by ext_opt
 : "${DIR_EXT_CONTEXT:=}" # Any information you want displayed on error
@@ -6,5 +6,5 @@
 err_opt="$([ "$DIR_ERR_SHOULD_EXIT" -eq 1 ] && echo " || exit 1")"
 cat
 find "$DIR_EXT_DIR" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_DIR_REGEX" -regex "^$DIR_EXT_DIR/${ext_opt}.*$" ! -name config | sort \
-  | awk -F'/' -v e="$err_opt" '{f=gensub(/^[^.]*[.]/, $(NF)".", "g" , $(NF-1)); print "cat "$0" | vclod_operation "f e}' | . /dev/stdin \
+  | awk -F'/' -v e="$err_opt" -v d="$DIR_EXT_DIR/$ext_opt" '{f=gensub("/[^./]*([^/]*)", "\\1", "g", gensub("^"d"(.+)/"$NF, $(NF)"/\\1", 1)); print "cat "$0" | vclod_operation "f e}' | . /dev/stdin \
   || { ret="$?" ; echo "$ext_opt Directory Failed $DIR_EXT_CONTEXT" >&2; exit "$ret"; }

@@ -1,1 +1,1 @@
-echo c wont be called because it is too deep
+echo "SELECT 'c should be called as a .sql.sh even though it is deep';"
