@@ -43,7 +43,7 @@ function all_uni(tt_f, t_f, use_tt) {
   w=cc_ws(w, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
 function updatable(tt_f, t_f, use_tt, f_start) {
   f_end=if_or(gensub(/^#[^_]+_?(.*)?$/, "\\1", "g", f_start),"ifnull");
-  odku=cc_ws(odku, ",", @f_end(t_f, "VALUES("t_f")"));
+  odku=cc_ws(odku, ",", @f_end(t"."t_f, "VALUE("t_f")"));
   uset=cc_ws(uset, ",", @f_end(t"."t_f, (use_tt ? tt"." : "") tt_f));}
 
 $1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
