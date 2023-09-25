@@ -4,6 +4,6 @@
 : "${DST:=VCLOD_DST_}" # Overrides the connection naming prefix.
 
 if [ "$DST_EXT_IGNORE_NO_CONNECT" -ne 0 ] ; then
-  echo 'SELECT NULL;' | vclod_conn "$DST" 2>/dev/null || { cat >/dev/null; return 0; }
+  echo 'SELECT NULL;' | vclod_conn "$DST" >/dev/null 2>/dev/null || { cat >/dev/null; return 0; }
 fi
 envsubst | vclod_conn "$DST"
