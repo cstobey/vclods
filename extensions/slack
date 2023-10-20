@@ -12,5 +12,5 @@ payload="$(cat << EOF
 payload={"channel": "$SLACK_EXT_CHANNEL", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "$SLACK_EXT_EMOJI", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": $(awk -v m="$(wc -l "$TEMP_FILE")" 'BEGIN {t=m-10;e=1;l=0} l <= 2996 && (NR <= 10 || NR >= t) {l=l + length;if(l >= 2996) {e=0;print "..."} else print} NR > 10 && NR < t && e {print "---"; e=0}' "$TEMP_FILE" | jq -Rs '.') } }] }] }
 EOF
 )"
-[ -s "$TEMP_FILE" ] || (curl -sSf -m15 --data-urlencode "$payload" "$SLACK_API_URL" >/dev/null || echo "[ERROR] slack: $payload")
+[ -s "$TEMP_FILE" ] && (curl -sSf -m15 --data-urlencode "$payload" "$SLACK_API_URL" >/dev/null || echo "[ERROR] slack: $payload")
 cat "$TEMP_FILE"  # make it go to the logs as well?
