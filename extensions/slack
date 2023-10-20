@@ -9,7 +9,7 @@ cat >"$TEMP_FILE"
 
 # TODO: if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 payload="$(cat << EOF
-payload={"channel": "$SLACK_EXT_CHANNEL", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "$SLACK_EXT_EMOJI", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": " $(awk -v m="$(wc -l "$ELF")" 'BEGIN {t=m-10;e=1;l=0} l <= 2996 && (NR <= 10 || NR >= t) {l=l + length;if(l >= 2996) {e=0;print "..."} else print} NR > 10 && NR < t && e {print "---"; e=0}' "$TEMP_FILE" | jq -Rs '.')" } }] }] }
+payload={"channel": "$SLACK_EXT_CHANNEL", "username": "$(hostname -s)", "text": "$S : $LF", "icon_emoji": "$SLACK_EXT_EMOJI", "attachments": [{ "blocks": [{ "type": "section", "text": {"type": "plain_text", "text": " $(awk -v m="$(wc -l "$TEMP_FILE")" 'BEGIN {t=m-10;e=1;l=0} l <= 2996 && (NR <= 10 || NR >= t) {l=l + length;if(l >= 2996) {e=0;print "..."} else print} NR > 10 && NR < t && e {print "---"; e=0}' "$TEMP_FILE" | jq -Rs '.')" } }] }] }
 EOF
 )"
 [ -z "$query_data" ] || (curl -sSf -m15 --data-urlencode "$payload" "$SLACK_API_URL" >/dev/null || echo "[ERROR] slack: $payload")
