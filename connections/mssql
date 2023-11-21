@@ -1,9 +1,9 @@
 vclod_mssql_connection() {
   : ${1:?Need a Connection_Prefix}
   h="$(vclod_conn_arg $1 MSSQL HOST)" && u="$(vclod_conn_arg $1 MSSQL USER)" && p="$(vclod_conn_arg $1 MSSQL PASSWORD)" && d="$(vclod_conn_arg $1 MSSQL DB)" || exit $?
-  { { { { sqlcmd -y 0 -X -S"$h" -d"$d" -U"$u" -P"$p" ; echo $? >&3; } | 
-    grep -E -v '[(][0-9]+ rows affected[])]' | 
-    grep -v 'Sqlcmd: Warning: The last operation was terminated because the user pressed CTRL+C.' | 
+  { { { { sqlcmd -y 0 -X -S"$h" -d"$d" -U"$u" -P"$p" "${MSSQL_CONN_OPT:-}" ; echo $? >&3; } | # Any additional MSSQL options you want to specify
+    grep -E -v '[(][0-9]+ rows affected[])]' |
+    grep -v 'Sqlcmd: Warning: The last operation was terminated because the user pressed CTRL+C.' |
     sed -r 's/\x00+$//' >&4; } 3>&1; } | { read xs; exit $xs; } } 4>&1
 }
 export vclod_mssql_connection

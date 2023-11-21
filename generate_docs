@@ -1,6 +1,6 @@
 cd "$(dirname "$(readlink -f "$(which "$0")")")"
 
-CODE_FILES='vclod* extensions/* post.sh/*' # NOTE: connections/* doesnt have any variables yet. Need to update if I ever add Configuration Variables to connections.
+CODE_FILES='vclod* extensions/* post.sh/* connections/*'
 exclusions=$(grep -E '^[A-Z_]+=' $CODE_FILES | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
 
 # TODO: post.sh/slack_errors is showing up as an extension for $SLACK_API_URL because it is used in extensions/slack... need to fix that.

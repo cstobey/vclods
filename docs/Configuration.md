@@ -57,6 +57,7 @@ LOG_SQL_ENGINE|Post Process|$LOG_ENGINE|Defines log2sql Post Processing db conne
 LOG_SQL_HOST|Post Process||Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 LOG_SQL_PASSWORD|Post Process|$LOG_PW|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 LOG_SQL_USER|Post Process|$LOG_USER|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
+MSSQL_CONN_OPT|Post Process|additional MSSQL options you want to specify
 OPERATIONS_EMAIL|Global||Email address list to send error output to
 OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR|Directory to put program output
 OUT_EXT_FILE|Extensions: out outa|$base_filename|the filename. Overridden by ext_opt.
