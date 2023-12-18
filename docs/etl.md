@@ -2,7 +2,7 @@
 
 Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
-NOTE: "destination table" below refers to the table you are inserting into. To allow the same table to be referenced several different ways, the format is <physical table name>@<identifier> where only the physical table name is required.
+NOTE: "destination table" below refers to the table you are inserting into. To allow the same table to be referenced several different ways, the format is \<physical table name\>@\<identifier\> where only the physical table name is required.
 
 ## Stand-Alone Commands
 Order between #sync, #append, and #include commands indicates execution order. 
@@ -36,8 +36,8 @@ sparse | Treats the temp table as sparse. All rows with NULL unique values are i
 These follow a destination table name
 Option | Format | Description
 --|--|--
-SET_NOT_PRESENT | <SET clause without the SET><Optional WHERE clause> | UPDATEs any rows in the destination table that are not found in the temp table in the provided way.
-DELETE_NOT_PRESENT | <Optional WHERE clause without the WHERE> | DELETEs any rows in the destination table that are not found in the temp table and conform to the where clause.
+SET_NOT_PRESENT | \<SET clause without the SET\>\<Optional WHERE clause\> | UPDATEs any rows in the destination table that are not found in the temp table in the provided way.
+DELETE_NOT_PRESENT | \<Optional WHERE clause without the WHERE\> | DELETEs any rows in the destination table that are not found in the temp table and conform to the where clause.
 
 ## Modifiers for #map and #generate
 These are appened directly to the Command that they modify, so #map + _no_update would be #map_no_update.
