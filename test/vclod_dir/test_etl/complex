@@ -28,7 +28,7 @@ INSERT INTO entity (entity_type_id,master_location_id,name,description,definitio
   SELECT entity_type_id,master_location_id,table_name,table_comment,filename,1
   FROM tmp_col
   GROUP BY master_location_id,table_name
-  ON DUPLICATE KEY UPDATE definition_link=IFNULL(VALUES(definition_link),definition_link),is_active=IFNULL(VALUES(is_active),is_active);
+  ON DUPLICATE KEY UPDATE entity.definition_link=IFNULL(VALUE(definition_link),entity.definition_link),entity.is_active=IFNULL(VALUE(is_active),entity.is_active);
 ALTER TABLE entity AUTO_INCREMENT = 1;
 UPDATE entity JOIN tmp_col ON tmp_col.master_location_id<=>entity.master_location_id AND tmp_col.table_name<=>entity.name SET tmp_col.entity_id=entity.entity_id;
 UPDATE entity SET is_active=0 WHERE master_location_id=${ml_id} AND entity_id NOT IN (SELECT entity_id FROM tmp_col);
@@ -42,7 +42,7 @@ INSERT INTO field (entity_id,data_type_id,is_active,name,field_authorization,is_
   SELECT entity_id,data_type_id,1,column_name,field_authorization,is_nullable,default_value,column_comment,column_position
   FROM tmp_col
   GROUP BY entity_id,column_name
-  ON DUPLICATE KEY UPDATE data_type_id=IFNULL(VALUES(data_type_id),data_type_id),is_active=IFNULL(VALUES(is_active),is_active),field_authorization=IFNULL(VALUES(field_authorization),field_authorization),is_nullable=IFNULL(VALUES(is_nullable),is_nullable),default_value=IFNULL(VALUES(default_value),default_value),order_by=IFNULL(VALUES(order_by),order_by);
+  ON DUPLICATE KEY UPDATE field.data_type_id=IFNULL(VALUE(data_type_id),field.data_type_id),field.is_active=IFNULL(VALUE(is_active),field.is_active),field.field_authorization=IFNULL(VALUE(field_authorization),field.field_authorization),field.is_nullable=IFNULL(VALUE(is_nullable),field.is_nullable),field.default_value=IFNULL(VALUE(default_value),field.default_value),field.order_by=IFNULL(VALUE(order_by),field.order_by);
 ALTER TABLE field AUTO_INCREMENT = 1;
 UPDATE field SET is_active=0 WHERE entity_id IN (SELECT DISTINCT entity_id FROM tmp_col) AND ROW(entity_id,name) NOT IN (SELECT entity_id,column_name FROM tmp_col);
 UPDATE tmp_col SET entity_id = NULL WHERE entity_id IS NULL;
