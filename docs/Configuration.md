@@ -38,6 +38,9 @@ EMAIL_EXT_FILE|Extensions: email|$(mktemp)|Absolute path of filename to put stdi
 EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body; 0 sends it as an attachment
 EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, This defines the body of the email pre-literate_source
 EMAIL_EXT_SUBJECT|Extensions: email|${base_filename//_/ }|
+ENV_EXT_DIR|Extensions: env|$INPUT_DIR|Directory to look for files referenced by ext_opt
+ENV_EXT_FILE|Extensions: env|$base_filename|Filename of env config file to run. Overridden by the first part of ext_opt. If not present, defaults to reimporting the base config
+ENV_EXT_OPERATION|Extensions: env|sh|Operations to use of awk file to run. Overridden by all the extensions in ext_opt (everything after a required `+`).
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR|Directory to look for .etl temp table definition files
 ETL_EXT_FILE|Extensions: etl|$base_filename|temp table definition filename.
 EXTRA_ERROR_EMAIL|Post Process||must have an email to send to

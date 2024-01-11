@@ -22,6 +22,7 @@ dir|WRAP|${DIR_EXT_START:=$base_filename}|Runs all scripts in any subdirectory t
 dst|ANY|Not Used|Run a SQL script with the secondary connection (configured with VCLOD_DST_)
 email|TERM|Not Used|email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
 end|PIPE|${ADD_EXT_FILE:=$base_filename}|Postpend a file's contents to the extension pipe
+env|ANY|Used, No Default|run an extra config file as the env context for the given operations. ext_opt is of the form `<config_filename>+<operations>`. Each piece may be overridden.
 err|TERM|Not Used|Everything to this point is an error. Great for Data tests.
 etl|PIPE|${ETL_EXT_FILE:=$base_filename}|Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch. [See more](/docs/etl.md)
 g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging

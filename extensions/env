@@ -1,0 +1,23 @@
+#ANY run an extra config file as the env context for the given operations. ext_opt is of the form `<config_filename>+<operations>`. Each piece may be overridden.
+: "${ENV_EXT_DIR:=$INPUT_DIR}" # Directory to look for files referenced by ext_opt
+ext_opt_file="${ext_opt%%.*}"
+ext_opt_opt="${ext_opt#*.}"
+[ "$ext_opt" == "$ext_opt_opt" ] && ext_opt_opt=""
+: "${ext_opt_file:=${ENV_EXT_FILE:=$base_filename}}" # Filename of env config file to run. Overridden by the first part of ext_opt. If not present, defaults to reimporting the base config
+: "${ext_opt_opt:=${ENV_EXT_OPERATION:=sh}}" # Operations to use of awk file to run. Overridden by all the extensions in ext_opt (everything after a required `+`).
+
+f1="$ENV_EXT_DIR/$ext_opt_file"
+f2="$ENV_EXT_DIR/config"
+f3="$INPUT_DIR/config"
+if [ -f "$f1" ] ; then . "$f1"
+elif [ -f "$f2" ] ; then . "$f2"
+elif [ -f "$f3" ] ; then . "$f3"
+else
+  cat << STMT | uniq | paste -sd' ,,' >&2 ; return 1
+.env: a config file must exist. tried: 
+$f1
+$f2
+$f3
+STMT
+fi || return $?
+cat | vclod_operation "env_$base_filename.$ext_opt_opt"

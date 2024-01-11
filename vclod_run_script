@@ -14,10 +14,7 @@ INPUT_DIR="$(dirname "$S")"
 env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
 set +a
 
-. "${VCLOD_BASE_DIR%/}/vclod_helpers" || exit $?
-. "${VCLOD_BASE_DIR%/}/vclod_get_semaphore" || exit $?
-. "${VCLOD_BASE_DIR%/}/vclod_stdio2log" || exit $?
-cat "${VCLOD_BASE_DIR%/}"/connections/* | . /dev/stdin || exit $?
+cat "${VCLOD_BASE_DIR%/}"/{vclod_helpers,vclod_get_semaphore,vclod_stdio2log,connections/*} | . /dev/stdin || exit $?
 
 ret=0
 [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo "[START] $S"
