@@ -8,7 +8,7 @@ THE_FILE="$DIFF_EXT_DIR/$DIFF_EXT_FILE"
 [ -e "$THE_FILE" ] || THE_FILE="$pIN_FILE" # must be -e or fifos break in .vfs
 
 if [[ "$DIFF_EXT_OPERATION" =~ [.] ]] ; then
-  diff -w <(vclod_operation "$DIFF_EXT_OPERATION" <"$THE_FILE") -
+  $DIFF_EXT_CMD <(vclod_operation "$DIFF_EXT_OPERATION" <"$THE_FILE") -
 else
-  diff -w "$THE_FILE" -
+  $DIFF_EXT_CMD "$THE_FILE" -
 fi
