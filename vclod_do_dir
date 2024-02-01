@@ -10,7 +10,7 @@
 
 # Argument validation
 : "${VCLOD_BASE_DIR:?}" "${1:?Missing a directory or file to process}"
-: "${VCLOD_JOBS:=10}" # How many sripts to run in parallel
+: "${VCLOD_JOBS:=10}" # How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 : "${OPERATIONS_EMAIL:?}" # Email address list to send error output to
 [ -d "$VCLOD_BASE_DIR" ] || { echo VCLOD_BASE_DIR must be an existing directory; exit; }
 [ -d "$LOG_BASE_DIR" ] || { echo LOG_BASE_DIR must be an existing directory; exit; }
@@ -19,14 +19,23 @@ MAIL_ELF="${LOG_BASE_DIR:?}/$$.err" # Where to store log files (will also store 
 export MAIL_ELF
 [ -s "$MAIL_ELF" ] && : >"$MAIL_ELF" # force it to start empty
 
+cat "${VCLOD_BASE_DIR%/}"/{vclod_helpers,connections/*} | . /dev/stdin || exit $?
+
 if [ -e "$1" ]; then
-  find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort | xargs -n1 -r -P"$VCLOD_JOBS" "${VCLOD_BASE_DIR%/}/vclod_run_script"
+  PIPE_FIFO="/dev/shm/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 3<>"$PIPE_FIFO"
+  seq 1 "$VCLOD_JOBS" >&3
+  find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort | while read f ; do
+    read dummy <&3
+    ( export MYPID="$(exec sh -c 'echo $PPID')" ; . "${VCLOD_BASE_DIR%/}/vclod_run_script" "$f" ; printf 'a\n' >&3 ) &
+  done  # WAS: xargs -n1 -r -P"$VCLOD_JOBS" "${VCLOD_BASE_DIR%/}/vclod_run_script"
+  wait
+  rm -f "$PIPE_FIFO"
 else
-  . "${VCLOD_BASE_DIR%/}/vclod_helpers" || exit $?
+  export MYPID="$$"
   export pIN_FILE="$(mktemp)" # the p stands for private and prevents it from showing up in the doco
   add_file_cleanup "$pIN_FILE"
   cat >"$pIN_FILE" # not sure why this works here but not in run_script
-  . "${VCLOD_BASE_DIR%/}/vclod_run_script" <"$pIN_FILE" 
+  . "${VCLOD_BASE_DIR%/}/vclod_run_script" <"$pIN_FILE"
 fi
 ret=$?
 [ -s "$MAIL_ELF" ] && [ "$IS_TERMINAL" -eq 0 ] && mail -s "Script error digest on $(hostname)" "$OPERATIONS_EMAIL" <"$MAIL_ELF"

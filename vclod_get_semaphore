@@ -33,6 +33,6 @@ for i in 1 $(seq 2 $VCLOD_BATCH_JOBS) ; do
   fi
   MY_LOCK="$LOCK_FILE"
 done
-[ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $$ >"$MY_LOCK" || exit 1
+[ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $MYPID >"$MY_LOCK" || exit 1
 
 add_file_cleanup "$MY_LOCK"

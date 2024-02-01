@@ -88,7 +88,7 @@ VCLOD_BATCH_JOBS|Script|1|How many instances of one script can be run at the sam
 VCLOD_ENGINE|Script|mysql|
 VCLOD_ERR_DIR|Script||Where to store error files (/dev/shm is a good option)
 VCLOD_EXIT_ERR|Script|$(basename "$1")|
-VCLOD_JOBS|Global|10|How many sripts to run in parallel
+VCLOD_JOBS|Global|10|How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 VCLOD_LOCK_DIR|Script||Where to put lock files. Generally /dev/shm
 WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin
 WHILE_EXT_REQUIRE_OUTPUT|Extensions: while|0|if true, operation must return something to stdout to continue running
