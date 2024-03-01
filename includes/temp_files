@@ -1,0 +1,9 @@
+# p*_exit_trap: The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
+pre_exit_trap() { # adds the given command to the beginning of the exit trap
+  trap "$*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; }
+post_exit_trap() { # adds the given command to the end of the exit trap
+  trap "$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/(.)$/\1;/')$*" EXIT; }
+add_file_cleanup() { # Cleans up the given file(s) when the current script or subshell exits.
+  pre_exit_trap "rm -f $@"; }
+vclod_mktemp() { # Returns the filename of a created temporary file. Automatically flags the file to be cleaned up upon script or subshell exit.
+  tmp_file=$(mktemp); add_file_cleanup "$tmp_file"; printf '%s\n' "$tmp_file"; }

@@ -1,10 +1,9 @@
 #TERM email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
-: "${EMAIL_EXT_FILE:=$(mktemp)}" # Absolute path of filename to put stdin into before sending it. Deleted after use.
-add_file_cleanup "$EMAIL_EXT_FILE"
+: "${EMAIL_EXT_FILE:=$(vclod_mktemp)}" # Absolute path of filename to put stdin into before sending it. Deleted after use.
 cat >"$EMAIL_EXT_FILE"
 [ -s "$EMAIL_EXT_FILE" ] || return 1 # need something to send.
 REPORT_ROWS="$(wc -l "$EMAIL_EXT_FILE")"
-: "${EMAIL_EXT_SUBJECT:=${base_filename//_/ }}"
+: "${EMAIL_EXT_SUBJECT:=${base_filename//_/ }}" # The subject of the email
 : "${SUPPORT_EMAIL:=$OPERATIONS_EMAIL}" # Email address to send to. Errors still go to OPERATIONS_EMAIL
 : "${EMAIL_EXT_MSG_BODY:=Report attached containing $REPORT_ROWS entries}" # If sending as an attachment, This defines the body of the email pre-literate_source
 : "${EMAIL_EXT_INLINE_REPORT:=0}" # 1 inlines the extension pipe into the email body; 0 sends it as an attachment

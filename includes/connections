@@ -1,0 +1,18 @@
+vclod_conn() # PRIVATE
+{
+  CONN_PREFIX=${1:=VCLOD_OVERRIDE_}
+  ENGINE="$(printf 'echo ${%sENGINE:-${VCLOD_ENGINE:-mysql}}' "${CONN_PREFIX}" | . /dev/stdin | tr '[:upper:]' '[:lower:]')"
+  [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
+  CMD=$(printf "vclod_%s_connection %s\n" "$ENGINE" "$CONN_PREFIX")
+  $CMD
+}
+
+vclod_conn_arg() # PRIVATE
+{
+  : ${1:?Need a Connection_Prefix} ${2:?Need an Engine} ${3:?Need to have an argument to generate in HOST, DB, USER, PASSWORD}
+
+  ret_var=$(printf 'printf "%%s\n" "${%s%s:=${VCLOD_%s_%s:=$VCLOD_%s}}"\n' "$1" "$3" "$2" "$3" "$3" | . /dev/stdin)
+  [ -z "$ret_var" ] && { echo >&2 "A $3 connection argument is required to use the .$ext extension (see docs for details)"; exit 1; }
+  printf "$ret_var"
+}
+

@@ -1,11 +1,10 @@
-#! /bin/ksh
-# Executes a VCLOD script (Variable Config, Locking, Operation, and Destination) as called by vclod_do_dir
-# See the README for an overview of VCLODs.
+# Executes one VCLODScript as called by vclod_do_dir
 
-# Argument validation -- Most is elsewhere
+### START Argument validation
 : ${VCLOD_BASE_DIR:?} ${1:?The full path of a file (or pseudofile) to process is a required positional argument}
+: "${DEBUG_SHOULD_TIME_IT:=$IS_TERMINAL}" # 1 prints [START] and [END] log lines at the begining and end of the extension pipe; 0 does not
 : "${pIN_FILE:=$1}"
-S=$([ "$(basename $1)" != "$1" ] && [[ $1 =~ ^/.* ]] && echo "$1" || echo "$(cd $(dirname "$1"); echo "$(pwd)/$(basename "$1")")") # get the absolute path
+S=$([ "$(basename $1)" != "$1" ] && [[ $1 =~ ^/.* ]] && printf '%s\n' "$1" || printf '%s\n' "$(cd $(dirname "$1"); printf '%s\n' "$(pwd)/$(basename "$1")")") # get the absolute path
 
 # respect local config file
 set -a
@@ -14,19 +13,79 @@ INPUT_DIR="$(dirname "$S")"
 env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
 set +a
 
-cat "${VCLOD_BASE_DIR%/}"/{vclod_get_semaphore,vclod_stdio2log} | . /dev/stdin || exit $?
-#cat "${VCLOD_BASE_DIR%/}"/{vclod_helpers,vclod_get_semaphore,vclod_stdio2log,connections/*} | . /dev/stdin || exit $?
+check_dirs
+: "${LOCK_NAME:=${1:?Missing a lock name}}" # Only override if you want multiple scripts to lock each other out and you know what you are doing
+: "${VCLOD_BATCH_JOBS:=1}" # How many instances of one script can be run at the same time
+LOCK_NAME="$(stat -c '%h %i' "$LOCK_NAME" 2>/dev/null | awk -v a="$(basename "$LOCK_NAME")" -v b="${LOCK_NAME//\//_}" '{n=$1;i=$2} END {if (n==1) print a"-"i; else print b;}')"
 
-ret=0
-[ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo "[START] $S"
+: "${LOG_FILE:=${1:?Missing a log file name}}" # If you really want to give the logs a special name, you can use this, but it is not recommended
+: "${RM_ERR_FILE:=1}" # 1 will detele error files after they post processing; 0 will leave them around. The default is recommended since Error files are redundant
+: "${MAIL_ELF:?}"
+### END Argument validation
+
+### START Locking: Ensures that at most N parallel batch jobs run for a particular lock/script. Processes beyond N abort (rather than blocking).
+MY_LOCK=''
+for i in 1 $(seq 2 $VCLOD_BATCH_JOBS) ; do
+  LOCK_FILE="${VCLOD_LOCK_DIR%/}/${LOCK_NAME}.${i}.LCK"
+  if [ -f "$LOCK_FILE" ] ; then
+    ps -p "$(<"$LOCK_FILE")" >/dev/null && continue || { printf 'Removing apparently false lock %s' "$LOCK_FILE"; rm -f "$LOCK_FILE"; }
+  fi
+  MY_LOCK="$LOCK_FILE"
+done
+[ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $MYPID >"$MY_LOCK" || exit 1
+
+add_file_cleanup "$MY_LOCK"
+## END Locking
+
+### START Logging
+LF="${LOG_BASE_DIR%/}/$(basename "$LOG_FILE").$MYPID.log"   # Log File
+ELF="${VCLOD_ERR_DIR%/}/$(basename "$LOG_FILE").$MYPID.err"  # Error Log File
+PELF="${LOG_BASE_DIR%/}/logging_post_process.$MYPID.err" # Post Processing Error Log File
+TLF=$([ "$IS_TERMINAL" -eq 1 ] && printf '/dev/stdout' || printf '/dev/null')
+export LF ELF LOG_FILE
+
+# make sure old runs dont get misattributed to now.
+[ -s "$LF" ] && : >"$LF"
+[ -s "$ELF" ] && : >"$ELF"
+ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
+
+# The conditionals in there allows for application specific tagging of normal output
+# If you keep it to 1 tag per line, then sql_logs will work wonderfully
+# If you want to send warnings through stderr, override [ERROR] with [WARNING].
+vclod_log() { # PRIVATE $1=is_error
+  def_tag="$([ "$1" -eq 1 ] && printf 'ERROR' || printf 'LOG')"
+  let FIRST_ERROR="$1"
+  while IFS='' read -r line; do
+    if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
+      new_line="$MYPID $([[ $line =~ ^\[.* ]] || printf '[%s] ' "$def_tag")$line"
+      logger "$new_line"
+      dated_line="$(printf "%(%F %T)T") $new_line"
+      printf "%s\n" "$dated_line" >>"$LF"
+      if [ "$1" -eq 1 ] ; then 
+        [ $FIRST_ERROR -eq 1 ] && { printf '%s\n' "$MYPID $LOG_FILE" >>"$MAIL_ELF"; let FIRST_ERROR=0; }
+        printf "%s\n" "$dated_line" >>"$ELF"
+        printf "%s\n" "$dated_line" >>"$MAIL_ELF"
+      fi
+      printf "%s\n" "$dated_line" >>"$TLF"
+    fi
+  done
+}
+
+logger_leave () {
+  DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post >"$PELF" 2>"$PELF"
+  [ "$RM_ERR_FILE" == 1 ] && rm -f "$ELF"
+  [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
+}
+post_exit_trap "logger_leave"
+### END Logging
+
+S_content='/dev/stdin'
 if [ -e "$S" ]; then
-  [ -s "$S" ] || { echo >&2 The positional file argument must be a non-empty file; exit 1; }
-  [[ $S =~ .*\.sh$ ]] && head -1 "$S" | grep '^#!' | grep -v 'ksh' | awk 'NR == 1 {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang."}' >&2
-
-  cat "$S"
-else
-  cat
-fi | vclod_operation "$S" 
-
-[ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo "[FINISH] $S $ret"
-exit $ret
+  [ -s "$S" ] || { printf 'The positional file argument must be a non-empty file\n' | vclod_log 1; exit 1; }
+  S_content="$S"
+fi
+{ { { { { 
+  [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && printf '[START] %s\n' "$S";
+  vclod_operation "$S" <"$S_content"; ret="$?";
+  [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && printf '[FINISH] %s %s\n' "$S" "$ret";
+  printf '%s\n' "$ret" >&3; } | vclod_log 0 >&4; } 2>&1 | vclod_log 1 >&4; } 3>&1; } | { read xs; exit $xs; } } 4>&1

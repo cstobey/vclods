@@ -1,0 +1,23 @@
+vclod_op(){ # PRIVATE
+  next="${1%.*}"
+  [[ "$1" == "$next" ]] && cat && return 0 # The cat connects stdin to stdout, note that the error case below does not. This should never happen.
+  extension="${1##*.}"
+  ext="${extension%%-*}"
+  ext_opt="$([ "$extension" = "$ext" ] || echo "${extension#*-}")"
+  ext_opt="${ext_opt//+/.}" ; ext_opt="${ext_opt//\.\./+}"
+  base_filename="${1%%.*}"
+  op_ext_file="${VCLOD_BASE_DIR%/}/extensions/$ext"
+  test -f "$op_ext_file" || { echo "Unknown file type $ext" >&2 ; exit 99 ; }
+  if [[ "$next" == "${next%.*}" ]] ; then
+    . "$op_ext_file"
+  else
+    . "$op_ext_file" | vclod_op "$next"
+  fi
+}
+function vclod_operation { # Within the current VCLODScript's context, process a custom defined VCLODScript. stdin acts as a VCLODScript's file contents; $1 like the filename with extensions.
+  typeset exit_err_msg="${VCLOD_EXIT_ERR:-$(basename "$1")}"
+  typeset ret=0
+  unset VCLOD_EXIT_ERR # force each layer to have its own error context.
+  vclod_op "$(basename "$1")" || { ret=$?; echo >&2 "$exit_err_msg returned $ret"; }
+  return $ret
+}
