@@ -1,6 +1,6 @@
 #FLOW Run multiple input rows in parallel. Retains all functions and args that are in the enviornment.
 : "${ext_opt:=${PARA_EXT_OPERATION:=sh-$base_filename}}" # what vclod_operation to use to process a line of stdin
-: "${PARA_EXT_JOBS:=10}" # numnber of parallel jobs to run at the same time.
+: "${PARA_EXT_JOBS:=10}" # number of parallel jobs to run at the same time.
 _FIFO="${VCLOD_LOCK_DIR%/}/para.$MYPID.fifo" ; mkfifo "$_FIFO" ; exec 3<>"$_FIFO" ; add_file_cleanup "$_FIFO"
 
 stdbuf -i0 -o0 -e0 seq 1 "$PARA_EXT_JOBS" >&3

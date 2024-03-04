@@ -67,13 +67,13 @@ OPERATIONS_EMAIL|Global||Email address list to send error output to
 OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR|Directory to put program output
 OUT_EXT_FILE|Extensions: out outa|$base_filename|the filename. Overridden by ext_opt.
 OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguish between different runs
-PARA_EXT_JOBS|Extensions: para|10|numnber of parallel jobs to run at the same time.
+PARA_EXT_JOBS|Extensions: para|10|number of parallel jobs to run at the same time.
 PARA_EXT_OPERATION|Extensions: para|sh-$base_filename|what vclod_operation to use to process a line of stdin
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
 RM_ERR_FILE|Script|1|1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
 SHARD_EXT_COUNT|Extensions: shard||the number of times to loop
 SHARD_EXT_OPERATION|Extensions: shard|${ext_opt:-sh}|what vclod_operation to use to process stdin
-SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations.<br />-1 to run in series.<br />0 to run in parallel.<br \>Any number will sleep that number of seconds between batchs.<br />Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
+SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations.<br />-1 to run in series.<br />0 to run in parallel.<br />Any number will sleep that number of seconds between batchs.<br />Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
 SH_EXT_DIR|Extensions: sh|$INPUT_DIR|Directory to look for files referenced by ext_opt
 SLACK_API_URL|Post: slack_errors, Extensions: slack||must have an endpoint to send the logs to -- same one that errors use
 SLACK_CHANNEL|Post: slack_errors|vclod_errors|Thus this only works if the bot is configured for multichannel use
