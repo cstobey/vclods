@@ -1,4 +1,4 @@
-# Helper functions that make interacting with cURL much easier. Automatically collects header information.Helper files:
+# Helper functions that make interacting with cURL much easier. Automatically collects header information. Helper files:
 # $VCURL_LAST_FULL_OUT: file with headers and body from the last vcurl run
 # $VCURL_LAST_ERROR: file with the error output if any from the last vcurl run
 # $VCURL_LAST_HEADER: file with the headers from the last vcurl run

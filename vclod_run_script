@@ -19,7 +19,7 @@ check_dirs
 LOCK_NAME="$(stat -c '%h %i' "$LOCK_NAME" 2>/dev/null | awk -v a="$(basename "$LOCK_NAME")" -v b="${LOCK_NAME//\//_}" '{n=$1;i=$2} END {if (n==1) print a"-"i; else print b;}')"
 
 : "${LOG_FILE:=${1:?Missing a log file name}}" # If you really want to give the logs a special name, you can use this, but it is not recommended
-: "${RM_ERR_FILE:=1}" # 1 will detele error files after they post processing; 0 will leave them around. The default is recommended since Error files are redundant
+: "${RM_ERR_FILE:=1}" # 1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
 : "${MAIL_ELF:?}"
 ### END Argument validation
 

@@ -1,7 +1,7 @@
 #FLOW Running a stdin with the given operation $SHARD_EXT_COUNT times. Optional run batches in series, sleep a set interval, or go full for parallelity.
 : "${SHARD_EXT_OPERATION:=${ext_opt:-sh}}" # what vclod_operation to use to process stdin
 : "${SHARD_EXT_COUNT:?}" # the number of times to loop
-: "${SHARD_EXT_SLEEP_INTERVAL:=0}" # positive integer if you want to to sleep some between backgrounded process invocations. -1 to run in series. 0 to run in series. Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
+: "${SHARD_EXT_SLEEP_INTERVAL:=0}" # positive integer if you want to to sleep some between backgrounded process invocations.<br />-1 to run in series.<br />0 to run in parallel.<br \>Any number will sleep that number of seconds between batchs.<br />Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
 
 TEMP_FILE=$(vclod_mktemp)
 cat >"$TEMP_FILE"

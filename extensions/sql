@@ -1,6 +1,6 @@
 #ANY Run a SQL script with default connection (configured with VCLOD_SRC_)
 : "${ext_opt:-BNAwrc if using mysql}" # TODO: this isnt showing up in the docs
-: "${SQL_EXT_IGNORE_NO_CONNECT:=0}" # if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
+: "${SQL_EXT_IGNORE_NO_CONNECT:=0}" # 0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.
 : "${SRC:=VCLOD_SRC_}" # Overrides the connection naming prefix.
 
 if [ "$SQL_EXT_IGNORE_NO_CONNECT" -ne 0 ] ; then 

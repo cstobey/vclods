@@ -5,8 +5,8 @@ cat >"$EMAIL_EXT_FILE"
 REPORT_ROWS="$(wc -l "$EMAIL_EXT_FILE")"
 : "${EMAIL_EXT_SUBJECT:=${base_filename//_/ }}" # The subject of the email
 : "${SUPPORT_EMAIL:=$OPERATIONS_EMAIL}" # Email address to send to. Errors still go to OPERATIONS_EMAIL
-: "${EMAIL_EXT_MSG_BODY:=Report attached containing $REPORT_ROWS entries}" # If sending as an attachment, This defines the body of the email pre-literate_source
-: "${EMAIL_EXT_INLINE_REPORT:=0}" # 1 inlines the extension pipe into the email body; 0 sends it as an attachment
+: "${EMAIL_EXT_MSG_BODY:=Report attached containing $REPORT_ROWS entries}" # If sending as an attachment, this defines the body of the email pre-literate_source
+: "${EMAIL_EXT_INLINE_REPORT:=0}" # 1 inlines the extension pipe into the email body;<br />0 sends it as an attachment
 
 if [ "$EMAIL_EXT_INLINE_REPORT" -eq 1 ] ; then
   mail -s "$EMAIL_EXT_SUBJECT" "$SUPPORT_EMAIL" <"$EMAIL_EXT_FILE"

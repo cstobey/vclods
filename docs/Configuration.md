@@ -5,7 +5,7 @@ Name | Used by:
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
 Connections | used in .sql and .dst as defaults
-Includes | Used at the script level or inside the .sh extension 
+Includes | Used at the script level or inside the .sh extension [See more](/docs/sh.md)
 Extensions | the given dot extensions
 Post | log processing after the script has run
 
@@ -35,10 +35,10 @@ DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
 DIR_EXT_START|Extensions: dir|$base_filename|Begining regex to find subscripts. Overridden by ext_opt
 DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
-DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
+DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.
 EMAIL_EXT_FILE|Extensions: email|$(vclod_mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
-EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body; 0 sends it as an attachment
-EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, This defines the body of the email pre-literate_source
+EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body;<br />0 sends it as an attachment
+EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, this defines the body of the email pre-literate_source
 EMAIL_EXT_SUBJECT|Extensions: email|${base_filename//_/ }|The subject of the email
 ENV_EXT_DIR|Extensions: env|$INPUT_DIR|Directory to look for files referenced by ext_opt
 ENV_EXT_FILE|Extensions: env|$base_filename|Filename of env config file to run. Overridden by the first part of ext_opt. If not present, defaults to reimporting the base config
@@ -70,10 +70,10 @@ OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguis
 PARA_EXT_JOBS|Extensions: para|10|numnber of parallel jobs to run at the same time.
 PARA_EXT_OPERATION|Extensions: para|sh-$base_filename|what vclod_operation to use to process a line of stdin
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
-RM_ERR_FILE|Script|1|1 will detele error files after they post processing; 0 will leave them around. The default is recommended since Error files are redundant
+RM_ERR_FILE|Script|1|1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
 SHARD_EXT_COUNT|Extensions: shard||the number of times to loop
 SHARD_EXT_OPERATION|Extensions: shard|${ext_opt:-sh}|what vclod_operation to use to process stdin
-SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations. -1 to run in series. 0 to run in series. Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
+SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations.<br />-1 to run in series.<br />0 to run in parallel.<br \>Any number will sleep that number of seconds between batchs.<br />Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
 SH_EXT_DIR|Extensions: sh|$INPUT_DIR|Directory to look for files referenced by ext_opt
 SLACK_API_URL|Post: slack_errors, Extensions: slack||must have an endpoint to send the logs to -- same one that errors use
 SLACK_CHANNEL|Post: slack_errors|vclod_errors|Thus this only works if the bot is configured for multichannel use
@@ -82,7 +82,7 @@ SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot i
 SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
 SPLIT_EXT_COUNT|Extensions: split|10000|how many lines to process in each batch
 SPLIT_EXT_OPERATION|Extensions: split|${ext_opt:-sh}|what vclod_operation to use to process stdin
-SQL_EXT_IGNORE_NO_CONNECT|Extensions: sql|0|if 0, connection errors break the pipe, else, test the connection first and silently continue without outputting anything.
+SQL_EXT_IGNORE_NO_CONNECT|Extensions: sql|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.
 SRC|Extensions: sql|VCLOD_SRC_|Overrides the connection naming prefix.
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Errors still go to OPERATIONS_EMAIL
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
