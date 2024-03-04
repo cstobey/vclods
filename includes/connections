@@ -1,3 +1,5 @@
+# Internal Connection handling functions used by .sql and .dst. Do not use directly.
+
 vclod_conn() # PRIVATE
 {
   CONN_PREFIX=${1:=VCLOD_OVERRIDE_}
@@ -15,4 +17,3 @@ vclod_conn_arg() # PRIVATE
   [ -z "$ret_var" ] && { echo >&2 "A $3 connection argument is required to use the .$ext extension (see docs for details)"; exit 1; }
   printf "$ret_var"
 }
-

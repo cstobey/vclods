@@ -1,4 +1,5 @@
-# p*_exit_trap: The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
+# Helper functions to create and cleanup temp files. The trap functions can be used to safely add your own cleanup upon EXIT.
+# NOTE: p*_exit_trap: The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, just relax the sed.
 pre_exit_trap() { # adds the given command to the beginning of the exit trap
   trap "$*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; }
 post_exit_trap() { # adds the given command to the end of the exit trap

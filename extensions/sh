@@ -7,5 +7,4 @@ if [ -z "$ext_opt" ] ; then
 else
   . "$SH_EXT_DIR/$ext_opt" # can't do the warning here
 fi
-#CMD Below are the available functions you can use. The Collection references the Includes Scope in the Variables documentation.
-#TBL Collection | Function Name | Description
+#CMD Collections are groups of functions as references the Includes Scope in the Variables documentation and in the functions defined below.
