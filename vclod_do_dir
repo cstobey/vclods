@@ -19,12 +19,12 @@ export MAIL_ELF
 if [ -e "$1" ]; then
   PIPE_FIFO="${VCLOD_LOCK_DIR%/}/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 3<>"$PIPE_FIFO" ; add_file_cleanup "$PIPE_FIFO"
   stdbuf -i0 -o0 -e0 seq 1 "$VCLOD_JOBS" >&3
-  post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ ! -z "$(jobs -p)" ] && wait'  #TODO: is this needed?
+  post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
   find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort -n | while read f ; do
     stdbuf -i0 -o0 -e0 read dummy <&3
     ( export MYPID="$(exec sh -c 'echo $PPID')"; . "${VCLOD_BASE_DIR%/}/vclod_run_script" "$f"; ret="$?"; stdbuf -i0 -o0 -e0 printf 'a\n' >&3; exit "$ret" ) &
   done  # WAS: xargs -n1 -r -P"$VCLOD_JOBS" "${VCLOD_BASE_DIR%/}/vclod_run_script"
-  [ ! -z "$(jobs -p)" ] && wait
+  [ -n "$(jobs -p)" ] && wait
 else
   export MYPID="$$"
   export pIN_FILE="$(vclod_mktemp)" # the p stands for private and prevents it from showing up in the doco

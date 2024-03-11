@@ -2,10 +2,11 @@
 : "${ext_opt:=${PARA_EXT_OPERATION:=sh-$base_filename}}" # what vclod_operation to use to process a line of stdin
 : "${PARA_EXT_JOBS:=10}" # number of parallel jobs to run at the same time.
 _FIFO="${VCLOD_LOCK_DIR%/}/para.$MYPID.fifo" ; mkfifo "$_FIFO" ; exec 3<>"$_FIFO" ; add_file_cleanup "$_FIFO"
+post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
 
 stdbuf -i0 -o0 -e0 seq 1 "$PARA_EXT_JOBS" >&3
-while read line ; do
+while stdbuf -i0 -oL -eL read line || [ -n "$line" ] ; do # do not require a trailing newline in this context
   stdbuf -i0 -o0 -e0 read dummy <&3
-  ( export MYPID="$(exec sh -c 'echo $PPID')" ; printf '%s\n' "$line" | vclod_operation "para_$base_filename.$ext_opt" ; stdbuf -i0 -o0 -e0 printf 'a\n' >&3 ) &
+  ( export MYPID="$(exec sh -c 'echo $PPID')" ; stdfub -i0 -oL -eL printf '%s\n' "$line" | stdbuf -i0 -oL -eL vclod_operation "para_$base_filename.$ext_opt" ; stdbuf -i0 -o0 -e0 printf 'a\n' >&3 ) &
 done
-[ ! -z "$(jobs -p)" ] && wait
+[ -n "$(jobs -p)" ] && wait

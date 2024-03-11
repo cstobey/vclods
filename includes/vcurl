@@ -57,7 +57,7 @@ vcurl_while() # Keep curling until there is no longer a URL to curl. $1 is a fun
   shift
   VCURL_LOOP_COUNTER=0
   next_url="$@" # TODO: should this be `$(echo $@ | envsubst)`?... should be able to do all that before calling this though.
-  while vcurl_run ${next_url:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && next_url="$("$get_next_url_func")" && [ ! -z "$next_url" ]
+  while vcurl_run ${next_url:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && next_url="$("$get_next_url_func")" && [ -n "$next_url" ]
   do : ; done
 }
 

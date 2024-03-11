@@ -19,6 +19,3 @@ should I add a retry?
 
 pp_etl_log2sql_compute_variables Line 1:
 should I validate that tag is surrounded by `[]`s?
-
-vclod_do_dir Line 22:  post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ ! -z "$(jobs -p)" ] && wait'
-is this needed?
