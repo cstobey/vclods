@@ -57,7 +57,7 @@ vclod_log() { # PRIVATE $1=is_error
   let FIRST_ERROR="$1"
   while IFS='' read -r line; do
     if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
-      new_line="$MYPID $([[ $line =~ ^\[.* ]] || printf '[%s] ' "$def_tag")$line"
+      new_line="$MYPID $([[ $line =~ ^\[.* ]] || printf '[%s] ' "$def_tag")${line%%+([[:space:]])}"
       logger "$new_line"
       dated_line="$(printf "%(%F %T)T") $new_line"
       printf "%s\n" "$dated_line" >>"$LF"
