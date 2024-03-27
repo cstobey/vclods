@@ -1,0 +1,27 @@
+# .sh Extension Details and Commands
+
+Collections are groups of functions as references the Includes Scope in the Variables documentation and in the functions defined below.
+Collection | Description
+-----------|------------
+connections|Internal Connection handling functions used by .sql and .dst. Do not use directly.
+literate_source|envsubst only does variable substitution<br />heredocs and quotes do variable substitution/expansion and process substitution<br />source (.) does the above and treats everything else as code too.<br />This targets heredoc-level substitutions to complete the set of quoting options.<br />The name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
+operations|Handles the recursive extension handling that is core to the Operations part of VCLODs.<br />By using this collection, you can create custom flow patterns.
+temp_files|Helper functions to create and cleanup temp files. The trap functions can be used to safely add your own cleanup upon EXIT.
+vcurl|Helper functions that make interacting with cURL much easier. Automatically collects header information. Helper files:<br />$VCURL_LAST_FULL_OUT: file with headers and body from the last vcurl run<br />$VCURL_LAST_ERROR: file with the error output if any from the last vcurl run<br />$VCURL_LAST_HEADER: file with the headers from the last vcurl run<br />$VCURL_LAST_OUTPUT: file with the body from the last vcurl run
+
+The available shell functions that are available are described below:
+
+Collection | Function Name | Description
+-----------|---------------|------------
+literate_source|literate_source|Allows heredoc-level substitutions for any string either through stdin or as a function argument.
+operations|vclod_operation|Within the current VCLODScript's context, process a custom defined VCLODScript. stdin acts as a VCLODScript's file contents; $1 like the filename with extensions.
+temp_files|pre_exit_trap|adds the given command to the beginning of the exit trap
+temp_files|post_exit_trap|adds the given command to the end of the exit trap
+temp_files|add_file_cleanup|Cleans up the given file(s) when the current script or subshell exits.
+temp_files|vclod_mktemp|Returns the filename of a created temporary file. Automatically flags the file to be cleaned up upon script or subshell exit.
+vcurl|urlen|url encode a string from stdin
+vcurl|vcurl_get_header_value|takes a HTTP header key name and returns its value from the last vcurl call. 
+vcurl|vcurl_get_http_status_code|gets the 3 digit HTTP status code
+vcurl|vcurl_run|run curl with the provided url and arguments. Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
+vcurl|vcurl_while|Keep curling until there is no longer a URL to curl. $1 is a function that returns then next URL; the rest of the input varialbes are the inital URL and curl arguments
+vcurl|vcurl_multi_run|Proces stdin where each line is the URL and curl arguments of vcurl_run.

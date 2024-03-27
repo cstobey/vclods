@@ -1,21 +1,21 @@
 
-extensions/dst Line 2:: "${ext_opt:-BNAwrc if using mysql}" 
+extensions/dst Line 2:: "${ext_opt:-BNAwrc if using mysql}"
 this and the .sql ext should dynamically be in sync with the connection... but that might be hard?
 
-extensions/slack Line 10:
+extensions/slack Line 9:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 
-extensions/sql Line 2:: "${ext_opt:-BNAwrc if using mysql}" 
+extensions/sql Line 2:: "${ext_opt:-BNAwrc if using mysql}"
 this isnt showing up in the docs
 
-generate_docs Line 6:
-post.sh/slack_errors is showing up as an extension for $SLACK_API_URL because it is used in extensions/slack... need to fix that.
+includes/vcurl Line 64:
+need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
+
+includes/vcurl Line 68:  next_url="$@"
+should this be `$(echo $@ | envsubst)`?... should be able to do all that before calling this though.
 
 post.sh/slack_errors Line 7:
 should I add a retry?
 
 pp_etl_log2sql_compute_variables Line 1:
 should I validate that tag is surrounded by `[]`s?
-
-vclod_helpers Line 3:add_file_cleanup () { trap "rm -f $*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; } 
-handle spaces?

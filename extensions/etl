@@ -1,6 +1,5 @@
 #PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch.
-fn=$(mktemp)
-add_file_cleanup "$fn"
+fn=$(vclod_mktemp)
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
@@ -38,7 +37,7 @@ function all(tt_f, t_f) {
 function all_uni(tt_f, t_f, use_tt) {
   tc_uni=cc_ws(tc_uni, ",", t_f); 
   ttc_uni=cc_ws(ttc_uni, ",", tt_f);
-  ugb=cc_ws(ugb, ",", tt_f);
+  if (tt_f~/[^0-9]/) ugb=cc_ws(ugb, ",", tt_f);
   w_s=cc_ws(w_s,""," AND "tt_f" IS NOT NULL");
   w=cc_ws(w, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
 function updatable(tt_f, t_f, use_tt, f_start) {

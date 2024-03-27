@@ -3,7 +3,6 @@
 # So if using vclod_operation, vary the base_filename that you give to that function.
 # (The guard will still work, the streams just won't be isolated).
 : "${ext_opt:?}"
-TEMP_FILE=$(mktemp)
-add_file_cleanup "$TEMP_FILE"
+TEMP_FILE=$(vclod_mktemp)
 NFL="$LF.g-$base_filename"
 tee "$TEMP_FILE" | VCLOD_EXIT_ERR="$base_filename.g-$ext_opt FILE: $NFL" vclod_operation "g_$base_filename.$ext_opt" || { ret="$?" ; cat <"$TEMP_FILE" >>"$NFL" ; return "$ret" ; }

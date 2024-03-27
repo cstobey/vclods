@@ -1,0 +1,3 @@
+[LOG] another line just to be safe
+[LOG] start
+[LOG] testing that carriage returns dont overwrite the next line

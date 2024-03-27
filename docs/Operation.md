@@ -31,8 +31,9 @@ litsh|PIPE|$HEREDOC_DELIMITER|literate source: inverts code and comments allowin
 null|TERM|Not Used|dump stdout to /dev/null, effectively silencing output.
 out|TERM|${OUT_EXT_FILE:=$base_filename}|Write to file; stop
 outa|TERM|${OUT_EXT_FILE:=$base_filename}|Append to file; stop
+para|FLOW|${PARA_EXT_OPERATION:=sh-$base_filename}|Run multiple input rows in parallel. Retains all functions and args that are in the enviornment.
 py|ANY|Used, No Default|Run either stdin or ext_opt file (with any optional ending) as python3
-sh|ANY|Used, No Default|Source a ksh script from the pipe or an external file (referenced through ext_opt -- 1 means use the base_filename)
+sh|ANY|Used, No Default|Source a ksh script from the pipe or an external file (referenced through ext_opt -- 1 means use the base_filename) [See more](/docs/sh.md)
 shard|FLOW|sh|Running a stdin with the given operation $SHARD_EXT_COUNT times. Optional run batches in series, sleep a set interval, or go full for parallelity.
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
 slack|TERM|${SLACK_EXT_CHANNEL:=vclod_logs}|push stdin to slack channel. Will propogate all data on.

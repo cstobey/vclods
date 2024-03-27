@@ -1,35 +1,51 @@
 cd "$(dirname "$(readlink -f "$(which "$0")")")"
 
-CODE_FILES='vclod* extensions/* post.sh/* connections/*'
+CODE_FILES='vclod* extensions/* post*/* connections/* includes/*'
 exclusions=$(grep -E '^[A-Z_]+=' $CODE_FILES | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
-
-# TODO: post.sh/slack_errors is showing up as an extension for $SLACK_API_URL because it is used in extensions/slack... need to fix that.
 
 cat << EOF >docs/Configuration.md
 # Configuration -- Enviornment Variables
 ## Scope
-Name | Used by: 
+Name | Used by:
 -----|----------
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
-Extension | the given dot extensions
-Post Process | log processing after the script has run
+Connections | used in .sql and .dst as defaults
+Includes | Used at the script level or inside the .sh extension [See more](/docs/sh.md)
+Extensions | the given dot extensions
+Post | log processing after the script has run
 
-NOTE: Setting the variable in the config file must be of the form \`VAR_NAME=...\` otherwise it will not be exported. Enviornment Variables given on the command line will be overridden by config files unless the variable is defined in the form \`VAR_NAME=\${VAR_NAME:=value to set}\` (or left to the default). 
+NOTE: Setting the variable in the config file must be of the form \`VAR_NAME=...\` otherwise it will not be exported. Enviornment Variables given on the command line will be overridden by config files unless the variable is defined in the form \`VAR_NAME=\${VAR_NAME:=value to set}\` (or left to the default).
 
 ## Recognized Variables
 Here is an automated listing of all Enviornment Variables, their Scopes and Default Values. \`\$INPUT_DIR\` is the Local directory of the script.
 Name | Scope | Defaults | Description
 -----|-------|----------|------------
-$(grep -onE '\$\{[A-Z_]+:[?=-]' $CODE_FILES | sed 's/[${:=?-]/ /g' | grep -vw $exclusions | awk '{printf $0" "} /^vclod/ {print 1 + !($1 == "vclod" || $1 == "vclod_do_dir")} /^extension/ {print "3"} /^post/ {print "4"}' | sort -k3,4 | while read f n v s ; do echo "$(sed -n "${n}p" "$f" | grep -oE '\$\{'"$v"':[?=-]([$][{][^{}]+}|[^{}]+)*}' | sed -r "s#^[\$][{]${v}:[?=-]##;s/[}]$//;s|^|${f#*/} $v $s |")|$(sed -n "${n}p" "$f" | grep -oE '#.*$' | sed 's/^# *//')" ; done | uniq | awk '
-function concat_ws(value, sep, new) {return (value=="") ? new : value sep new} 
-function tail() {ret=""; for (i=4; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret} 
-function s() {if(l==1) return "Global"; if(l==2) return "Script"; if(l==3) return "Extensions: "e; return "Post Process"}
-BEGIN {cur="";l=0;e=""} 
-$2==cur && l==3 {e=e" "$1} 
-$2==cur && l==$3 && tail()!=d {print "WARNING: inconsistent definitions for "cur >"/dev/stderr"}
-$2!=cur {if(cur!="")print cur"|"s()"|"d;cur=$2;l=$3;d=tail();e=$1}
-END {print cur"|"s()"|"d}')
+$( { grep -onE '\$\{[A-Z_]+:[?=-]' $CODE_FILES | grep -vw $exclusions | sed 's/[${:=?-]/ /g' | while read f n v ; do 
+  f2="$(echo "$f" | sed -r 's#^([^.]+)([.].+)?/#\1|#;s/^vclod_do_dir$/Global|/;s/^vclod_run_script$/Script|/;s/^vclod.*/Global|Script/')"
+  sed -nr "${n} s@^.*\{${v}:[?=-](([$][{][^{}]+}|[^{}]+)*)\}[^#]*#? *@$v |$f2 |\\1|@p" "$f"; done; cat << CONNS 
+$(find connections/* | awk -F'/' 'BEGIN {split("HOST/DB/USER/PASSWORD",vs)}
+{for (v in vs) {
+  print "VCLOD_"vs[v]"|"$1"|"$2"||Base level default "tolower(vs[v]);
+  print "VCLOD_"toupper($2)"_"vs[v]"|"$1"|"$2"|$VCLOD_"vs[v]"|Default "tolower(vs[v])" for "$2" connections";
+}}')
+CONNS
+} | sort | awk -F'|' '
+function concat_ws(value, sep, new) {return (value=="") ? new : ((new=="") ? value : value sep new)}
+function reset() {g=s=c=i=e=p=""}
+function prt_l(name, list) {return (list=="") ? "" : concat_ws(name, ": ", list)}
+function prt() {gsub(/[ \t]+$/, "", cur); print cur"|"concat_ws(concat_ws(concat_ws(g, ", ", s), ", ", concat_ws(prt_l("Post", p), ",", prt_l("Includes", i))), ", ", concat_ws(prt_l("Extensions",e), ", ", prt_l("Connections",c)))"|"v"|"d}
+function set_nv() {gsub(/[ \t]+$/, "", $3); switch ($2) {
+  case "Global": g=$2; if($3=="Script" && $1 !~ /^CONFIG/) s=$3; break;
+  case "Script": s=$2; break; 
+  case "connections": c=concat_ws(c," ",$3); break;
+  case "extensions": e=concat_ws(e," ",$3); break;
+  case "includes": i=concat_ws(i," ",$3); break;
+  case "post": p=concat_ws(p," ",$3); break; }}
+BEGIN {cur=v=d="";reset()}
+$1==cur {set_nv(); if (d!=$5) print "WARNING: inconsistent definitions for "cur >"/dev/stderr"}
+$1!=cur {if(cur!="")prt();cur=$1;reset();v=$4;d=$5;set_nv()}
+END {prt()}')
 EOF
 
 cat << EOF >docs/Operation.md
@@ -49,13 +65,13 @@ Many extensions have the abilty to accept one and only one option in the .extens
 Name | Location | Option Default | Description
 -----|----------|----------------|------------
 $(grep -oE '( |\$(\{ext_opt(:[?=-]([$][{][^{]+}|[/$0-9A-Za-z_-]+)*)?}|ext_opt)|#(ANY|TERM|PIPE|WRAP|FLOW|CMD) .*$)' extensions/* | sed -r 's|extensions/([^:]+):|\1 |;s/\$\{?ext_opt:?[?=-]?/eo /;s/}$//;s/#//' | uniq | awk '
-function concat_ws(value, sep, new) {return (value=="") ? new : value sep new} 
-function tail() {ret=""; for (i=3; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret} 
+function concat_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function tail() {ret=""; for (i=3; i<=NF; i++) ret=concat_ws(ret," ",$i); return ret}
 function err(msg) {print "WARNING: "msg" for "cur >"/dev/stderr"}
 function p() {if(cur!="") {if(l=="")err("missing location");if(d=="")err("missing description");if(e=="")e="Not Used";print cur"|"l"|"e"|"d;l="";e="";d="";}}
-BEGIN {cur="";l="";e="";d=""} 
+BEGIN {cur="";l="";e="";d=""}
 $1!=cur {p();cur=$1}
-$1==cur && $2=="eo" && e=="" {e=tail();if(e=="") e="Used, No Default"} 
+$1==cur && $2=="eo" && e=="" {e=tail();if(e=="") e="Used, No Default"}
 $1==cur && $2=="eo" && e!="Used, No Default" && e!=tail() && tail()!="" {err("inconsistent ext_opt default")}
 $1==cur && $2~/^(ANY|TERM|PIPE|WRAP|FLOW)$/ {if(l!="" && l!=$2) err("inconsistent location");l=$2;d=concat_ws(d," ",tail())}
 $1==cur && $2=="CMD" {d=concat_ws(d," ","[See more](/docs/"cur".md)")}
@@ -66,10 +82,22 @@ for f in $(grep -l '^#CMD' extensions/*) ; do
   cat << EOF > docs/"$(basename "$f")".md
 # .$(basename "$f") Extension Details and Commands
 
-$(grep '^#CMD' -A100 "$f" | awk '{print} /^#TBL/{n="--";for (i=3; i<=NF; i++)if($i=="|")n=n"|--"; print n}' | sed -r 's/^#(CMD|TBL) *//;s/^# //')
+$(grep '^#CMD' -A100 "$f" | sed -r '/^#TBL */{s/^#TBL *//p;s/[^|]+/--/g;};s/^#(CMD *)? //')
 EOF
 done
 
-grep -rn TODO * | awk '/[^#]# *TODO/ {print 1" "$0} /[^#]## *TODO/ {print 2" "$0} /[^#]### *TODO/ {print 3" "$0} /#### *TODO/ {print 4" "$0}' | sort | sed -r 's/^([0-9]+) ([^:]+):([0-9]+):(.*)# *TODO:? *(.*)$/\n\2 Line \3:\4\n\5/' >TODO
+cat << EOF >> docs/sh.md
+Collection | Description
+-----------|------------
+$(grep '^#' includes/* | sed -r '/# *NOTE[: ]/d;s@^[^/]+/([^:]+):# *(.*?)$@\1|\2@' | awk -F'|' '$1==cur {printf "<br />"$2} $1!=cur {if (cur) printf "\n"; printf $1"|"$2; cur=$1} END {printf "\n"}')
+
+The available shell functions that are available are described below:
+
+Collection | Function Name | Description
+-----------|---------------|------------
+$(grep -E '^(function [a-z_]+|[a-z_]+ *[(][)])[ {]+#' includes/* | sed -r 's@^[^/]+/([^:]+): *(function +)?([^ ({#]+)[ (){#]*@\1|\3|@;/PRIVATE/d')
+EOF
+
+grep -rn TODO * | sed -rn 's/^([^:]+):([0-9]+:)(.*[^ ])? *(#+) *TODO:? *(.*)$/\4|\1 Line \2\3|\5/p' | sort | sed -r 's/^#+[|]([^|]+)[|]/\n\1\n/' >TODO
 
 #commit -m"$@"

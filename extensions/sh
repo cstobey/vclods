@@ -2,8 +2,9 @@
 : "${SH_EXT_DIR:=$INPUT_DIR}" # Directory to look for files referenced by ext_opt
 [ "${ext_opt}" == "1" ] && ext_opt="$base_filename" # sentinal value
 
-if [[ -z $ext_opt ]] ; then
-  . /dev/stdin
+if [ -z "$ext_opt" ] ; then
+  awk 'NR == 1 && $0 ~ /^#!/ && $0 !~ /ksh/ {print "[WARNING] This is a KSH framework, and the sh files are sourced, so only KSH dialects are supported. For others, use the .shebang.">"/dev/stderr"} {print}' | . /dev/stdin
 else
-  . "$SH_EXT_DIR/$ext_opt"
+  . "$SH_EXT_DIR/$ext_opt" # can't do the warning here
 fi
+#CMD Collections are groups of functions as references the Includes Scope in the Variables documentation and in the functions defined below.

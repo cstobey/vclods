@@ -1,6 +1,10 @@
 #!/bin/ksh
+
+if [ "$CONTENT_LENGTH" -gt 0 ]; then
+  read -n $CONTENT_LENGTH POST_DATA <&0
+fi
 cat << EOF
 Content-type: application/json
 
-{"a":"${QUERY_STRING:-Empty Query String}","total":2}
+{"a":"${QUERY_STRING:-${POST_DATA:-Empty Query String}}","total":2}
 EOF

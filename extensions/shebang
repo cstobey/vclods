@@ -1,6 +1,5 @@
 #ANY Respect script's first line shebang (default: source in ksh just like .sh)
-TEMP_FILE=$(mktemp)
-add_file_cleanup "$TEMP_FILE"
+TEMP_FILE=$(vclod_mktemp)
 cat >"$TEMP_FILE"
 if head -1 "$TEMP_FILE" | grep -q '^#!' ; then 
   CMD="$(head -1 "$TEMP_FILE" | cut -c 3-)"
