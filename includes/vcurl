@@ -11,13 +11,16 @@ function urlen # url encode a string from stdin
 
 vcurl_get_header_value() # takes a HTTP header key name and returns its value from the last vcurl call. 
 {
-  grep -Eim1 "^${1:?Need a header to look for}:" "$VCURL_LAST_HEADER" | sed -r 's/^'"$1"': *([^ ].*[^ ]|[^ ]) *$/\1/i'
+  awk '/^'"${1:?Need a header to look for}"':/ {printf gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
+  #sed -nr '/^'"${1:?Need a header to look for}"':/I {s/^'"$1"':\s*(\S.*\S|\S)\s*$/\1/i;p;q}' "$VCURL_LAST_HEADER" | ORS="" awk 1 # if need case insensitivity.
 }
 
 vcurl_get_http_status_code() # gets the 3 digit HTTP status code
 {
   sed -r '1 s/^HTTP\S+ +([0-9][0-9][0-9]) .*$/\1/;q' "$VCURL_LAST_HEADER"
 }
+
+: "${VCURL_OPTIONS:-}" # Addtional curl options you want to use every time
 
 vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
 {
@@ -29,7 +32,7 @@ vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS a
     export VCURL_LAST_FULL_OUT VCURL_LAST_ERROR VCURL_LAST_HEADER VCURL_LAST_OUTPUT
   fi
   ret=0
-  curl -fLisS $@ >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
+  curl -fLisS $@ $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
   ret=$?
   sed -r '/^\r?$/q'  "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_HEADER"
   sed -r '1,/^\r?$/d' "$VCURL_LAST_FULL_OUT" | tee "$VCURL_LAST_OUTPUT"

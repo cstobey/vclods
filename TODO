@@ -8,10 +8,10 @@ if the data is too big, need to either shorten it, or batch it. currently just s
 extensions/sql Line 2:: "${ext_opt:-BNAwrc if using mysql}"
 this isnt showing up in the docs
 
-includes/vcurl Line 55:
+includes/vcurl Line 64:
 need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
 
-includes/vcurl Line 59:  next_url="$@"
+includes/vcurl Line 68:  next_url="$@"
 should this be `$(echo $@ | envsubst)`?... should be able to do all that before calling this though.
 
 post.sh/slack_errors Line 7:
