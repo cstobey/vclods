@@ -1,0 +1,77 @@
+# Helper functions that make interacting with cURL much easier. Automatically collects header information. Helper files:
+# $VCURL_LAST_FULL_OUT: file with headers and body from the last vcurl run
+# $VCURL_LAST_ERROR: file with the error output if any from the last vcurl run
+# $VCURL_LAST_HEADER: file with the headers from the last vcurl run
+# $VCURL_LAST_OUTPUT: file with the body from the last vcurl run
+
+function urlen # url encode a string from stdin
+{
+  while IFS='' read -n 1 c ; do [[ "$c" =~ [A-Za-z0-9.~_-] ]] && printf "$c" || printf '%%%02X' "'$c" ; done
+}
+
+vcurl_get_header_value() # takes a HTTP header key name and returns its value from the last vcurl call. 
+{
+  awk '/^'"${1:?Need a header to look for}"':/ {printf gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
+  #sed -nr '/^'"${1:?Need a header to look for}"':/I {s/^'"$1"':\s*(\S.*\S|\S)\s*$/\1/i;p;q}' "$VCURL_LAST_HEADER" | ORS="" awk 1 # if need case insensitivity.
+}
+
+vcurl_get_http_status_code() # gets the 3 digit HTTP status code
+{
+  sed -r '1 s/^HTTP\S+ +([0-9][0-9][0-9]) .*$/\1/;q' "$VCURL_LAST_HEADER"
+}
+
+: "${VCURL_OPTIONS:-}" # Addtional curl options you want to use every time
+
+vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
+{
+  if [ -z "$VCURL_LAST_FULL_OUT" ] ; then 
+    VCURL_LAST_FULL_OUT=$(vclod_mktemp)
+    VCURL_LAST_ERROR=$(vclod_mktemp)
+    VCURL_LAST_HEADER=$(vclod_mktemp)
+    VCURL_LAST_OUTPUT=$(vclod_mktemp)
+    export VCURL_LAST_FULL_OUT VCURL_LAST_ERROR VCURL_LAST_HEADER VCURL_LAST_OUTPUT
+  fi
+  ret=0
+  curl -fLisS $@ $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
+  ret=$?
+  sed -r '/^\r?$/q'  "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_HEADER"
+  sed -r '1,/^\r?$/d' "$VCURL_LAST_FULL_OUT" | tee "$VCURL_LAST_OUTPUT"
+  if [ "$ret" -ne 0 ] ; then
+    if [ "$(vcurl_get_http_status_code)" -eq 429 ] && [ "$VCURL_RECURSION_CNT" -lt "${VCURL_RECURSION_LIMIT:=10}" ]; then # how many times to retry a curl 429 HTTP return code
+      RETRY_AFTER="$(vcurl_get_header_value 'Retry-After')"
+      [[ "$RETRY_AFTER" =~ [:-] ]] && RETRY_AFTER="$(( $(date +%s -d"$RETRY_AFTER") - $(date +%s) ))"
+      (( RETRY_AFTER=RETRY_AFTER<3?4:RETRY_AFTER+1 )) # add a little buffer
+      if (( RETRY_AFTER > 14400 )) ; then # 4 hours is just too long
+        [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo >&2 "[DEBUG] curl: 429 Too Many Requests, requested wait time too long: $RETRY_AFTER"
+        cat >&2 "$VCURL_LAST_ERROR"
+      else
+        [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo >&2 "[DEBUG] curl: 429 Too Many Requests, waiting $RETRY_AFTER seconds [$VCURL_RECURSION_CNT/$VCURL_RECURSION_LIMIT]"
+        sleep "$RETRY_AFTER"
+        VCURL_RECURSION_CNT="$((VCURL_RECURSION_CNT + 1))"
+        vcurl_run $@
+        return $?
+      fi
+    else 
+      cat >&2 "$VCURL_LAST_ERROR"
+    fi
+  fi
+  VCURL_RECURSION_CNT=0
+  return $ret 
+}
+
+vcurl_while() # Keep curling until there is no longer a URL to curl. $1 is a function that returns then next URL; the rest of the input varialbes are the inital URL and curl arguments
+{
+  # TODO: need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
+  get_next_url_func=$1
+  shift
+  VCURL_LOOP_COUNTER=0
+  next_url="$@" # TODO: should this be `$(echo $@ | envsubst)`?... should be able to do all that before calling this though.
+  while vcurl_run ${next_url:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && next_url="$("$get_next_url_func")" && [ -n "$next_url" ]
+  do : ; done
+}
+
+vcurl_multi_run() # Proces stdin where each line is the URL and curl arguments of vcurl_run.
+{
+  while read url; do vcurl_run $url ; done
+}
+

@@ -1,0 +1,9 @@
+# envsubst only does variable substitution
+# heredocs and quotes do variable substitution/expansion and process substitution
+# source (.) does the above and treats everything else as code too.
+# This targets heredoc-level substitutions to complete the set of quoting options.
+# The name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
+
+literate_source () { # Allows heredoc-level substitutions for any string either through stdin or as a function argument.
+  printf 'echo "%s"' "${@:-$(</dev/stdin)}" | . /dev/stdin
+}
