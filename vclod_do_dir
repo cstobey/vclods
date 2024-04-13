@@ -13,24 +13,26 @@ ulimit -s unlimited  # log files might get large, need to let them float in howe
 : "${VCLOD_JOBS:=10}" # How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 : "${OPERATIONS_EMAIL:?}" # Email address list to send error output to
 MAIL_ELF="${LOG_BASE_DIR}/$$.err" # used to send batched error emails.
-export MAIL_ELF
 [ -s "$MAIL_ELF" ] && : >"$MAIL_ELF" # force it to start empty
 
-if [ -e "$1" ]; then
-  PIPE_FIFO="${VCLOD_LOCK_DIR%/}/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 3<>"$PIPE_FIFO" ; add_file_cleanup "$PIPE_FIFO"
-  stdbuf -i0 -o0 -e0 seq 1 "$VCLOD_JOBS" >&3
-  post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
-  find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort -n | while read f ; do
-    stdbuf -i0 -o0 -e0 read dummy <&3
-    ( export MYPID="$(exec sh -c 'echo $PPID')"; . "${VCLOD_BASE_DIR%/}/vclod_run_script" "$f"; ret="$?"; stdbuf -i0 -o0 -e0 printf 'a\n' >&3; exit "$ret" ) &
-  done  # WAS: xargs -n1 -r -P"$VCLOD_JOBS" "${VCLOD_BASE_DIR%/}/vclod_run_script"
-  [ -n "$(jobs -p)" ] && wait
-else
-  export MYPID="$$"
+PIPE_FIFO="${VCLOD_LOCK_DIR%/}/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 9<>"$PIPE_FIFO" ; add_file_cleanup "$PIPE_FIFO"
+stdbuf -i0 -o0 -e0 seq 1 "$VCLOD_JOBS" >&9
+post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
+
+if [ ! -e "$1" ]; then # needs to be here instead of the next if because of the pipe.
   export pIN_FILE="$(vclod_mktemp)" # the p stands for private and prevents it from showing up in the doco
   cat >"$pIN_FILE" # not sure why this works here but not in run_script
-  . "${VCLOD_BASE_DIR%/}/vclod_run_script" <"$pIN_FILE"
 fi
+
+if [ -e "$1" ]; then
+  find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort -n
+else
+  printf '%s\n' "$1"
+fi | while read filename ; do
+  stdbuf -i0 -o0 -e0 read dummy <&9
+  run_script "$filename" &
+done
+[ -n "$(jobs -p)" ] && wait
 ret=$?
 [ -s "$MAIL_ELF" ] && [ "$IS_TERMINAL" -eq 0 ] && mail -s "Script error digest on $(hostname)" "$OPERATIONS_EMAIL" <"$MAIL_ELF"
 exit $ret

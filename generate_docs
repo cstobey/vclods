@@ -1,7 +1,7 @@
 cd "$(dirname "$(readlink -f "$(which "$0")")")"
 
 CODE_FILES='vclod* extensions/* post*/* connections/* includes/*'
-exclusions=$(grep -E '^[A-Z_]+=' $CODE_FILES | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
+exclusions=$(grep -E '^\s*[A-Z_]+=' $CODE_FILES | grep -v vclod_op | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
 
 cat << EOF >docs/Configuration.md
 # Configuration -- Enviornment Variables
@@ -22,7 +22,7 @@ Here is an automated listing of all Enviornment Variables, their Scopes and Defa
 Name | Scope | Defaults | Description
 -----|-------|----------|------------
 $( { grep -onE '\$\{[A-Z_]+:[?=-]' $CODE_FILES | grep -vw $exclusions | sed 's/[${:=?-]/ /g' | while read f n v ; do 
-  f2="$(echo "$f" | sed -r 's#^([^.]+)([.].+)?/#\1|#;s/^vclod_do_dir$/Global|/;s/^vclod_run_script$/Script|/;s/^vclod.*/Global|Script/')"
+  f2="$(echo "$f" | sed -r 's#^([^.]+)([.].+)?/#\1|#;s/^vclod_do_dir$/Global|/;s/^includes.script$/Script|/;s/^vclod.*/Global|Script/')"
   sed -nr "${n} s@^.*\{${v}:[?=-](([$][{][^{}]+}|[^{}]+)*)\}[^#]*#? *@$v |$f2 |\\1|@p" "$f"; done; cat << CONNS 
 $(find connections/* | awk -F'/' 'BEGIN {split("HOST/DB/USER/PASSWORD",vs)}
 {for (v in vs) {

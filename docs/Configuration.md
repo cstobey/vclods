@@ -50,12 +50,8 @@ HEREDOC_DELIMITER|Extensions: litsh|MSG|If multiple literate_source layers deep,
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq programs in.
 JQ_EXT_OPT|Extensions: jq||jq command options, generally -cMr
 JQ_EXT_PROG|Extensions: jq||if not using ext_opt, the jq program to use, simplest is '.'
-LF_OVERRIDE|Post: log2sql||Only use these if you know what you are doing
 LITSH_EXT_BATCH_SIZE|Extensions: litsh|100|Number of rows to process at a time... NOTE: each line should be standalone.
-LOCK_NAME|Script|${1:?Missing a lock name}|Only override if you want multiple scripts to lock each other out and you know what you are doing
 LOG_BASE_DIR|Global, Script||Where to store log files (will also store error output)
-LOG_FILE|Script, Post: log2sql|${1:?Missing a log file name}|If you really want to give the logs a special name, you can use this, but it is not recommended
-LOG_FILE_OVERRIDE|Post: log2sql||Only use these if you know what you are doing
 LOG_POST_PROCESS|Post: external_script||it must exist to run it
 LOG_SQL_DB|Post: log2sql||Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 LOG_SQL_ENGINE|Post: log2sql|$LOG_ENGINE|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
@@ -88,7 +84,7 @@ SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Erro
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
 TEE_EXT_FILE_SHARD|Extensions: tee teea|$(date +%F)|A way to save and distinguish between different runs
 TEE_EXT_OPERATION|Extensions: tee|$ext_opt|vclod_operation to optionally process "static" file. Must not output anything
-VCLOD_BATCH_JOBS|Script|1|How many instances of one script can be run at the same time
+VCLOD_BATCH_JOBS|Includes: locking|1|How many instances of one script can be run at the same time
 VCLOD_DB|Connections: mssql mysql postgres||Base level default db
 VCLOD_ENGINE|Includes: connections|mysql|
 VCLOD_ERR_DIR|Global, Script||Where to store error files (/dev/shm is a good option)

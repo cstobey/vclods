@@ -1,5 +1,5 @@
 # Empty config file for vclod test
-VCLOD_JOBS=100 # let's speed things up
+VCLOD_JOBS=20 # let's speed things up, but still test the waiting
 VCLOD_LOCK_DIR=/dev/shm/
 VCLOD_ERR_DIR=/dev/shm/
 VCLOD_MYSQL_HOST=localhost

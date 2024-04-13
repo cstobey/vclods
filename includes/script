@@ -1,0 +1,65 @@
+vclod_log() { # PRIVATE $1=is_error
+  # The conditionals in there allows for application specific tagging of normal output
+  # If you keep it to 1 tag per line, then sql_logs will work wonderfully
+  # If you want to send warnings through stderr, override [ERROR] with [WARNING].
+  def_tag="$([ "$1" -eq 1 ] && printf 'ERROR' || printf 'LOG')"
+  let FIRST_ERROR="$1"
+  while IFS='' read -r line; do
+    if [[ "$line" =~ [^[:space:]] ]]; then # ignore blank lines
+      new_line="$MYPID $([[ $line =~ ^\[.* ]] || printf '[%s] ' "$def_tag")${line%%+([[:space:]])}"
+      logger "$new_line"
+      dated_line="$(printf "%(%F %T)T") $new_line"
+      printf "%s\n" "$dated_line" >>"$LF"
+      if [ "$1" -eq 1 ] ; then 
+        [ $FIRST_ERROR -eq 1 ] && { printf '%s\n' "$MYPID $LOG_FILE" >>"$MAIL_ELF"; let FIRST_ERROR=0; }
+        printf "%s\n" "$dated_line" >>"$ELF"
+        printf "%s\n" "$dated_line" >>"$MAIL_ELF"
+      fi
+      printf "%s\n" "$dated_line" >>"$TLF"
+    fi
+  done
+}
+
+logger_leave () { # PRIVATE
+  DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post >"$PELF" 2>"$PELF"
+  [ "$RM_ERR_FILE" == 1 ] && rm -f "$ELF"
+  [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
+}
+
+function run_script { # PRIVATE
+  export MYPID="$(exec sh -c 'echo $PPID')"
+  S="$( ( cd $(dirname "$1"); printf '%s\n' "$(pwd)/$(basename "$1")";) )" # get the absolute path
+  : "${pIN_FILE:=$S}"
+
+  # respect local config file
+  set -a
+  : "${DEBUG_SHOULD_TIME_IT:=$IS_TERMINAL}" # 1 prints [START] and [END] log lines at the begining and end of the extension pipe; 0 does not
+  : "${RM_ERR_FILE:=1}" # 1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
+  INPUT_DIR="$(dirname "$S")"
+  [ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
+  env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
+  set +a
+
+  check_dirs
+  get_semaphore_lock "$S"
+
+  LOG_FILE="$S" # variable duplicated for log2sql to be semantic
+  LF="${LOG_BASE_DIR%/}/$(basename "$LOG_FILE").$MYPID.log"   # Log File
+  ELF="${VCLOD_ERR_DIR%/}/$(basename "$LOG_FILE").$MYPID.err"  # Error Log File
+  PELF="${LOG_BASE_DIR%/}/logging_post_process.$MYPID.err" # Post Processing Error Log File
+  TLF=$([ "$IS_TERMINAL" -eq 1 ] && printf '/dev/stdout' || printf '/dev/null')
+  [ -s "$LF" ] && : >"$LF" # make sure old runs dont get misattributed to now.
+  [ -s "$ELF" ] && : >"$ELF"
+  export LF ELF PELF TLF
+  post_exit_trap "logger_leave"
+
+  if [ -e "$S" ]; then
+    [ -s "$S" ] || { printf 'The file must be a non-empty file\n' | vclod_log 1; exit 1; }
+  fi
+  { { { { { 
+    [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && printf '[START] %s\n' "$S";
+    vclod_operation "$S" <"$pIN_FILE"; ret="$?";
+    [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && printf '[FINISH] %s %s\n' "$S" "$ret";
+    stdbuf -i0 -o0 -e0 printf 'a\n' >&9; 
+    printf '%s\n' "$ret" >&3; } | vclod_log 0 >&4; } 2>&1 | vclod_log 1 >&4; } 3>&1; } | { read xs; exit $xs; } } 4>&1
+}

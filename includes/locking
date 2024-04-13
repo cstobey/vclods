@@ -1,0 +1,18 @@
+# Ensures that at most N parallel batch jobs run for a particular lock/script. Processes beyond N abort (rather than blocking). 
+# Each script is atuomatically locked with its own name and inode (or absolute path when there are symlinks).
+# virtual files and given lock names are used without modification.  
+get_semaphore_lock () { # Get a lock. First argument is the lock basename.
+  : "${VCLOD_BATCH_JOBS:=1}" # How many instances of one script can be run at the same time
+  LOCK_NAME="$(stat -c '%h %i' "$1" 2>/dev/null | awk -v a="$(basename "$1")" -v b="${1//\//_}" 'BEGIN {n=0} {n=$1;i=$2} END {if (n==0) {print a} else {if (n==1) print a"-"i; else print b}}')"
+
+  MY_LOCK=''
+  for i in 1 $(seq 2 $VCLOD_BATCH_JOBS) ; do
+    LOCK_FILE="${VCLOD_LOCK_DIR%/}/${LOCK_NAME}.${i}.LCK"
+    if [ -f "$LOCK_FILE" ] ; then
+      ps -p "$(<"$LOCK_FILE")" >/dev/null && continue || { printf 'Removing apparently false lock %s' "$LOCK_FILE"; rm -f "$LOCK_FILE"; }
+    fi
+    MY_LOCK="$LOCK_FILE"
+  done
+  [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $MYPID >"$MY_LOCK" || exit 1
+  add_file_cleanup "$MY_LOCK"
+}
