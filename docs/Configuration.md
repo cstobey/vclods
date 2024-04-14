@@ -25,7 +25,7 @@ CURL_EXT_JQ_PAGE_PROG|Extensions: curl||The jq program to use for batching
 CURL_EXT_NUMB_PAGES|Extensions: curl|1|Used to force how many batchs to use when not using jq (like for date based batches)
 CURL_EXT_OPT|Extensions: curl|-sSf|cURL options as seen in the man page.
 CURL_EXT_URL|Extensions: curl||The URL to call, uses literate_source to qualify variables. $CURL_EXT_LOOP_CNT is the default variable used for batching
-DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL|1 prints [START] and [END] log lines at the begining and end of the extension pipe; 0 does not
+DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL|1 prints [START] and [FINISH] log lines at the begining and end of the extension pipe; 0 does not
 DIFF_EXT_CMD|Extensions: diff|diff -w|what diff program to use (maybe try comm -13)
 DIFF_EXT_DIR|Extensions: diff|$INPUT_DIR|What directory to look for "static"
 DIFF_EXT_FILE|Extensions: diff|${ext_opt:-$base_filename}|What to use as the "static" file. defaults to self if the base_filename of either ext_opt or self doesn't exist.
