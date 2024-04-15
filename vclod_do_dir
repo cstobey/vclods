@@ -30,7 +30,7 @@ else
   printf '%s\n' "$1"
 fi | while read filename ; do
   stdbuf -i0 -o0 -e0 read dummy <&9
-  run_script "$filename" &
+  : | run_script "$filename" &
 done
 [ -n "$(jobs -p)" ] && wait
 ret=$?

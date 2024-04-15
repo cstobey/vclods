@@ -1,2 +1,4 @@
+[ERROR] b.dst.sql returned 1
+[ERROR] test_missing_sql_force.sh returned 1
 [ERROR] A HOST connection argument is required to use the .dst extension (see docs for details)
 [ERROR] A HOST connection argument is required to use the .sql extension (see docs for details)

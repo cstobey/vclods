@@ -7,12 +7,12 @@ remaining_extensions="$base_filename.$SPLIT_EXT_OPERATION"
 i=0
 while read line ; do
   if [ -s "$TEMP_FILE" ] && [ "$((i%SPLIT_EXT_COUNT))" -eq 0 ] ; then
-    vclod_op "n$((i/SPLIT_EXT_COUNT))_$remaining_extensions" <"$TEMP_FILE"
+    ( vclod_op "n$((i/SPLIT_EXT_COUNT))_$remaining_extensions" <"$TEMP_FILE" )
     : >"$TEMP_FILE"
   fi
   echo "$line" >>"$TEMP_FILE"
   i=$((i + 1))
 done
 if [ -s "$TEMP_FILE" ] ; then
-  vclod_op "last_$remaining_extensions" <"$TEMP_FILE"
+  ( vclod_op "last_$remaining_extensions" <"$TEMP_FILE" )
 fi

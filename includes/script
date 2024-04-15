@@ -59,8 +59,8 @@ function run_script { # PRIVATE
   fi
   { { { { { 
     [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && printf '[START] %s\n' "$S";
-    vclod_operation "$S" <"$pIN_FILE"; ret="$?";
+    ( vclod_operation "$S" <"$pIN_FILE"; ); ret="$?";
     [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && printf '[FINISH] %s %s\n' "$S" "$ret";
     stdbuf -i0 -o0 -e0 printf 'a\n' >&9; 
-    printf '%s\n' "$ret" >&3; } | vclod_log 0 >&4; } 2>&1 | vclod_log 1 >&4; } 3>&1; } | { read xs; exit $xs; } } 4>&1
+    printf '%s\n' "$ret" >&7; } | vclod_log 0 >&6; } 2>&1 | vclod_log 1 >&6; } 7>&1; } | { read xs; exit $xs; } } 6>&1
 }

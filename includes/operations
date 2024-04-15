@@ -21,6 +21,6 @@ function vclod_operation { # Within the current VCLODScript's context, process a
   typeset exit_err_msg="${VCLOD_EXIT_ERR:-$(basename "$1")}"
   typeset ret=0
   unset VCLOD_EXIT_ERR # force each layer to have its own error context.
-  vclod_op "$(basename "$1")" || { ret=$?; echo >&2 "$exit_err_msg returned $ret"; }
+  ( vclod_op "$(basename "$1")" ) || { ret=$?; echo >&2 "$exit_err_msg returned $ret"; }
   return $ret
 }

@@ -5,12 +5,12 @@ TEMP_FILE=$(vclod_mktemp)
 cat >"$TEMP_FILE"
 
 if [ "$WHILE_EXT_REQUIRE_OUTPUT" == "0" ] ; then
-  while vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" || return 0 ; do :; done # force a 0 exit status to continue
+  while ( vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" ) || return 0 ; do :; done # force a 0 exit status to continue
 else
   while { { { { 
-      vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" ; 
-      printf $? >&3; 
-    } | stdbuf -i0 -o0 -e0 grep . >&4; printf $? >&3; } 3>&1; } | ( read xs; return $xs; ) } 4>&1 ; do
+      ( vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE"; ) ; 
+      printf '%d' "$?" >&3;
+    } | stdbuf -i0 -o0 -e0 grep . >&4; printf '%d\n' "$?" >&3; } 3>&1; } | ( read xs; return $xs; ) } 4>&1 ; do
     :
  done # force both a 0 exit status and log data to continue
 fi
