@@ -1,0 +1,8 @@
+# Helper functions to manage the trap, especially for temporary files (ie, after calling mktemp). 
+# NOTE: p*_exit_trap: The sed is for cmd border safety. It also renders case statements unattainable. If this is a problem, relax the sed.
+pre_exit_trap() { # adds the given command to the beginning of the exit trap
+  trap "$*$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/^(.)/;\1/')" EXIT; }
+post_exit_trap() { # adds the given command to the end of the exit trap
+  trap "$(trap -p EXIT | sed -r 's/;+/;/g;s/^;//;s/;$//;s/(.)$/\1;/')$*" EXIT; }
+add_file_cleanup() { # Cleans up the given file(s) when the current script or subshell exits.
+  pre_exit_trap "rm -f $@"; }

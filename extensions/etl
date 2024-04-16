@@ -1,5 +1,5 @@
 #PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch.
-fn=$(vclod_mktemp)
+fn="$(mktemp)"; add_file_cleanup "$fn"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 

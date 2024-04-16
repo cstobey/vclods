@@ -3,7 +3,7 @@
 : "${SHARD_EXT_COUNT:?}" # the number of times to loop
 : "${SHARD_EXT_SLEEP_INTERVAL:=0}" # positive integer if you want to to sleep some between backgrounded process invocations.<br />-1 to run in series.<br />0 to run in parallel.<br />Any number will sleep that number of seconds between batchs.<br />Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
 
-TEMP_FILE=$(vclod_mktemp)
+TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 cat >"$TEMP_FILE"
 
 pids=''

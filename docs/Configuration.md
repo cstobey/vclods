@@ -36,7 +36,7 @@ DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
 DIR_EXT_START|Extensions: dir|$base_filename|Begining regex to find subscripts. Overridden by ext_opt
 DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
 DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.
-EMAIL_EXT_FILE|Extensions: email|$(vclod_mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
+EMAIL_EXT_FILE|Extensions: email|$(mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
 EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body;<br />0 sends it as an attachment
 EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, this defines the body of the email pre-literate_source
 EMAIL_EXT_SUBJECT|Extensions: email|${base_filename//_/ }|The subject of the email

@@ -20,7 +20,8 @@ stdbuf -i0 -o0 -e0 seq 1 "$VCLOD_JOBS" >&9
 post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
 
 if [ ! -e "$1" ]; then # needs to be here instead of the next if because of the pipe.
-  export pIN_FILE="$(vclod_mktemp)" # the p stands for private and prevents it from showing up in the doco
+  export pIN_FILE="$(mktemp)" # the p stands for private and prevents it from showing up in the doco
+  add_file_cleanup "$pIN_FILE"
   cat >"$pIN_FILE" # not sure why this works here but not in run_script
 fi
 

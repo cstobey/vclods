@@ -1,5 +1,5 @@
 #WRAP virtual file system: use #fifo to generate virtual files and #run to use those files inside a VCLOD context. You can only use each virtual file once per run. Helps with large composite programs with many small files. Especially useful for running oneoff scripts from stdin
-TEMP_FILE=$(vclod_mktemp)
+TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 cat >"$TEMP_FILE"
 
 setup_fifo(){

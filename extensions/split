@@ -1,7 +1,7 @@
 #FLOW Split records into batched operations... running the same operation for every $SPLIT_EXT_COUNT rows
 : "${SPLIT_EXT_COUNT:=10000}" # how many lines to process in each batch
 : "${SPLIT_EXT_OPERATION:=${ext_opt:-sh}}" # what vclod_operation to use to process stdin
-TEMP_FILE=$(vclod_mktemp)
+TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 remaining_extensions="$base_filename.$SPLIT_EXT_OPERATION"
 
 i=0

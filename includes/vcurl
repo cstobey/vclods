@@ -25,10 +25,10 @@ vcurl_get_http_status_code() # gets the 3 digit HTTP status code
 vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
 {
   if [ -z "$VCURL_LAST_FULL_OUT" ] ; then 
-    VCURL_LAST_FULL_OUT=$(vclod_mktemp)
-    VCURL_LAST_ERROR=$(vclod_mktemp)
-    VCURL_LAST_HEADER=$(vclod_mktemp)
-    VCURL_LAST_OUTPUT=$(vclod_mktemp)
+    VCURL_LAST_FULL_OUT="$(mktemp)"; add_file_cleanup "$VCURL_LAST_FULL_OUT"
+    VCURL_LAST_ERROR="$(mktemp)";    add_file_cleanup "$VCURL_LAST_ERROR"
+    VCURL_LAST_HEADER="$(mktemp)";   add_file_cleanup "$VCURL_LAST_HEADER"
+    VCURL_LAST_OUTPUT="$(mktemp)";   add_file_cleanup "$VCURL_LAST_OUTPUT"
     export VCURL_LAST_FULL_OUT VCURL_LAST_ERROR VCURL_LAST_HEADER VCURL_LAST_OUTPUT
   fi
   ret=0

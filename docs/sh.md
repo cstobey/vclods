@@ -7,7 +7,7 @@ connections|Internal Connection handling functions used by .sql and .dst. Do not
 literate_source|envsubst only does variable substitution<br />heredocs and quotes do variable substitution/expansion and process substitution<br />source (.) does the above and treats everything else as code too.<br />This targets heredoc-level substitutions to complete the set of quoting options.<br />The name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
 locking|Ensures that at most N parallel batch jobs run for a particular lock/script. Processes beyond N abort (rather than blocking). <br />Each script is atuomatically locked with its own name and inode (or absolute path when there are symlinks).<br />virtual files and given lock names are used without modification.  
 operations|Handles the recursive extension handling that is core to the Operations part of VCLODs.<br />By using this collection, you can create custom flow patterns.
-temp_files|Helper functions to create and cleanup temp files. The trap functions can be used to safely add your own cleanup upon EXIT.
+trap|Helper functions to manage the trap, especially for temporary files (ie, after calling mktemp). 
 vcurl|Helper functions that make interacting with cURL much easier. Automatically collects header information. Helper files:<br />$VCURL_LAST_FULL_OUT: file with headers and body from the last vcurl run<br />$VCURL_LAST_ERROR: file with the error output if any from the last vcurl run<br />$VCURL_LAST_HEADER: file with the headers from the last vcurl run<br />$VCURL_LAST_OUTPUT: file with the body from the last vcurl run
 
 The available shell functions that are available are described below:
@@ -17,10 +17,9 @@ Collection | Function Name | Description
 literate_source|literate_source|Allows heredoc-level substitutions for any string either through stdin or as a function argument.
 locking|get_semaphore_lock|Get a lock. First argument is the lock basename.
 operations|vclod_operation|Within the current VCLODScript's context, process a custom defined VCLODScript. stdin acts as a VCLODScript's file contents; $1 like the filename with extensions.
-temp_files|pre_exit_trap|adds the given command to the beginning of the exit trap
-temp_files|post_exit_trap|adds the given command to the end of the exit trap
-temp_files|add_file_cleanup|Cleans up the given file(s) when the current script or subshell exits.
-temp_files|vclod_mktemp|Returns the filename of a created temporary file. Automatically flags the file to be cleaned up upon script or subshell exit.
+trap|pre_exit_trap|adds the given command to the beginning of the exit trap
+trap|post_exit_trap|adds the given command to the end of the exit trap
+trap|add_file_cleanup|Cleans up the given file(s) when the current script or subshell exits.
 vcurl|urlen|url encode a string from stdin
 vcurl|vcurl_get_header_value|takes a HTTP header key name and returns its value from the last vcurl call. 
 vcurl|vcurl_get_http_status_code|gets the 3 digit HTTP status code
