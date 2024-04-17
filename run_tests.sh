@@ -48,8 +48,8 @@ for f in $(ls -1 logs/*.g-* | grep -E '[.]g-[^.]*$') ; do cp "$f" "tmp_files/$(b
 diff -wr expected_files tmp_files || err "to render the right output files with the right content"
 
 # ensure that the post process log2sql process works in all ways.
-cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" O_SRC=LOG_SQL_ ../vclod_do_dir test_pp_logger.out.sh || err "to export log2sql"
-diff -w <(cat << 'STMT' | vclod_operation get_sql.sql
+cat << 'EOF' | CONFIG_FILE="${LOCAL_DIR}/config" O_SRC=LOG_SQL_ ../vclod_do_dir test_pp_logger.out.sh
+diff -w <(cat << 'STMT' | vclod_operation get_sql.sql | sort
 SELECT
   CONCAT('logs/', SUBSTRING_INDEX(log_file, '/', -1), '.', pid, '.log:',
     ROW_NUMBER() OVER (PARTITION BY log_file, pid ORDER BY script_log_id), ':',
@@ -58,6 +58,7 @@ FROM script_log ORDER BY 1;
 STMT
 ) <(grep ^ -n logs/*.log | sort)
 EOF
+grep -q . files/test_pp_logger-* && err "to export log2sql -- see $(find files/ -name 'test_pp_logger-*')"
 
 # untested extentions
 comm -13 <(find vclod_dir/ | grep -Eo '[.][a-z]+' | sort -u) <(find ../extensions/* | sed -r 's#^.*/([^/]+)$#.\1#') | paste -sd',' | sed 's/^/---UNTESTED EXTENSIONS/;s/[.]/ /g' >&2

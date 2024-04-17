@@ -21,6 +21,7 @@ vclod_log() { # PRIVATE $1=is_error
 }
 
 logger_leave () { # PRIVATE
+  sync
   DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post >"$PELF" 2>"$PELF"
   [ "$RM_ERR_FILE" == 1 ] && rm -f "$ELF"
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
@@ -51,7 +52,7 @@ function run_script { # PRIVATE
   TLF=$([ "$IS_TERMINAL" -eq 1 ] && printf '/dev/stdout' || printf '/dev/null')
   [ -s "$LF" ] && : >"$LF" # make sure old runs dont get misattributed to now.
   [ -s "$ELF" ] && : >"$ELF"
-  export LF ELF PELF TLF
+  export LF ELF PELF TLF LOG_FILE
   post_exit_trap "logger_leave"
 
   if [ -e "$S" ]; then
