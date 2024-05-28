@@ -1,3 +1,3 @@
 # TODO: should I validate that tag is surrounded by `[]`s?
 UPDATE tmp_log SET message = in_message;
-UPDATE tmp_log SET message = REGEXP_REPLACE(in_message, ' [0-9]+$', ''), value = SUBSTRING_INDEX(in_message, ' ', -1) WHERE in_message RLIKE ' [0-9]+$';
+UPDATE tmp_log SET message = REGEXP_REPLACE(in_message, ' [0-9]+$', ''), value = SUBSTRING_INDEX(in_message, ' ', -1) WHERE in_message RLIKE ' [0-9]{1,9}$';

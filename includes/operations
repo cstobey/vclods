@@ -16,6 +16,7 @@ vclod_op(){ # PRIVATE
   else
     . "$op_ext_file" | vclod_op "$next"
   fi
+  ret=$? ; sync ; return $ret
 }
 function vclod_operation { # Within the current VCLODScript's context, process a custom defined VCLODScript. stdin acts as a VCLODScript's file contents; $1 like the filename with extensions.
   typeset exit_err_msg="${VCLOD_EXIT_ERR:-$(basename "$1")}"

@@ -1,7 +1,0 @@
-#! /bin/ksh
-
-set -a
-VCLOD_BASE_DIR=/usr/local/bin/vclods/
-set +a
-. /usr/local/bin/vclods/vclod_loadenv
-. /usr/local/bin/vclods/vclod_do_dir

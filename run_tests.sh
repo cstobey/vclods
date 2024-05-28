@@ -58,10 +58,10 @@ FROM script_log ORDER BY 1;
 STMT
 ) <(grep ^ -n logs/*.log | sort)
 EOF
-grep -q . files/test_pp_logger-* && err "to export log2sql -- see $(find files/ -name 'test_pp_logger-*')"
+grep -Ev '^(>.*[[]LOG[]] subprocess done|[^<>].*)$' files/test_pp_logger-* | grep -q . && err "to export log2sql -- see $(find files/ -name 'test_pp_logger-*')"
 
 # untested extentions
-comm -13 <(find vclod_dir/ | grep -Eo '[.][a-z]+' | sort -u) <(find ../extensions/* | sed -r 's#^.*/([^/]+)$#.\1#') | paste -sd',' | sed 's/^/---UNTESTED EXTENSIONS/;s/[.]/ /g' >&2
+comm -13 <(find vclod_dir/ | grep -Eo '[.][a-z]+' | sort -u) <(find ../extensions/* | sed -r 's#^.*/([^/]+)$#.\1#') | paste -sd',' | sed '/^$/ d;s/^/---UNTESTED EXTENSIONS/;s/[.]/ /g' >&2
 
 # extra tests
 

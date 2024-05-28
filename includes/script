@@ -21,7 +21,7 @@ vclod_log() { # PRIVATE $1=is_error
 }
 
 logger_leave () { # PRIVATE
-  sync
+  sync ; sync ; sync # apparently 3 syncs are better than 1
   DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post >"$PELF" 2>"$PELF"
   [ "$RM_ERR_FILE" == 1 ] && rm -f "$ELF"
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty

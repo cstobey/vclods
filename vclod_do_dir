@@ -4,7 +4,7 @@
 # Usage (better to just use vclod installed script):
 # ./vclod_do_dir /path/to/dir
 
-[ -z "$VCLOD_BASE_DIR" ] && . "$(dirname "$(readlink -f "$(which "$0")")")/vclod_loadenv"
+. "${VCLOD_BASE_DIR:=$(dirname "$(readlink -f "$(which "$0")")")}/vclod_loadenv"
 
 ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
 
