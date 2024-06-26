@@ -27,6 +27,13 @@ logger_leave () { # PRIVATE
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
 }
 
+check_dirs() { # PRIVATE
+  [ -d "$VCLOD_BASE_DIR" ] || { echo VCLOD_BASE_DIR must be an existing directory; exit; }
+  [ -d "$LOG_BASE_DIR" ] && [ -w "$LOG_BASE_DIR" ] || { printf 'LOG_BASE_DIR must be an existing, writable directory\n' ; exit 1; }
+  [ -d "$VCLOD_ERR_DIR" ] && [ -w "$VCLOD_ERR_DIR" ] || { printf 'VCLOD_ERR_DIR must be an existing, writable directory\n' ; exit 1; }
+  [ -d "$VCLOD_LOCK_DIR" ] && [ -w "$VCLOD_LOCK_DIR" ] || { printf 'VCLOD_LOCK_DIR must be an existing, writable directory\n' ; exit 1; }
+}
+
 function run_script { # PRIVATE
   export MYPID="$(exec sh -c 'echo $PPID')"
   S="$( ( cd $(dirname "$1"); printf '%s\n' "$(pwd)/$(basename "$1")";) )" # get the absolute path

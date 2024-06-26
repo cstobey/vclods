@@ -1,12 +1,6 @@
 
-extensions/dst Line 2:: "${ext_opt:-BNAwrc if using mysql}"
-this and the .sql ext should dynamically be in sync with the connection... but that might be hard?
-
 extensions/slack Line 9:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
-
-extensions/sql Line 2:: "${ext_opt:-BNAwrc if using mysql}"
-this isnt showing up in the docs
 
 includes/vcurl Line 64:
 need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?

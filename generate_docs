@@ -44,8 +44,8 @@ function set_nv() {gsub(/[ \t]+$/, "", $3); switch ($2) {
   case "post": p=concat_ws(p," ",$3); break; }}
 BEGIN {cur=v=d="";reset()}
 $1==cur {set_nv(); if (d!=$5) print "WARNING: inconsistent definitions for "cur >"/dev/stderr"}
-$1!=cur {if(cur!="")prt();cur=$1;reset();v=$4;d=$5;set_nv()}
-END {prt()}')
+$1!=cur {if(cur!=""&&d!~"PRIVATE")prt();cur=$1;reset();v=$4;d=$5;set_nv()}
+END {if(d!~"PRIVATE")prt()}')
 EOF
 
 cat << EOF >docs/Operation.md

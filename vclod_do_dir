@@ -1,19 +1,28 @@
 #! /bin/ksh
 # Launches all VCLOD batches defined in a directory, running up to VCLOD_JOBS at a time. 
-#
-# Usage (better to just use vclod installed script):
-# ./vclod_do_dir /path/to/dir
 
-. "${VCLOD_BASE_DIR:=$(dirname "$(readlink -f "$(which "$0")")")}/vclod_loadenv"
-
-ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
-
-# Argument validation
+set -a
+: ${CONFIG_FILE:=${CONFIG_ENV_PATH:-/etc}/vclods} # Where to find the global config. Fully Qualified version is $CONFIG_FILE
+[ -f "$CONFIG_FILE" ] || { echo "CONFIG_FILE must exist - default of /etc/vclods - current $CONFIG_FILE" ; exit 1; }
+: "${VCLOD_BASE_DIR:=$(dirname "$(readlink -f "$(which "$0")")")}" # PRIVATE
 : "${1:?Missing a directory or file to process}"
+IS_TERMINAL=$([ -t 1 ] && echo 1 || echo 0)
+
+cat "$CONFIG_FILE" "${VCLOD_BASE_DIR%/}"/includes/* "${VCLOD_BASE_DIR%/}"/connections/* | . /dev/stdin || exit $?
+
+VCLOD_FILE_EXTS="$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|')"
+VCLOD_FILE_REGEX='^.*[^.]+(\.('$VCLOD_FILE_EXTS')(-[^.]+)?)+$'
+: "${VCLOD_LOCK_DIR:=/dev/shm/}" # Where to put lock files (and internal fifos). Generally /dev/shm
+: "${LOG_BASE_DIR:?}" # Where to store log files (will also store error output)
+: "${VCLOD_ERR_DIR:?}" # Where to store error files (/dev/shm is a good option)
 : "${VCLOD_JOBS:=10}" # How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 : "${OPERATIONS_EMAIL:?}" # Email address list to send error output to
 MAIL_ELF="${LOG_BASE_DIR}/$$.err" # used to send batched error emails.
+set +a
+check_dirs
 [ -s "$MAIL_ELF" ] && : >"$MAIL_ELF" # force it to start empty
+
+ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
 
 PIPE_FIFO="${VCLOD_LOCK_DIR%/}/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 9<>"$PIPE_FIFO" ; add_file_cleanup "$PIPE_FIFO"
 stdbuf -i0 -o0 -e0 seq 1 "$VCLOD_JOBS" >&9

@@ -21,10 +21,6 @@ AWK_EXT_DIR|Extensions: awk|$INPUT_DIR|directory to find awk files.
 AWK_EXT_FILE|Extensions: awk|$base_filename|filename of awk file to run. Overridden by ext_opt.
 CONFIG_ENV_PATH|Global|/etc|Where to find the global config. Fully Qualified version is $CONFIG_FILE
 CONFIG_FILE|Global|${CONFIG_ENV_PATH:-/etc}/vclods|Where to find the global config. Fully Qualified version is $CONFIG_FILE
-CURL_EXT_JQ_PAGE_PROG|Extensions: curl||The jq program to use for batching
-CURL_EXT_NUMB_PAGES|Extensions: curl|1|Used to force how many batchs to use when not using jq (like for date based batches)
-CURL_EXT_OPT|Extensions: curl|-sSf|cURL options as seen in the man page.
-CURL_EXT_URL|Extensions: curl||The URL to call, uses literate_source to qualify variables. $CURL_EXT_LOOP_CNT is the default variable used for batching
 DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL|1 prints [START] and [FINISH] log lines at the begining and end of the extension pipe; 0 does not
 DIFF_EXT_CMD|Extensions: diff|diff -w|what diff program to use (maybe try comm -13)
 DIFF_EXT_DIR|Extensions: diff|$INPUT_DIR|What directory to look for "static"
@@ -35,7 +31,8 @@ DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
 DIR_EXT_START|Extensions: dir|$base_filename|Begining regex to find subscripts. Overridden by ext_opt
 DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
-DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.
+DST_EXT_ENVSUBST|Extensions: dst|1|0: Input is sent as a raw query.<br />1: first run input through envsubst before running it as a query
+DST_EXT_IGNORE_NO_CONNECT|Extensions: dst|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.<br />anything else is used as an error message
 EMAIL_EXT_FILE|Extensions: email|$(mktemp)|Absolute path of filename to put stdin into before sending it. Deleted after use.
 EMAIL_EXT_INLINE_REPORT|Extensions: email|0|1 inlines the extension pipe into the email body;<br />0 sends it as an attachment
 EMAIL_EXT_MSG_BODY|Extensions: email|Report attached containing $REPORT_ROWS entries|If sending as an attachment, this defines the body of the email pre-literate_source
@@ -44,6 +41,7 @@ ENV_EXT_DIR|Extensions: env|$INPUT_DIR|Directory to look for files referenced by
 ENV_EXT_FILE|Extensions: env|$base_filename|Filename of env config file to run. Overridden by the first part of ext_opt. If not present, defaults to reimporting the base config
 ENV_EXT_OPERATION|Extensions: env|sh|Operations to use of awk file to run. Overridden by all the extensions in ext_opt (everything after a required `+`).
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR|Directory to look for .etl temp table definition files
+ETL_EXT_ERR_ON_EMPTY|Extensions: etl|1|If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
 ETL_EXT_FILE|Extensions: etl|$base_filename|temp table definition filename.
 EXTRA_ERROR_EMAIL|Post: extra_error_email||must have an email to send to
 HEREDOC_DELIMITER|Extensions: litsh|MSG|If multiple literate_source layers deep, use this to override the heredoc delimiter
@@ -51,7 +49,7 @@ JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq progr
 JQ_EXT_OPT|Extensions: jq||jq command options, generally -cMr
 JQ_EXT_PROG|Extensions: jq||if not using ext_opt, the jq program to use, simplest is '.'
 LITSH_EXT_BATCH_SIZE|Extensions: litsh|100|Number of rows to process at a time... NOTE: each line should be standalone.
-LOG_BASE_DIR|Global, Script||Where to store log files (will also store error output)
+LOG_BASE_DIR|Global||Where to store log files (will also store error output)
 LOG_POST_PROCESS|Post: external_script||it must exist to run it
 LOG_SQL_DB|Post: log2sql||Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 LOG_SQL_ENGINE|Post: log2sql|$LOG_ENGINE|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
@@ -78,7 +76,8 @@ SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot i
 SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
 SPLIT_EXT_COUNT|Extensions: split|10000|how many lines to process in each batch
 SPLIT_EXT_OPERATION|Extensions: split|${ext_opt:-sh}|what vclod_operation to use to process stdin
-SQL_EXT_IGNORE_NO_CONNECT|Extensions: sql|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.
+SQL_EXT_ENVSUBST|Extensions: sql|1|0: Input is sent as a raw query.<br />1: first run input through envsubst before running it as a query
+SQL_EXT_IGNORE_NO_CONNECT|Extensions: sql|0|0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.<br />anything else is used as an error message
 SRC|Extensions: sql|VCLOD_SRC_|Overrides the connection naming prefix.
 SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Errors still go to OPERATIONS_EMAIL
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
@@ -87,11 +86,11 @@ TEE_EXT_OPERATION|Extensions: tee|$ext_opt|vclod_operation to optionally process
 VCLOD_BATCH_JOBS|Includes: locking|1|How many instances of one script can be run at the same time
 VCLOD_DB|Connections: mssql mysql postgres||Base level default db
 VCLOD_ENGINE|Includes: connections|mysql|
-VCLOD_ERR_DIR|Global, Script||Where to store error files (/dev/shm is a good option)
+VCLOD_ERR_DIR|Global||Where to store error files (/dev/shm is a good option)
 VCLOD_EXIT_ERR|Includes: operations|$(basename "$1")|
 VCLOD_HOST|Connections: mssql mysql postgres||Base level default host
 VCLOD_JOBS|Global|10|How many scripts to run in parallel. Must be at least 1 or nothing will happen.
-VCLOD_LOCK_DIR|Global, Script|/dev/shm/|Where to put lock files (and internal fifos). Generally /dev/shm
+VCLOD_LOCK_DIR|Global|/dev/shm/|Where to put lock files (and internal fifos). Generally /dev/shm
 VCLOD_MSSQL_DB|Connections: mssql|$VCLOD_DB|Default db for mssql connections
 VCLOD_MSSQL_HOST|Connections: mssql|$VCLOD_HOST|Default host for mssql connections
 VCLOD_MSSQL_PASSWORD|Connections: mssql|$VCLOD_PASSWORD|Default password for mssql connections

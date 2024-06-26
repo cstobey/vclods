@@ -2,11 +2,25 @@
 
 vclod_conn() # PRIVATE
 {
-  CONN_PREFIX=${1:=VCLOD_OVERRIDE_}
-  ENGINE="$(printf 'echo ${%sENGINE:-${VCLOD_ENGINE:-mysql}}' "${CONN_PREFIX}" | . /dev/stdin | tr '[:upper:]' '[:lower:]')"
-  [ -f "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
-  CMD=$(printf "vclod_%s_connection %s\n" "$ENGINE" "$CONN_PREFIX")
-  $CMD
+  CONN_PREFIX="${1:=VCLOD_OVERRIDE_}"
+  shift
+  IGNORE_NO_CONNECT="$@"
+  ENGINE="$(printf 'echo ${%sENGINE:-${VCLOD_ENGINE:-mysql}}' "${CONN_PREFIX:?in ENGINE}" | . /dev/stdin | tr '[:upper:]' '[:lower:]')"
+  [ -s "${VCLOD_BASE_DIR%/}/connections/$ENGINE" ] || { echo >&2 "Unknown engine type $ENGINE" ; exit 1 ; }
+  ENGINE_UPPER="$(echo "$ENGINE" | tr '[:lower:]' '[:upper:]')"
+  CMD="$(printf "vclod_${ENGINE}_connection\n")"
+  h="$(vclod_conn_arg "$CONN_PREFIX" "$ENGINE_UPPER" HOST)" && 
+    d="$(vclod_conn_arg "$CONN_PREFIX" "$ENGINE_UPPER" DB)" && 
+    u="$(vclod_conn_arg "$CONN_PREFIX" "$ENGINE_UPPER" USER)" && 
+    p="$(vclod_conn_arg "$CONN_PREFIX" "$ENGINE_UPPER" PASSWORD)" || exit $?
+
+  if [ "$IGNORE_NO_CONNECT" -ne 0 ] ; then
+    printf 'printf "${VCLOD_%s_TEST_QUERY:-SELECT NULL;}\n"' "${ENGINE_UPPER:?}" | . /dev/stdin | 
+      $CMD "$h" "$d" "$u" "$p" &>/dev/null || {
+        [ "$IGNORE_NO_CONNECT" -ne 1 ] && echo ".sql: $IGNORE_NO_CONNECT" | envsubst >&2;
+        cat >/dev/null; return 0; }
+  fi
+  $CMD "$h" "$d" "$u" "$p"
 }
 
 vclod_conn_arg() # PRIVATE
