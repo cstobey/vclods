@@ -14,10 +14,10 @@ vclod_conn() # PRIVATE
     u="$(vclod_conn_arg "$CONN_PREFIX" "$ENGINE_UPPER" USER)" && 
     p="$(vclod_conn_arg "$CONN_PREFIX" "$ENGINE_UPPER" PASSWORD)" || exit $?
 
-  if [ "$IGNORE_NO_CONNECT" -ne 0 ] ; then
+  if [ "$IGNORE_NO_CONNECT" != 0 ] ; then
     printf 'printf "${VCLOD_%s_TEST_QUERY:-SELECT NULL;}\n"' "${ENGINE_UPPER:?}" | . /dev/stdin | 
-      $CMD "$h" "$d" "$u" "$p" &>/dev/null || {
-        [ "$IGNORE_NO_CONNECT" -ne 1 ] && echo ".sql: $IGNORE_NO_CONNECT" | envsubst >&2;
+      $CMD "$h" "$d" "$u" "$p" >/dev/null 2>/dev/null || {
+        [ "$IGNORE_NO_CONNECT" != 1 ] && echo ".sql: $IGNORE_NO_CONNECT" | envsubst >&2;
         cat >/dev/null; return 0; }
   fi
   $CMD "$h" "$d" "$u" "$p"

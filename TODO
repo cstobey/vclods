@@ -5,9 +5,6 @@ if the data is too big, need to either shorten it, or batch it. currently just s
 includes/vcurl Line 64:
 need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
 
-includes/vcurl Line 68:  next_url="$@"
-should this be `$(echo $@ | envsubst)`?... should be able to do all that before calling this though.
-
 post.sh/slack_errors Line 7:
 should I add a retry?
 

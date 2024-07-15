@@ -4,7 +4,7 @@ CREATE TEMPORARY TABLE tmp_log (
   log_tag_id INT UNSIGNED NULL DEFAULT NULL, #key log_tag log_tag_id #map_no_update log_line log_tag_id
   st_name VARCHAR(50) NOT NULL, #unique log_tag name
   log_file_id INT UNSIGNED NULL DEFAULT NULL, #key log_file log_file_id #map_no_update log_line log_file_id
-  log_file VARCHAR(1024) NOT NULL DEFAULT '$LOG_FILE', #ignore #unique log_file name
+  log_file VARCHAR(1024) NOT NULL, #unique log_file name
   in_message VARCHAR(4096) NOT NULL, #ingest
   log_message_id INT UNSIGNED NULL DEFAULT NULL, #key log_message log_message_id #map_no_update log_line log_message_id
   message VARCHAR(4096) NULL DEFAULT NULL, #ignore #unique log_message name

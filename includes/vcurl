@@ -22,7 +22,7 @@ vcurl_get_http_status_code() # gets the 3 digit HTTP status code
 
 : "${VCURL_OPTIONS:-}" # Addtional curl options you want to use every time
 
-vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
+vcurl_run() # run curl with the provided url and arguments (make sure to quote arguments with spaces). Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
 {
   if [ -z "$VCURL_LAST_FULL_OUT" ] ; then 
     VCURL_LAST_FULL_OUT="$(mktemp)"; add_file_cleanup "$VCURL_LAST_FULL_OUT"
@@ -32,7 +32,7 @@ vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS a
     export VCURL_LAST_FULL_OUT VCURL_LAST_ERROR VCURL_LAST_HEADER VCURL_LAST_OUTPUT
   fi
   ret=0
-  curl -fLisS $@ $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
+  curl -fLisS "$@" $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
   ret=$?
   sed -r '/^\r?$/q'  "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_HEADER"
   sed -r '1,/^\r?$/d' "$VCURL_LAST_FULL_OUT" | tee "$VCURL_LAST_OUTPUT"
@@ -59,14 +59,14 @@ vcurl_run() # run curl with the provided url and arguments. Always uses -fLisS a
   return $ret 
 }
 
-vcurl_while() # Keep curling until there is no longer a URL to curl. $1 is a function that returns then next URL; the rest of the input varialbes are the inital URL and curl arguments
+vcurl_while() # Keep curling until there is no longer a URL to curl.<br />$1 is a function that returns then next URL (additional parameters each on their own line of output);<br />the optional rest of the input variables are the inital URL and curl arguments (remember to quote arguments).
 {
   # TODO: need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
   get_next_url_func=$1
   shift
   VCURL_LOOP_COUNTER=0
-  next_url="$@" # TODO: should this be `$(echo $@ | envsubst)`?... should be able to do all that before calling this though.
-  while vcurl_run ${next_url:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && next_url="$("$get_next_url_func")" && [ -n "$next_url" ]
+  next_url=("$@")
+  while vcurl_run ${next_url:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && IFS=$'\n' next_url=($("$get_next_url_func")) && unset IFS && [ -n "$next_url" ]
   do : ; done
 }
 

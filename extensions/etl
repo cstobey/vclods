@@ -5,7 +5,6 @@ fn="$(mktemp)"; add_file_cleanup "$fn"
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$fn" # handle fifos; -- are real comments
-sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
 tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$fn" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
 working_fields=$(grep -E "#(key|unique|generate_unique|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) " "$fn" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} /^[#]/ {gsub(/#/, "\n#", $0)} 1' | grep -E "#(key|unique|sync|map|generate|mode)")
@@ -15,7 +14,8 @@ cat >"$TEMP_FILE" # include the previous pipe's data
 [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
 head -1 "$TEMP_FILE" | grep -Eq '^[(#]' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
 cat - "$TEMP_FILE" << EOF
-
+$(sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
+)
 #RESET
 #start INSERT INTO $tmp_tbl ($ingest_fields) VALUES
 EOF

@@ -12,7 +12,7 @@ next_page()
 {
   JQ_EXT_OPT='-r' JQ_EXT_PROG='.next' vclod_operation get_next_url.jq <"$VCURL_LAST_OUTPUT" 2>/dev/null | sed 's/^null$//'
 }
-vcurl_while next_page "http://localhost:9000/next_page_1.json"
+vcurl_while next_page "http://localhost:9000/next_page_1.json" '-H"X-Custom-Header: test_space_in_arg"'
 
 cat << 'EOF' | vcurl_multi_run
 http://localhost:9000/page_1.json
