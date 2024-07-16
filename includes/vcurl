@@ -48,7 +48,7 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
         [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo >&2 "[DEBUG] curl: 429 Too Many Requests, waiting $RETRY_AFTER seconds [$VCURL_RECURSION_CNT/$VCURL_RECURSION_LIMIT]"
         sleep "$RETRY_AFTER"
         VCURL_RECURSION_CNT="$((VCURL_RECURSION_CNT + 1))"
-        vcurl_run $@
+        vcurl_run "$@"
         return $?
       fi
     else 
@@ -65,8 +65,8 @@ vcurl_while() # Keep curling until there is no longer a URL to curl.<br />$1 is 
   get_next_url_func=$1
   shift
   VCURL_LOOP_COUNTER=0
-  next_url=("$@")
-  while vcurl_run ${next_url:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && IFS=$'\n' next_url=($("$get_next_url_func")) && unset IFS && [ -n "$next_url" ]
+  typeset -a next_url=("$@")
+  while vcurl_run ${next_url[@]:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && IFS=$'\n' next_url=($("$get_next_url_func")) && unset IFS && [ -n "$next_url" ]
   do : ; done
 }
 
