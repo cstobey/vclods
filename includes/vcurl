@@ -66,7 +66,7 @@ vcurl_while() # Keep curling until there is no longer a URL to curl.<br />$1 is 
   shift
   VCURL_LOOP_COUNTER=0
   typeset -a next_url=("$@")
-  while vcurl_run ${next_url[@]:-$("$get_next_url_func")} && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && IFS=$'\n' next_url=($("$get_next_url_func")) && unset IFS && [ -n "$next_url" ]
+  while vcurl_run "${next_url[@]:-$("$get_next_url_func")}" && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && IFS=$'\n' next_url=($("$get_next_url_func")) && unset IFS && [ -n "$next_url" ]
   do : ; done
 }
 
