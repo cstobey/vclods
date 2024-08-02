@@ -11,7 +11,7 @@ function urlen # url encode a string from stdin
 
 vcurl_get_header_value() # takes a HTTP header key name and returns its value from the last vcurl call. 
 {
-  awk '/^'"${1:?Need a header to look for}"':/ {printf gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
+  awk '/^'"${1:?Need a header to look for}"':/ {printf "%s", gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
   #sed -nr '/^'"${1:?Need a header to look for}"':/I {s/^'"$1"':\s*(\S.*\S|\S)\s*$/\1/i;p;q}' "$VCURL_LAST_HEADER" | ORS="" awk 1 # if need case insensitivity.
 }
 

@@ -106,9 +106,9 @@ grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$fn" | awk '
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
 BEGIN {printf "cat <(echo)"} 
-/^#include/ {printf " $ETL_EXT_DIR/"$2} 
-/^#append/ {printf " <(echo \x22"tail()"\x22)";} 
-/^#sync/ {printf " <(sync_tbl "$2")"}' | . /dev/stdin
+/^#include/ {printf "%s", " $ETL_EXT_DIR/"$2} 
+/^#append/ {printf "%s", " <(echo \x22"tail()"\x22)";} 
+/^#sync/ {printf "%s", " <(sync_tbl "$2")"}' | . /dev/stdin
 
 #CMD Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
