@@ -2,7 +2,7 @@
 extensions/slack Line 9:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 
-includes/vcurl Line 64:
+includes/vcurl Line 69:
 need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
 
 post.sh/slack_errors Line 7:

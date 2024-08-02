@@ -34,8 +34,13 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
   ret=0
   curl -fLisS "$@" $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
   ret=$?
-  sed -r '/^\r?$/q'  "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_HEADER"
-  sed -r '1,/^\r?$/d' "$VCURL_LAST_FULL_OUT" | tee "$VCURL_LAST_OUTPUT"
+  while :; do
+    sed -r '/^\r?$/q'  "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_HEADER"
+    sed -r '1,/^\r?$/d' "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_OUTPUT"
+    head -c6 "$VCURL_LAST_OUTPUT" | grep -q "^HTTP/" && cat "$VCURL_LAST_OUTPUT" > "$VCURL_LAST_FULL_OUT" || break
+    grep '^Location: ' "$VCURL_LAST_HEADER" | sed 's/^/[WARNING] URL Redirect /' >&2
+  done
+  cat "$VCURL_LAST_OUTPUT"
   if [ "$ret" -ne 0 ] ; then
     if [ "$(vcurl_get_http_status_code)" -eq 429 ] && [ "$VCURL_RECURSION_CNT" -lt "${VCURL_RECURSION_LIMIT:=10}" ]; then # how many times to retry a curl 429 HTTP return code
       RETRY_AFTER="$(vcurl_get_header_value 'Retry-After')"
