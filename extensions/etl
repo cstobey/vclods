@@ -12,7 +12,7 @@ working_fields=$(grep -E "#(key|unique|generate_unique|mode|sync(_no_update)?|(m
 TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 cat >"$TEMP_FILE" # include the previous pipe's data
 [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
-head -1 "$TEMP_FILE" | grep -Eq '^[(#]' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
+awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
 cat - "$TEMP_FILE" << EOF
 $(sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
 )
