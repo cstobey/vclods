@@ -31,4 +31,14 @@ PS_FORMAT=pid,ppid,%cpu,%mem,tname,uname,start_time,time,args ps $PS_ARG | while
   elif [[ "$line" =~ /vclod ]] || [ -n "${pids["$ppid"]}" ] ; then pids["$pid"]=1; [ "$SHOW_ALL" -eq 1 ] && echo -e "$pid\t$ppid\t$cpu\t$mem\t$tty\t$u\t$st\t$t\t$line";
   fi ; done ; 
 EOF
-chmod +x /usr/local/bin/{vclod,vps} vclod_*
+cat << 'EOF' >/usr/local/bin/vkill
+#! /bin/ksh
+
+pid_to_kill="${1:?pid to kill required}"
+[[ "$pid_to_kill" =~ ^[0-9]+$ ]] || { echo >&2 "Pid must be a number"; exit 1; }
+pstree -p "$pid_to_kill" | 
+  sed -r 's/[^()0-9]*[(]([0-9]+)[)][^()0-9]*/\1\n/g' | 
+  awk 'BEGIN {printf "kill "} /^[0-9]+$/ {printf $1" "} END {printf ";\n"}' | 
+  . /dev/stdin 
+EOF
+chmod +x /usr/local/bin/{vclod,vps,vkill} vclod_*
