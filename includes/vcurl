@@ -17,7 +17,7 @@ vcurl_get_header_value() # takes a HTTP header key name and returns its value fr
 
 vcurl_get_http_status_code() # gets the 3 digit HTTP status code
 {
-  sed -r '1 s/^HTTP\S+ +([0-9][0-9][0-9]) .*$/\1/;q' "$VCURL_LAST_HEADER"
+  sed -r '1 s/^HTTP\S+\s+([0-9][0-9][0-9]).*$/\1/;q' "$VCURL_LAST_HEADER"
 }
 
 : "${VCURL_OPTIONS:-}" # Addtional curl options you want to use every time
