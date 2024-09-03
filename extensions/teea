@@ -4,3 +4,5 @@
 tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD"
 tee -a "$tfn"
 [ -s "$tfn" ] || rm -f "$tfn"
+
+#TODO: make this mimic .tee

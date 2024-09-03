@@ -5,7 +5,7 @@
 if [[ "$TEE_EXT_OPERATION" =~ [.] ]] ; then
   tee >(vclod_operation "$TEE_EXT_OPERATION")
 else
-  tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD"
+  tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD" # TODO: make docs discover this
   tee "$tfn"
   [ -s "$tfn" ] || rm -f "$tfn"
 fi

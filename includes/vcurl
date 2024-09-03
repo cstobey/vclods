@@ -11,7 +11,7 @@ function urlen # url encode a string from stdin
 
 vcurl_get_header_value() # takes a HTTP header key name and returns its value from the last vcurl call. 
 {
-  awk '/^'"${1:?Need a header to look for}"':/ {printf "%s", gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
+  awk 'BEGIN {IGNORECASE=1}/^'"${1:?Need a header to look for}"':/ {printf "%s", gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
   #sed -nr '/^'"${1:?Need a header to look for}"':/I {s/^'"$1"':\s*(\S.*\S|\S)\s*$/\1/i;p;q}' "$VCURL_LAST_HEADER" | ORS="" awk 1 # if need case insensitivity.
 }
 
@@ -22,7 +22,7 @@ vcurl_get_http_status_code() # gets the 3 digit HTTP status code
 
 : "${VCURL_OPTIONS:-}" # Addtional curl options you want to use every time
 
-vcurl_run() # run curl with the provided url and arguments (make sure to quote arguments with spaces). Always uses -fLisS arguments. If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times
+vcurl_run() # run curl with the provided url and arguments (make sure to quote arguments with spaces). Always uses -fLisS arguments.<br />If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times and the requested delay is <4 hours.
 {
   if [ -z "$VCURL_LAST_FULL_OUT" ] ; then 
     VCURL_LAST_FULL_OUT="$(mktemp)"; add_file_cleanup "$VCURL_LAST_FULL_OUT"
@@ -42,7 +42,7 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
   done
   cat "$VCURL_LAST_OUTPUT"
   if [ "$ret" -ne 0 ] ; then
-    if [ "$(vcurl_get_http_status_code)" -eq 429 ] && [ "$VCURL_RECURSION_CNT" -lt "${VCURL_RECURSION_LIMIT:=10}" ]; then # how many times to retry a curl 429 HTTP return code
+    if [ "$(vcurl_get_http_status_code)" -eq 429 ] && [ "${VCURL_RECURSION_CNT:=0}" -lt "${VCURL_RECURSION_LIMIT:=10}" ]; then # how many times to retry a curl 429 HTTP return code
       RETRY_AFTER="$(vcurl_get_header_value 'Retry-After')"
       [[ "$RETRY_AFTER" =~ [:-] ]] && RETRY_AFTER="$(( $(date +%s -d"$RETRY_AFTER") - $(date +%s) ))"
       (( RETRY_AFTER=RETRY_AFTER<3?4:RETRY_AFTER+1 )) # add a little buffer
@@ -50,9 +50,9 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
         [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo >&2 "[DEBUG] curl: 429 Too Many Requests, requested wait time too long: $RETRY_AFTER"
         cat >&2 "$VCURL_LAST_ERROR"
       else
+        VCURL_RECURSION_CNT="$((VCURL_RECURSION_CNT + 1))"
         [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo >&2 "[DEBUG] curl: 429 Too Many Requests, waiting $RETRY_AFTER seconds [$VCURL_RECURSION_CNT/$VCURL_RECURSION_LIMIT]"
         sleep "$RETRY_AFTER"
-        VCURL_RECURSION_CNT="$((VCURL_RECURSION_CNT + 1))"
         vcurl_run "$@"
         return $?
       fi
