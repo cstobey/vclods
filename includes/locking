@@ -14,5 +14,5 @@ get_semaphore_lock () { # Get a lock. First argument is the lock basename.
     MY_LOCK="$LOCK_FILE"
   done
   [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $MYPID >"$MY_LOCK" || exit 1
-  add_file_cleanup "$MY_LOCK"
+  add_file_cleanup "$MY_LOCK" # TODO: need to setup PID namespaces or cgroups to make killing children easier without a race condition.
 }

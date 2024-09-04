@@ -1,4 +1,4 @@
 vclod_mysql_connection() {
-  mysql -h"$1" -u"$3" -p"$4" "$2" -${ext_opt:-BNAwrc} --init-command="SET NAMES utf8mb4;"
+  MYSQL_PWD="$4" mysql -h"$1" -u"$3" "$2" -${ext_opt:-BNAwrc} --init-command="SET NAMES utf8mb4;"
 }
 export vclod_mysql_connection
