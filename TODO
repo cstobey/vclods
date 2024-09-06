@@ -11,7 +11,7 @@ make this mimic .tee
 includes/locking Line 17:  add_file_cleanup "$MY_LOCK"
 need to setup PID namespaces or cgroups to make killing children easier without a race condition.
 
-includes/vcurl Line 69:
+includes/vcurl Line 71:
 need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
 
 post.sh/slack_errors Line 7:

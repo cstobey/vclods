@@ -9,7 +9,7 @@ function urlen # url encode a string from stdin
   while IFS='' read -n 1 c ; do [[ "$c" =~ [A-Za-z0-9.~_-] ]] && printf "$c" || printf '%%%02X' "'$c" ; done
 }
 
-vcurl_get_header_value() # takes a HTTP header key name and returns its value from the last vcurl call. 
+vcurl_get_header_value() # takes a HTTP header key name and returns its value from the last vcurl call.
 {
   awk 'BEGIN {IGNORECASE=1}/^'"${1:?Need a header to look for}"':/ {printf "%s", gensub(/^'"$1"':\s*(\S.*\S|\S)\s*$/, "\\1", "g");exit}' "$VCURL_LAST_HEADER"
   #sed -nr '/^'"${1:?Need a header to look for}"':/I {s/^'"$1"':\s*(\S.*\S|\S)\s*$/\1/i;p;q}' "$VCURL_LAST_HEADER" | ORS="" awk 1 # if need case insensitivity.
@@ -22,9 +22,9 @@ vcurl_get_http_status_code() # gets the 3 digit HTTP status code
 
 : "${VCURL_OPTIONS:-}" # Addtional curl options you want to use every time
 
-vcurl_run() # run curl with the provided url and arguments (make sure to quote arguments with spaces). Always uses -fLisS arguments.<br />If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times and the requested delay is <4 hours.
+vcurl_run() # run curl with the provided url and arguments (make sure to quote arguments with spaces). Always uses -LisS arguments.<br />If HTTP 429 Too Many Requests is received, then it will retry up to $VCURL_RECURSION_LIMIT times and the requested delay is <4 hours.
 {
-  if [ -z "$VCURL_LAST_FULL_OUT" ] ; then 
+  if [ -z "$VCURL_LAST_FULL_OUT" ] ; then
     VCURL_LAST_FULL_OUT="$(mktemp)"; add_file_cleanup "$VCURL_LAST_FULL_OUT"
     VCURL_LAST_ERROR="$(mktemp)";    add_file_cleanup "$VCURL_LAST_ERROR"
     VCURL_LAST_HEADER="$(mktemp)";   add_file_cleanup "$VCURL_LAST_HEADER"
@@ -32,7 +32,7 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
     export VCURL_LAST_FULL_OUT VCURL_LAST_ERROR VCURL_LAST_HEADER VCURL_LAST_OUTPUT
   fi
   ret=0
-  curl -fLisS "$@" $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
+  curl -LisS "$@" $VCURL_OPTIONS >"$VCURL_LAST_FULL_OUT" 2>"$VCURL_LAST_ERROR"
   ret=$?
   while :; do
     sed -r '/^\r?$/q'  "$VCURL_LAST_FULL_OUT" >"$VCURL_LAST_HEADER"
@@ -40,7 +40,7 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
     head -c6 "$VCURL_LAST_OUTPUT" | grep -q "^HTTP/" && cat "$VCURL_LAST_OUTPUT" > "$VCURL_LAST_FULL_OUT" || break
     grep '^Location: ' "$VCURL_LAST_HEADER" | sed 's/^/[WARNING] URL Redirect /' >&2
   done
-  cat "$VCURL_LAST_OUTPUT"
+  [ "$ret" -eq 0 ] && [ "$(vcurl_get_http_status_code)" -ge 400 ] && ret=22 # Simulate using -f in the curl cmd above, but let's us keep the header data this way
   if [ "$ret" -ne 0 ] ; then
     if [ "$(vcurl_get_http_status_code)" -eq 429 ] && [ "${VCURL_RECURSION_CNT:=0}" -lt "${VCURL_RECURSION_LIMIT:=10}" ]; then # how many times to retry a curl 429 HTTP return code
       RETRY_AFTER="$(vcurl_get_header_value 'Retry-After')"
@@ -56,12 +56,14 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
         vcurl_run "$@"
         return $?
       fi
-    else 
+    else
       cat >&2 "$VCURL_LAST_ERROR"
     fi
+  else
+    cat "$VCURL_LAST_OUTPUT"
   fi
   VCURL_RECURSION_CNT=0
-  return $ret 
+  return $ret
 }
 
 vcurl_while() # Keep curling until there is no longer a URL to curl.<br />$1 is a function that returns then next URL (additional parameters each on their own line of output);<br />the optional rest of the input variables are the inital URL and curl arguments (remember to quote arguments).
@@ -79,4 +81,3 @@ vcurl_multi_run() # Proces stdin where each line is the URL and curl arguments o
 {
   while read url; do vcurl_run $url ; done
 }
-
