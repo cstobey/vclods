@@ -1,0 +1,31 @@
+awk
+basename 
+cat
+curl 
+diff # the default for .diff, can be overridden to, say, comm.
+dirname
+env 
+envsubst 
+find 
+grep
+head 
+jq
+ksh
+mail
+mkfifo 
+mktemp
+mysql # the Include connection is because mysql is the default.
+psql
+python3
+readlink
+sed
+sh
+sleep
+sort
+sqlcmd
+sshpass
+stat
+stdbuf
+sync
+tee
+which

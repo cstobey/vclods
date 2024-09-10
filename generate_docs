@@ -3,8 +3,10 @@ cd "$(dirname "$(readlink -f "$(which "$0")")")"
 CODE_FILES='vclod* extensions/* post*/* connections/* includes/*'
 exclusions=$(grep -E '^\s*[A-Z_]+=' $CODE_FILES | grep -v vclod_op | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
 
-cat << EOF >docs/Configuration.md
-# Configuration -- Enviornment Variables
+echo '# Configuration -- Enviornment Variables' >docs/Configuration.md
+echo '# Dependencies -- Where What External Programs are Used' >docs/Dependencies.md
+
+cat << EOF | tee -a docs/Dependencies.md >>docs/Configuration.md
 ## Scope
 Name | Used by:
 -----|----------
@@ -14,6 +16,9 @@ Connections | used in .sql and .dst as defaults
 Includes | Used at the script level or inside the .sh extension [See more](/docs/sh.md)
 Extensions | the given dot extensions
 Post | log processing after the script has run
+EOF
+
+cat << EOF >>docs/Configuration.md
 
 NOTE: Setting the variable in the config file must be of the form \`VAR_NAME=...\` otherwise it will not be exported. Enviornment Variables given on the command line will be overridden by config files unless the variable is defined in the form \`VAR_NAME=\${VAR_NAME:=value to set}\` (or left to the default).
 
@@ -46,6 +51,16 @@ BEGIN {cur=v=d="";reset()}
 $1==cur {set_nv(); if (d!=$5) print "WARNING: inconsistent definitions for "cur >"/dev/stderr"}
 $1!=cur {if(cur!=""&&d!~"PRIVATE")prt();cur=$1;reset();v=$4;d=$5;set_nv()}
 END {if(d!~"PRIVATE")prt()}')
+EOF
+
+cat << EOF >>docs/Dependencies.md
+
+Name | Scope | Note
+-----|-------|-----$(sed -r 's/^([a-z]+)([=<>]+[0-9.]+)?\s*[#]?$/\1 /g;/^ *$/ d' DEPENDENCIES | sort | while read c n ; do printf '\n%s|' "$c" ; grep -El "^((#!)?[^#]*[^A-Za-z0-9])?$c([^A-Za-z0-9]|$)" vclod* extensions/* post*/* connections/* includes/* | sed -r 's#^vclod_do_dir$#Gobal#;s#^includes/script$#Script#;s#([.][^/]+)?/# #' | sort | awk 'NR==1 {printf "%s", toupper(substr($1,1,1))substr($1,2);l_d=$1} 
+l_d!=$1 {printf "<br />%s", toupper(substr($1,1,1))substr($1,2)}
+NF==2 && (NR==1 || l_d!=$1) {printf ":"}
+NF==2 {printf " %s", $2}
+{l_d=$1}'; printf '|%s' "$n" ; done)
 EOF
 
 cat << EOF >docs/Operation.md
