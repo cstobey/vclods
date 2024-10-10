@@ -56,7 +56,7 @@ EOF
 cat << EOF >>docs/Dependencies.md
 
 Name | Scope | Note
------|-------|-----$(sed -r 's/^([a-z]+)([=<>]+[0-9.]+)?\s*[#]?$/\1 /g;/^ *$/ d' DEPENDENCIES | sort | while read c n ; do printf '\n%s|' "$c" ; grep -El "^((#!)?[^#]*[^A-Za-z0-9])?$c([^A-Za-z0-9]|$)" vclod* extensions/* post*/* connections/* includes/* | sed -r 's#^vclod_do_dir$#Gobal#;s#^includes/script$#Script#;s#([.][^/]+)?/# #' | sort | awk 'NR==1 {printf "%s", toupper(substr($1,1,1))substr($1,2);l_d=$1} 
+-----|-------|-----$(sed -r 's/^([a-z]+)([=<>]+[0-9.]+)?\s*[#]?$/\1 /g;/^ *$/ d' DEPENDENCIES | sort | while read c n ; do printf '\n%s|' "$c" ; grep -El "^((#!)?[^#]*[^A-Za-z0-9])?$c([^A-Za-z0-9]|$)" $CODE_FILES | sed -r 's#^vclod_do_dir$#Global#;s#^includes/script$#Script#;s#([.][^/]+)?/# #' | sort | awk 'NR==1 {printf "%s", toupper(substr($1,1,1))substr($1,2);l_d=$1} 
 l_d!=$1 {printf "<br />%s", toupper(substr($1,1,1))substr($1,2)}
 NF==2 && (NR==1 || l_d!=$1) {printf ":"}
 NF==2 {printf " %s", $2}

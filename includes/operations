@@ -20,8 +20,6 @@ vclod_op(){ # PRIVATE
 }
 function vclod_operation { # Within the current VCLODScript's context, process a custom defined VCLODScript. stdin acts as a VCLODScript's file contents; $1 like the filename with extensions.
   typeset exit_err_msg="${VCLOD_EXIT_ERR:-$(basename "$1")}"
-  typeset ret=0
   unset VCLOD_EXIT_ERR # force each layer to have its own error context.
-  ( vclod_op "$(basename "$1")" ) || { ret=$?; echo >&2 "$exit_err_msg returned $ret"; }
-  return $ret
+  ( vclod_op "$(basename "$1")" ) || { ret=$?; echo >&2 "$exit_err_msg returned $ret"; return $ret; }
 }

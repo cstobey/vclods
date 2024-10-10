@@ -84,11 +84,11 @@ TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
 TEE_EXT_FILE_SHARD|Extensions: tee teea|$(date +%F)|A way to save and distinguish between different runs
 TEE_EXT_OPERATION|Extensions: tee|$ext_opt|vclod_operation to optionally process "static" file. Must not output anything
 VCLOD_BATCH_JOBS|Includes: locking|1|How many instances of one script can be run at the same time
-VCLOD_DB|Connections: mssql mysql postgres||Base level default db
+VCLOD_DB|Connections: mssql mysql oracle postgres||Base level default db
 VCLOD_ENGINE|Includes: connections|mysql|
 VCLOD_ERR_DIR|Global||Where to store error files (/dev/shm is a good option)
 VCLOD_EXIT_ERR|Includes: operations|$(basename "$1")|
-VCLOD_HOST|Connections: mssql mysql postgres||Base level default host
+VCLOD_HOST|Connections: mssql mysql oracle postgres||Base level default host
 VCLOD_JOBS|Global|10|How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 VCLOD_LOCK_DIR|Global|/dev/shm/|Where to put lock files (and internal fifos). Generally /dev/shm
 VCLOD_MSSQL_DB|Connections: mssql|$VCLOD_DB|Default db for mssql connections
@@ -99,12 +99,16 @@ VCLOD_MYSQL_DB|Connections: mysql|$VCLOD_DB|Default db for mysql connections
 VCLOD_MYSQL_HOST|Connections: mysql|$VCLOD_HOST|Default host for mysql connections
 VCLOD_MYSQL_PASSWORD|Connections: mysql|$VCLOD_PASSWORD|Default password for mysql connections
 VCLOD_MYSQL_USER|Connections: mysql|$VCLOD_USER|Default user for mysql connections
-VCLOD_PASSWORD|Connections: mssql mysql postgres||Base level default password
+VCLOD_ORACLE_DB|Connections: oracle|$VCLOD_DB|Default db for oracle connections
+VCLOD_ORACLE_HOST|Connections: oracle|$VCLOD_HOST|Default host for oracle connections
+VCLOD_ORACLE_PASSWORD|Connections: oracle|$VCLOD_PASSWORD|Default password for oracle connections
+VCLOD_ORACLE_USER|Connections: oracle|$VCLOD_USER|Default user for oracle connections
+VCLOD_PASSWORD|Connections: mssql mysql oracle postgres||Base level default password
 VCLOD_POSTGRES_DB|Connections: postgres|$VCLOD_DB|Default db for postgres connections
 VCLOD_POSTGRES_HOST|Connections: postgres|$VCLOD_HOST|Default host for postgres connections
 VCLOD_POSTGRES_PASSWORD|Connections: postgres|$VCLOD_PASSWORD|Default password for postgres connections
 VCLOD_POSTGRES_USER|Connections: postgres|$VCLOD_USER|Default user for postgres connections
-VCLOD_USER|Connections: mssql mysql postgres||Base level default user
+VCLOD_USER|Connections: mssql mysql oracle postgres||Base level default user
 VCURL_OPTIONS|Includes: vcurl||Addtional curl options you want to use every time
 VCURL_RECURSION_LIMIT|Includes: vcurl|10|how many times to retry a curl 429 HTTP return code
 WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin

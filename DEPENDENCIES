@@ -23,6 +23,7 @@ sh
 sleep
 sort
 sqlcmd
+sqlplus
 sshpass
 stat
 stdbuf
