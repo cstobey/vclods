@@ -1,29 +1,30 @@
 #PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch.
-fn="$(mktemp)"; add_file_cleanup "$fn"
+ETL_TBL_TEMP_FILE="$(mktemp)"; add_file_cleanup "$ETL_TBL_TEMP_FILE"
+TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
 : "${ETL_EXT_ERR_ON_EMPTY:=1}" # If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
-sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$fn" # handle fifos; -- are real comments
-tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$fn" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
-ingest_fields=$(grep -E '#(map|ingest|unique)' "$fn" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-working_fields=$(grep -E "#(key|unique|generate_unique|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) " "$fn" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} /^[#]/ {gsub(/#/, "\n#", $0)} 1' | grep -E "#(key|unique|sync|map|generate|mode)")
+sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
+tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
+ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
+working_fields=$(grep -E "#(key|unique|explode_[^ ]+|join|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) " "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} /^[#]/ {gsub(/#/, "\n#", $0)} 1' | grep -E "#(key|unique|explode|join|mode|sync|map|generate)")
 
-TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
-cat >"$TEMP_FILE" # include the previous pipe's data
+cat >"$TEMP_FILE" # include the previous pipe's data... then test it
 [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
 awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
-cat - "$TEMP_FILE" << EOF
-$(sed '/^ *#/ d;s/#.*$//' "$fn" # dont want to confuse other potential stream readers
-)
+
+cat - "$TEMP_FILE" << EOF  # sed gets rid of directives to avoid confusing other potential stream readers
+$(sed '/^ *#/ d;s/#.*$//' "$ETL_TBL_TEMP_FILE")
 #RESET
 #start INSERT INTO $tmp_tbl ($ingest_fields) VALUES
 EOF
+echo '#RESET'
 
 function sync_tbl {
   tbl=$1
   shift
-  echo "$working_fields" | grep -E "#[^ ]+ $tbl( |$)" | awk -v t="${tbl%%@*}" -v tt="$tmp_tbl" '
+  grep -E "#([^ ]+\s+$tbl(\s|$)|explode)" <<<"$working_fields" | awk -v t="${tbl%%@*}" -v tt="$tmp_tbl" '
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
 function if_or(v, d) {return (v=="") ? d : v}
@@ -50,11 +51,14 @@ function updatable(tt_f, t_f, use_tt, f_start) {
   odku=cc_ws(odku, ",", @f_end(t"."t_f, "VALUE("t_f")"));
   uset=cc_ws(uset, ",", @f_end(t"."t_f, (use_tt ? tt"." : "") tt_f));}
 
+$2~/^#explode/ {e[$2]=$1}
+$1~/^#join/ {j[$3]=1}
+
 $1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
 $1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail(),1," AND ","")"\n  ";} 
 $1~/^#sync_no_update$/ {no_update=1;}
 
-$1~/^#mode$/ && $3~/^(odku_ai|ui_split)$/ {mode=$3}
+$1~/^#mode$/ && $3~/^(odku(_ai)?|ui_split)$/ {mode=$3}
 $1~/^#mode$/ && $3~/^sparse$/ {use_sparse=1}
 
 $1~/^#generate/ {all(tail(), $3);} # include _no_update and _unique
@@ -72,37 +76,89 @@ END {
   if (odku && !no_update) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";odku="";}
   u_to_on="UPDATE "t" JOIN "tt" ON ";
   if(!use_sparse) {w_s="";}
+  for (e_j in j) {
+    if(e_j in e)
+      j_stmt = cc_ws(j_stmt, "", "\n  LEFT JOIN "e" ON "e".id = "tt"."e[e_j])
+    else
+      ext("could not find requested explode table "e_j)
+  }
   if (f) {
     join_on=tt"."nf"="t"."f;
-    u_get_f="UPDATE "t" JOIN "tt" ON "w" SET "join_on";";
+    u_get_f="UPDATE "t" JOIN "tt" ON "w j_stmt" SET "join_on";";
     w_not_key="\n  WHERE "nf" IS NULL"w_s;
-    row_not_in=f" NOT IN (SELECT "nf" FROM "tt");";
+    row_not_in=f" NOT IN (SELECT "nf" FROM "tt j_stmt");";
   } else {
     join_on=w;
     if (tc_uni~/^[^,]+,/) {
-      row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt");";
+      row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
       w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")"w_s;
     } else if (tc_uni~/^[^,]+$/) {
-      row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt");";
+      row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
       w_not_key="\n  WHERE "ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
   }
   uset=(!no_update && uset) ? u_to_on join_on" SET "uset";" : "";
   if (mode == "ui_split") {
     p(u_get_f);
     p(uset);
-    p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_not_key ugb ";");
+    p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb ";");
   } else { # odku_ai
     if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE 1=1"w_s;} else {w_not_key="";}}
-    p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt w_not_key ugb odku";");
-    p("ALTER TABLE "t" AUTO_INCREMENT = 1;");
+    p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb odku";");
+    if (mode != "odku") { p("ALTER TABLE "t" AUTO_INCREMENT = 1;"); }
   }
   p(u_get_f);
-  if(snp && row_not_in) {print "UPDATE "t" SET "snp row_not_in;};
+  if(snp && row_not_in) {print "UPDATE "t j_stmt" SET "snp row_not_in;};
   if(dnp && row_not_in) {print "DELETE FROM "t" WHERE "dnp row_not_in;};
 }'
 }
-echo '#RESET'
-grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$fn" | awk '
+
+grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" 'function tbl(sub_tt) {print "CREATE OR REPLACE TEMPORARY TABLE "sub_tt" (KEY (id)) ENGINE=MEMORY AS"}
+function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function csv(tt_id, sub_tt, source) {print "SELECT "tt"."tt_id", SUBSTRING_INDEX(SUBSTRING_INDEX("source", \x27,\x27, s.seq+1), \x27,\x27, -1) AS the_value, s.seq AS index_number\nFROM "tt" JOIN seq_1_to_1000 AS s ON s.seq <= LENGTH("source") - LENGTH(REPLACE("source", \x27,\x27, \x27\x27));"}
+function json_shallow(tt_id, sub_tt, source) {print "WITH t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
+  SELECT\
+    t.id,\ 
+    CASE JSON_TYPE(t.j)\
+      WHEN \x27ARRAY\x27 THEN s.seq\
+      WHEN \x27OBJECT\x27 THEN JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
+      ELSE NULL\
+    END AS the_key,\
+    CASE JSON_TYPE(t.j)\
+      WHEN \x27ARRAY\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
+      WHEN \x27OBJECT\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$.\x27, JSON_QUOTE(JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27)))))\
+      ELSE t.j\
+    END AS the_value\
+  FROM t\
+  LEFT JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j)"}
+function json_deep(tt_id, sub_tt, source) {print "SET SESSION standard_compliant_cte = 0;
+WITH RECURSIVE t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
+  r AS (SELECT\
+    t.id, t.j AS full, 1 AS depth,\
+    CONCAT(\x27$\x27, CASE JSON_TYPE(t.j) WHEN \x27OBJECT\x27 THEN CONCAT(\x27.\x27, JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27))) WHEN \x27ARRAY\x27 THEN CONCAT(\x27[\x27, s.seq, \x27]\x27) ELSE \x27\x27 END) AS the_jpath,\
+    JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27)) AS the_key,\
+    CASE JSON_TYPE(t.j)\
+      WHEN \x27ARRAY\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
+      WHEN \x27OBJECT\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$.\x27, JSON_QUOTE(JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27)))))\
+      ELSE t.j\
+    END AS the_value\
+  FROM t\
+  LEFT JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j)\
+  UNION ALL\
+  SELECT\
+    r.id, r.full, r.depth + 1 AS depth,\
+    CONCAT(r.the_jpath, IFNULL(CONCAT('.', JSON_VALUE(JSON_KEYS(r.the_value), CONCAT(\x27$[\x27, s.seq, \x27]\x27))), CONCAT(\x27[\x27, s.seq, \x27]\x27))) AS the_jpath,\
+    JSON_VALUE(JSON_KEYS(r.the_value), CONCAT(\x27$[\x27, s.seq, \x27]\x27)) AS the_key,\
+    CASE JSON_TYPE(r.the_value)\
+      WHEN \x27ARRAY\x27 THEN JSON_EXTRACT(r.the_value, CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
+      WHEN \x27OBJECT\x27 THEN JSON_EXTRACT(r.the_value, CONCAT(\x27$.\x27, JSON_QUOTE(JSON_VALUE(JSON_KEYS(r.the_value), CONCAT(\x27$[\x27, s.seq, \x27]\x27)))))\
+    END AS the_value\
+  FROM r\
+  JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(r.the_value) AND JSON_TYPE(r.the_value) IN (\x27ARRAY\x27, \x27OBJECT\x27))\
+SELECT id, the_jpath, NULLIF(JSON_UNQUOTE(the_value), \x27null\x27) AS the_value FROM r WHERE IFNULL(JSON_TYPE(r.the_value), \x27\x27) NOT IN (\x27ARRAY\x27, \x27OBJECT\x27) OR the_value IN (\x27[]\x27, \x27{}\x27)"}
+$2~/^#explode_(csv|json_(shallow|deep))$/ {tbl($3); f_type=gensub(/^#explode_(.*)$/, "\\1", "g", $2); @f_type($1, $3, tail());}'
+
+grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
 BEGIN {printf "cat <(echo)"} 
@@ -117,8 +173,9 @@ BEGIN {printf "cat <(echo)"}
 ## Stand-Alone Commands
 # Order between #sync, #append, and #include commands indicates execution order. 
 #TBL Command | Description
-#mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
 #sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
+#mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
+#join | for the given table (first argument), JOIN in a given #explode sub-temp table (second argument)
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
@@ -132,12 +189,15 @@ BEGIN {printf "cat <(echo)"}
 #key | The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table.
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.
+#explode | Generate a sub-temp table that explodes a column (or virtual column like #generate). Attach this directive to an id column for the temp table. Use with #join.<br />There are several methods of exploding with different generated columns. See details below.
 
 ## #mode Options
-#TBL Option | Description
-# odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE. Overrides ui_split
-# ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables. Overrides odku_ai
-# sparse | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables. Independent of other modes.
+# Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
+#TBL Option | Group | Description
+# odku | Format | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
+# odku_ai | Format | The default: same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
+# ui_split | Format | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+# sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
 
 ## #sync Optional Parameters
 # These follow a destination table name
@@ -153,3 +213,10 @@ BEGIN {printf "cat <(echo)"}
 # _always | Update the field even if the temp table value IS NULL.
 # _greatest | Update the field to the GREATEST value between the destination and temp tables. NULL safe.
 # _least | Update the field to the LEAST value between the destination and temp tables. NULL safe.
+
+## Modifiers for #explode
+# All Sub tables have an `id` column that linkes to the main temp tables id field (that the #explode directive is attached to). The temp table id is what the #explode directive is attached to. The 2 id fields are used for normal #sync operations by using the #join directive.
+#TBL Modifier | Columns | Description
+# _csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
+# _json_shallow | id, the_value, the_key | From a JSON document, break up the top level Object OR Array. the_key is a string for Ojects or an int for Arrays.
+# _json_deep | id, the_value, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).
