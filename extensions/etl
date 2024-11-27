@@ -122,7 +122,7 @@ END {
 grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" 'function tbl(sub_tt) {print "CREATE OR REPLACE TEMPORARY TABLE "sub_tt" (KEY (id)) AS"}
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
-function csv(tt_id, sub_tt, source) {print "SELECT "tt"."tt_id" AS id, SUBSTRING_INDEX(SUBSTRING_INDEX("source", \x27,\x27, s.seq+1), \x27,\x27, -1) AS the_value, s.seq AS index_number\nFROM "tt" JOIN seq_1_to_1000 AS s ON s.seq <= LENGTH("source") - LENGTH(REPLACE("source", \x27,\x27, \x27\x27));"}
+function csv(tt_id, sub_tt, source) {print "SELECT "tt"."tt_id" AS id, SUBSTRING_INDEX(SUBSTRING_INDEX("source", \x27,\x27, s.seq+1), \x27,\x27, -1) AS the_value, s.seq AS index_number\nFROM "tt" JOIN seq_0_to_1000 AS s ON s.seq <= LENGTH("source") - LENGTH(REPLACE("source", \x27,\x27, \x27\x27)) AND LENGTH("source");"}
 function json_shallow(tt_id, sub_tt, source) {print "WITH t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt ")\
   SELECT\
     t.id,\
@@ -137,7 +137,7 @@ function json_shallow(tt_id, sub_tt, source) {print "WITH t AS (SELECT "tt_id" A
       ELSE t.j\
     END AS the_value\
   FROM t\
-  LEFT JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j);"}
+  JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j);"}
 function json_deep(tt_id, sub_tt, source) {print "SET SESSION standard_compliant_cte = 0;\
 WITH RECURSIVE t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
   r AS (SELECT\
@@ -150,7 +150,7 @@ WITH RECURSIVE t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
       ELSE t.j\
     END AS the_value\
   FROM t\
-  LEFT JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j)\
+  JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j)\
   UNION ALL\
   SELECT\
     r.id, r.full, r.depth + 1 AS depth,\
