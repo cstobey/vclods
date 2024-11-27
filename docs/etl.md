@@ -8,8 +8,9 @@ NOTE: "destination table" below refers to the table you are inserting into. To a
 Order between #sync, #append, and #include commands indicates execution order. 
 Command | Description
 --|--
-#mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
 #sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
+#mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
+#join | for the given table (first argument), JOIN in a given #explode sub-temp table (second argument)
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
@@ -24,13 +25,16 @@ Command | Description
 #key | The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table.
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.
+#explode | Generate a sub-temp table that explodes a column (or virtual column like #generate). Attach this directive to an id column for the temp table. Use with #join.<br />There are several methods of exploding with different generated columns. See details below.
 
 ## #mode Options
-Option | Description
---|--
-odku_ai | The default: forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE. Overrides ui_split
-ui_split | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables. Overrides odku_ai
-sparse | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables. Independent of other modes.
+Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
+Option | Group | Description
+--|--|--
+odku | Format | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
+odku_ai | Format | The default: same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
+ui_split | Format | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
 
 ## #sync Optional Parameters
 These follow a destination table name
@@ -48,3 +52,11 @@ _ifnull | The default: This field will be updated if the temp table value IS NOT
 _always | Update the field even if the temp table value IS NULL.
 _greatest | Update the field to the GREATEST value between the destination and temp tables. NULL safe.
 _least | Update the field to the LEAST value between the destination and temp tables. NULL safe.
+
+## Modifiers for #explode
+All Sub tables have an `id` column that linkes to the main temp tables id field (that the #explode directive is attached to). The temp table id is what the #explode directive is attached to. The 2 id fields are used for normal #sync operations by using the #join directive.
+Modifier | Columns | Description
+--|--|--
+_csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
+_json_shallow | id, the_value, the_key | From a JSON document, break up the top level Object OR Array. the_key is a string for Ojects or an int for Arrays.
+_json_deep | id, the_value, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).

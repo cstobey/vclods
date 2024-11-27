@@ -19,7 +19,7 @@ diff|Extensions: diff|# the default for .diff, can be overridden to, say, comm.
 dirname|Global<br />Script|
 env|Script<br />Extensions: env|
 envsubst|Extensions: dst sql<br />Includes: connections|
-find|Global<br />Extensions: dir py<br />Includes: locking|
+find|Global<br />Extensions: dir etl py<br />Includes: locking|
 grep|Script<br />Connections: mssql<br />Extensions: etl shebang vfs while<br />Includes: vcurl|
 head|Extensions: py shebang<br />Includes: vcurl|
 jq|Extensions: jq slack<br />Post: slack_errors|
