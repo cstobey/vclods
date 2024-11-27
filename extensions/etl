@@ -51,7 +51,7 @@ function updatable(tt_f, t_f, use_tt, f_start) {
   odku=cc_ws(odku, ",", @f_end(t"."t_f, "VALUE("t_f")"));
   uset=cc_ws(uset, ",", @f_end(t"."t_f, (use_tt ? tt"." : "") tt_f));}
 
-$2~/^#explode/ {e[$2]=$1}
+$2~/^#explode/ {e[$3]=$1}
 $1~/^#join/ {j[$3]=1}
 
 $1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
@@ -78,7 +78,7 @@ END {
   if(!use_sparse) {w_s="";}
   for (e_j in j) {
     if(e_j in e)
-      j_stmt = cc_ws(j_stmt, "", "\n  LEFT JOIN "e" ON "e".id = "tt"."e[e_j])
+      j_stmt = cc_ws(j_stmt, "", "\n  LEFT JOIN "e_j" ON "e_j".id = "tt"."e[e_j])
     else
       ext("could not find requested explode table "e_j)
   }
