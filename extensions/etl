@@ -119,6 +119,7 @@ END {
 }'
 }
 
+grep '#explod_json_deep' -q <<<"$working_fields" && echo 'SET SESSION standard_compliant_cte = 0;'
 grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" 'function tbl(sub_tt) {print "CREATE OR REPLACE TEMPORARY TABLE "sub_tt" (KEY (id)) AS"}
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
@@ -138,8 +139,7 @@ function json_shallow(tt_id, sub_tt, source) {print "WITH t AS (SELECT "tt_id" A
     END AS the_value\
   FROM t\
   JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j);"}
-function json_deep(tt_id, sub_tt, source) {print "SET SESSION standard_compliant_cte = 0;\
-WITH RECURSIVE t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
+function json_deep(tt_id, sub_tt, source) {print "WITH RECURSIVE t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
   r AS (SELECT\
     t.id, t.j AS full, 1 AS depth,\
     CONCAT(\x27$\x27, CASE JSON_TYPE(t.j) WHEN \x27OBJECT\x27 THEN CONCAT(\x27.\x27, JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27))) WHEN \x27ARRAY\x27 THEN CONCAT(\x27[\x27, s.seq, \x27]\x27) ELSE \x27\x27 END) AS the_jpath,\
