@@ -162,7 +162,7 @@ function json_deep(tt_id, sub_tt, source) {print "WITH RECURSIVE t AS (SELECT "t
     END AS the_value\
   FROM r\
   JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(r.the_value) AND JSON_TYPE(r.the_value) IN (\x27ARRAY\x27, \x27OBJECT\x27))\
-SELECT id, the_jpath, NULLIF(JSON_UNQUOTE(the_value), \x27null\x27) AS the_value FROM r WHERE IFNULL(JSON_TYPE(r.the_value), \x27\x27) NOT IN (\x27ARRAY\x27, \x27OBJECT\x27) OR the_value IN (\x27[]\x27, \x27{}\x27);"}
+SELECT id, the_jpath, the_key, NULLIF(JSON_UNQUOTE(the_value), \x27null\x27) AS the_value FROM r WHERE IFNULL(JSON_TYPE(r.the_value), \x27\x27) NOT IN (\x27ARRAY\x27, \x27OBJECT\x27) OR the_value IN (\x27[]\x27, \x27{}\x27);"}
 $2~/^#explode_(csv|json_(shallow|deep))$/ {tbl($3); f_type=gensub(/^#explode_(.*)$/, "\\1", "g", $2); @f_type($1, $3, tail());}'
 
 grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
@@ -227,4 +227,4 @@ BEGIN {printf "cat <(echo)"}
 #TBL Modifier | Columns | Description
 # _csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
 # _json_shallow | id, the_value, the_key | From a JSON document, break up the top level Object OR Array. the_key is a string for Ojects or an int for Arrays.
-# _json_deep | id, the_value, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).
+# _json_deep | id, the_value, the_key, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).
