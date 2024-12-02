@@ -119,7 +119,7 @@ END {
 }'
 }
 
-grep '#explod_json_deep' -q <<<"$working_fields" && echo 'SET SESSION standard_compliant_cte = 0;'
+grep '#explode_json_deep' -q <<<"$working_fields" && echo 'SET SESSION standard_compliant_cte = 0;'
 grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" 'function tbl(sub_tt) {print "CREATE OR REPLACE TEMPORARY TABLE "sub_tt" (KEY (id)) AS"}
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
