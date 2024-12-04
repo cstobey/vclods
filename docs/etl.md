@@ -21,8 +21,8 @@ Command | Description
 Unless specified, the following commands take the destination table and field name as parameters. Spaces are not allowed in table and field names. #generate follows the same format but is not attached to a field.
 Command | Description
 --|--
-#ingest | Force this field to be ingested in the initial INSERT INTO tmp table. Takes not parameters.
-#ignore | Do not ingest this field into the initial temp table. Takes not parameters.
+#ingest | Force this field to be ingested in the initial INSERT INTO tmp table. Takes no parameters.
+#ignore | Do not ingest this field into the initial temp table. Takes no parameters.
 #key | The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table.
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.

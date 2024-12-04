@@ -8,7 +8,7 @@ TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
 tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-all_directives='#(key|unique|explode_[^ ]+|join|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) '
+all_directives='#(sync(_no_update)?|mode|l?join|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate)(_[^ ]+)?) '
 working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep -E "$all_directives")
 
 cat >"$TEMP_FILE" # include the previous pipe's data... then test it
@@ -196,8 +196,8 @@ BEGIN {printf "cat <(echo)"}
 ## Commands after a field definition
 # Unless specified, the following commands take the destination table and field name as parameters. Spaces are not allowed in table and field names. #generate follows the same format but is not attached to a field.
 #TBL Command | Description
-#ingest | Force this field to be ingested in the initial INSERT INTO tmp table. Takes not parameters.
-#ignore | Do not ingest this field into the initial temp table. Takes not parameters.
+#ingest | Force this field to be ingested in the initial INSERT INTO tmp table. Takes no parameters.
+#ignore | Do not ingest this field into the initial temp table. Takes no parameters.
 #key | The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table.
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.
