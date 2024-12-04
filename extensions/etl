@@ -8,7 +8,8 @@ TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
 tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-working_fields=$(grep -E "#(key|unique|explode_[^ ]+|join|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) " "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/#/, "\n"$1" #", $0)} /^[#]/ {gsub(/#/, "\n#", $0)} 1' | grep -E "#(key|unique|explode|join|mode|sync|map|generate)")
+all_directives='#(key|unique|explode_[^ ]+|join|mode|sync(_no_update)?|(map|generate)(_[^ ]+)?) '
+working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep -E "$all_directives")
 
 cat >"$TEMP_FILE" # include the previous pipe's data... then test it
 [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
