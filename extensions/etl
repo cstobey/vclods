@@ -8,7 +8,7 @@ TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
 tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-all_directives='#(sync(_no_update)?|mode|l?join|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate)(_[^ ]+)?) '
+all_directives='#(sync(_no_update)?|mode|l?join|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
 working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/;s/(#[^ ]+ )/\1  /' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep "#")
 
 cat >"$TEMP_FILE" # include the previous pipe's data... then test it
@@ -64,8 +64,10 @@ $1~/^#mode$/ && $3~/^(odku(_ai)?|ui_split)$/ {mode=$3}
 $1~/^#mode$/ && $3~/^sparse$/ {use_sparse=1}
 
 $1~/^#generate/ {all(tail(), $3);} # include _no_update and _unique
+$1~/^#pivot/ {all("MAX(IF("$4"."$5" = "$6", "$4".the_value, NULL))", $3);} # include _no_update and _unique
 $2~/^#(map|unique)/ {all($1, $4);} # include _no_update
 $1~/^#generate(_(ifnull|always|greatest|least))?$/ {updatable(tail(), $3, 0, $1)}
+$1~/^#pivot(_(ifnull|always|greatest|least))?$/ {updatable("MAX(IF("$4"."$5" = "$6", "$4".the_value, NULL))", $3, 0, $1)}
 $2~/^#map(_(ifnull|always|greatest|least))?$/ {updatable($1, $4, 1, $2)}
 $2~/^#unique$/ {all_uni($1, $4, 1);}
 $1~/^#generate_unique$/ {all_uni(tail(), $3, 0);}
@@ -192,6 +194,7 @@ BEGIN {printf "cat <(echo)"}
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
+#pivot | #generate but for #join fields that need to be pivoted on. After the field name, takes the #join table name, field, and expected value. 
 
 ## Commands after a field definition
 # Unless specified, the following commands take the destination table and field name as parameters. Spaces are not allowed in table and field names. #generate follows the same format but is not attached to a field.
@@ -217,7 +220,7 @@ BEGIN {printf "cat <(echo)"}
 # SET_NOT_PRESENT | \<SET clause without the SET\>\<Optional WHERE clause\> | UPDATEs any rows in the destination table that are not found in the temp table in the provided way.
 # DELETE_NOT_PRESENT | \<Optional WHERE clause without the WHERE\> | DELETEs any rows in the destination table that are not found in the temp table and conform to the where clause.
 
-## Modifiers for #map and #generate
+## Modifiers for #mapi, #generate, and #pivot
 # These are appened directly to the Command that they modify, so #map + _no_update would be #map_no_update.
 #TBL Modifier | Description
 # _no_update | Exclude this field from being updated if it otherwise would have been.

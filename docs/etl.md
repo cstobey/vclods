@@ -16,6 +16,7 @@ Command | Description
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
+#pivot | #generate but for #join fields that need to be pivoted on. After the field name, takes the #join table name, field, and expected value. 
 
 ## Commands after a field definition
 Unless specified, the following commands take the destination table and field name as parameters. Spaces are not allowed in table and field names. #generate follows the same format but is not attached to a field.
@@ -44,7 +45,7 @@ Option | Format | Description
 SET_NOT_PRESENT | \<SET clause without the SET\>\<Optional WHERE clause\> | UPDATEs any rows in the destination table that are not found in the temp table in the provided way.
 DELETE_NOT_PRESENT | \<Optional WHERE clause without the WHERE\> | DELETEs any rows in the destination table that are not found in the temp table and conform to the where clause.
 
-## Modifiers for #map and #generate
+## Modifiers for #mapi, #generate, and #pivot
 These are appened directly to the Command that they modify, so #map + _no_update would be #map_no_update.
 Modifier | Description
 --|--
