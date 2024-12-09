@@ -62,3 +62,4 @@ Modifier | Columns | Description
 _csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
 _json_shallow | id, the_value, the_key | From a JSON document, break up the top level Object OR Array. the_key is a string for Ojects or an int for Arrays.
 _json_deep | id, the_value, the_key, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).
+_manual | User Defined (must include id) | takes an #include file instead of a #generate SQL clause so you can define your own temp table to use. Be sure to keep the temp table's name consistent.

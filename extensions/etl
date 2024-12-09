@@ -169,7 +169,8 @@ function json_deep(tt_id, sub_tt, source) {print "WITH RECURSIVE t AS (SELECT "t
   JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(r.the_value) AND JSON_TYPE(r.the_value) IN (\x27ARRAY\x27, \x27OBJECT\x27))\
 SELECT id, the_jpath, the_key, NULLIF(JSON_UNQUOTE(the_value), \x27null\x27) AS the_value FROM r WHERE IFNULL(JSON_TYPE(r.the_value), \x27\x27) NOT IN (\x27ARRAY\x27, \x27OBJECT\x27) OR the_value IN (\x27[]\x27, \x27{}\x27);";
   print "ALTER TABLE "sub_tt" ADD INDEX (the_key(555)), ADD INDEX (the_jpath(555));"}
-$2~/^#explode_(csv|json_(shallow|deep))$/ {tbl($3); f_type=gensub(/^#explode_(.*)$/, "\\1", "g", $2); @f_type($1, $3, tail());}'
+function manual(tt_id, sub_tt, source) {system("cat $ETL_EXT_DIR/"source)}
+$2~/^#explode_(csv|json_(shallow|deep)|manual)$/ {tbl($3); f_type=gensub(/^#explode_(.*)$/, "\\1", "g", $2); @f_type($1, $3, tail());}'
 
 grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
@@ -235,3 +236,4 @@ BEGIN {printf "cat <(echo)"}
 # _csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
 # _json_shallow | id, the_value, the_key | From a JSON document, break up the top level Object OR Array. the_key is a string for Ojects or an int for Arrays.
 # _json_deep | id, the_value, the_key, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).
+# _manual | User Defined (must include id) | takes an #include file instead of a #generate SQL clause so you can define your own temp table to use. Be sure to keep the temp table's name consistent.
