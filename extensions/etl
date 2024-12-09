@@ -78,7 +78,6 @@ END {
   if (should_exit) {exit 1;}
   if (ugb) {ugb="\n  GROUP BY "ugb;}
   if (odku && !no_update) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";odku="";}
-  u_to_on="UPDATE "t" JOIN "tt" ON ";
   if(!use_sparse) {w_s="";}
   for (e_j in j) {
     if(e_j in e)
@@ -106,7 +105,7 @@ END {
       row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
       w_not_key="\n  WHERE "ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
   }
-  uset=(!no_update && uset) ? u_to_on join_on j_stmt" SET "uset";" : "";
+  uset=(!no_update && uset) ? "UPDATE "t" JOIN "tt" ON "join_on j_stmt" SET "uset";" : "";
   if (mode == "ui_split") {
     p(u_get_f);
     p(uset);
