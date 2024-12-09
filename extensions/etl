@@ -106,7 +106,7 @@ END {
       row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
       w_not_key="\n  WHERE "ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
   }
-  uset=(!no_update && uset) ? u_to_on join_on" SET "uset";" : "";
+  uset=(!no_update && uset) ? u_to_on join_on j_stmt" SET "uset";" : "";
   if (mode == "ui_split") {
     p(u_get_f);
     p(uset);
@@ -169,7 +169,7 @@ function json_deep(tt_id, sub_tt, source) {print "WITH RECURSIVE t AS (SELECT "t
   JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(r.the_value) AND JSON_TYPE(r.the_value) IN (\x27ARRAY\x27, \x27OBJECT\x27))\
 SELECT id, the_jpath, the_key, NULLIF(JSON_UNQUOTE(the_value), \x27null\x27) AS the_value FROM r WHERE IFNULL(JSON_TYPE(r.the_value), \x27\x27) NOT IN (\x27ARRAY\x27, \x27OBJECT\x27) OR the_value IN (\x27[]\x27, \x27{}\x27);";
   print "ALTER TABLE "sub_tt" ADD INDEX (the_key(555)), ADD INDEX (the_jpath(555));"}
-function manual(tt_id, sub_tt, source) {system("cat $ETL_EXT_DIR/"source)}
+function manual(tt_id, sub_tt, source) {system("cat \x22$ETL_EXT_DIR/"source"\x22")}
 $2~/^#explode_(csv|json_(shallow|deep)|manual)$/ {tbl($3); f_type=gensub(/^#explode_(.*)$/, "\\1", "g", $2); @f_type($1, $3, tail());}'
 
 grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
