@@ -25,6 +25,7 @@ echo '#RESET'
 function sync_tbl {
   tbl=$1
   shift
+# TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
   grep -E "#([^ ]+\s+$tbl(\s|$)|explode)" <<<"$working_fields" | awk -v t="${tbl%%@*}" -v tt="$tmp_tbl" '
 function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
 function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
