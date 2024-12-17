@@ -1,4 +1,7 @@
 
+extensions/etl Line 28:
+generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
+
 extensions/slack Line 9:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 
