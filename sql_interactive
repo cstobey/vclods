@@ -1,0 +1,12 @@
+#! /bin/ksh
+
+set -a
+: "${VCLOD_BASE_DIR:?only use inside vsql or vdst}" "${ext_opt:=tc}" # PRIVATE
+SRC=VCLOD_SRC_
+DST=VCLOD_DST_
+N="$1"
+
+cat "${CONFIG_FILE:=${CONFIG_ENV_PATH:-/etc}/vclods}" "${VCLOD_BASE_DIR%/}"/includes/connections "${VCLOD_BASE_DIR%/}"/connections/* "$(pwd)/config" <(env | grep ^O_ | sed 's/^O_//') 2>/dev/null | . /dev/stdin
+set +a
+
+vclod_conn "${!N}" 0

@@ -1,0 +1,21 @@
+# Helper functions that manage a git repo. Using .sh, cd into the git repo, run autogit_pull, make your changes, and then run autogit_push.
+autogit_pull() { # git pull, but handles local changes gracefully.
+  : "${AUTOGIT_BRANCH:=origin/master}" # what branch to force when local change conflict with the source.
+  git pull -q || {
+    echo "git had a local merge conflict" >&2;
+    git merge --strategy-option ours &&
+      git add -A &&
+      git commit -m"merge conflicts" &&
+      git push -f origin HEAD:refs/heads/local_$$ ||
+      { echo "failed to recover after merge conflict" >&2; exit 1; }
+    git fetch --prune -q && git reset --hard "$AUTOGIT_BRANCH" -q || { echo "cannot setup git" >&2; exit 1; }
+  }
+}
+autogit_push() { # git add, commit, and push to some number of origins. $1 is the commit message. Any additional positional arguments are origin names (defaults to origin).
+  git add -A
+  git commit -m"${1:?commit message required}" -q >/dev/null
+  shift
+  for source in "${@:-origin}" ; do
+    git push -q $source HEAD:master 2>&1 | grep -v 'remote: Resolving deltas:' >&2 # silence unhelpful GitHub messaging
+  done
+}

@@ -17,6 +17,7 @@ Name | Scope | Defaults | Description
 -----|-------|----------|------------
 ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR|directory to find files.
 ADD_EXT_FILE|Extensions: add end wrap|$base_filename|the filename. Overridden by ext_opt.
+AUTOGIT_BRANCH|Includes: autogit|origin/master|what branch to force when local change conflict with the source.
 AWK_EXT_DIR|Extensions: awk|$INPUT_DIR|directory to find awk files.
 AWK_EXT_FILE|Extensions: awk|$base_filename|filename of awk file to run. Overridden by ext_opt.
 CONFIG_ENV_PATH|Global|/etc|Where to find the global config. Fully Qualified version is $CONFIG_FILE

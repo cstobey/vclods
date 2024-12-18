@@ -118,7 +118,7 @@ END {
   }
   p(u_get_f);
   if(snp && row_not_in) {print "UPDATE "t j_stmt" SET "snp row_not_in;};
-  if(dnp && row_not_in) {print "DELETE FROM "t" WHERE "dnp row_not_in;};
+  if(dnp && row_not_in) {print "DELETE FROM "t j_stmt" WHERE "dnp row_not_in;};
 }'
 }
 

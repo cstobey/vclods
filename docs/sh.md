@@ -3,6 +3,7 @@
 Collections are groups of functions as references the Includes Scope in the Variables documentation and in the functions defined below.
 Collection | Description
 -----------|------------
+autogit|Helper functions that manage a git repo. Using .sh, cd into the git repo, run autogit_pull, make your changes, and then run autogit_push.
 connections|Internal Connection handling functions used by .sql and .dst. Do not use directly.
 literate_source|envsubst only does variable substitution<br />heredocs and quotes do variable substitution/expansion and process substitution<br />source (.) does the above and treats everything else as code too.<br />This targets heredoc-level substitutions to complete the set of quoting options.<br />The name comes from language systems that invert comments and code for executable blog posts (ie, like Literate Haskell)
 locking|Ensures that at most N parallel batch jobs run for a particular lock/script. Processes beyond N abort (rather than blocking). <br />Each script is atuomatically locked with its own name and inode (or absolute path when there are symlinks).<br />virtual files and given lock names are used without modification.  
@@ -14,6 +15,8 @@ The available shell functions that are available are described below:
 
 Collection | Function Name | Description
 -----------|---------------|------------
+autogit|autogit_pull|git pull, but handles local changes gracefully.
+autogit|autogit_push|git add, commit, and push to some number of origins. $1 is the commit message. Any additional positional arguments are origin names (defaults to origin).
 literate_source|literate_source|Allows heredoc-level substitutions for any string either through stdin or as a function argument.
 locking|get_semaphore_lock|Get a lock. First argument is the lock basename.
 operations|vclod_operation|Within the current VCLODScript's context, process a custom defined VCLODScript. stdin acts as a VCLODScript's file contents; $1 like the filename with extensions.

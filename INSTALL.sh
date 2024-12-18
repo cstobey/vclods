@@ -9,6 +9,18 @@ cat << EOF >/usr/local/bin/vclod
 export VCLOD_BASE_DIR="$DEST_FOLDER"
 . "$DEST_FOLDER/vclod_do_dir"
 EOF
+cat << EOF >/usr/local/bin/vsql
+#! /bin/ksh
+
+export VCLOD_BASE_DIR="$DEST_FOLDER"
+. "$DEST_FOLDER/sql_interactive" "SRC"
+EOF
+cat << EOF >/usr/local/bin/vdst
+#! /bin/ksh
+
+export VCLOD_BASE_DIR="$DEST_FOLDER"
+. "$DEST_FOLDER/sql_interactive" "DST"
+EOF
 cat << 'EOF'>/usr/local/bin/vps
 #! /bin/ksh
 
@@ -41,4 +53,4 @@ pstree -p "$pid_to_kill" |
   awk 'BEGIN {printf "kill "} /^[0-9]+$/ {printf $1" "} END {printf ";\n"}' | 
   . /dev/stdin 
 EOF
-chmod +x /usr/local/bin/{vclod,vps,vkill} vclod_*
+chmod +x /usr/local/bin/{vclod,vsql,vdst,vps,vkill} vclod_do_dir sql_interactive
