@@ -9,4 +9,4 @@ N="$1"
 cat "${CONFIG_FILE:=${CONFIG_ENV_PATH:-/etc}/vclods}" "${VCLOD_BASE_DIR%/}"/includes/connections "${VCLOD_BASE_DIR%/}"/connections/* "$(pwd)/config" <(env | grep ^O_ | sed 's/^O_//') 2>/dev/null | . /dev/stdin
 set +a
 
-vclod_conn "${!N}" 0
+vclod_conn "$(eval "echo \${$N}")" 0
