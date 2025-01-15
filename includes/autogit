@@ -12,10 +12,12 @@ autogit_pull() { # git pull, but handles local changes gracefully.
   }
 }
 autogit_push() { # git add, commit, and push to some number of origins. $1 is the commit message. Any additional positional arguments are origin names (defaults to origin).
+  sync ; sync ; sync # make sure the file updates have finished
   git add -A
   git commit -m"${1:?commit message required}" -q >/dev/null
   shift
   for source in "${@:-origin}" ; do
     git push -q $source HEAD:master 2>&1 | grep -v 'remote: Resolving deltas:' >&2 # silence unhelpful GitHub messaging
   done
+  git diff --quiet # fix the return code.
 }

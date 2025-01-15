@@ -2,11 +2,12 @@ awk
 basename 
 cat
 curl 
-diff # the default for .diff, can be overridden to, say, comm.
+diff # the default for .diff, can be overridden to, say, comm. autogit uses git diff.
 dirname
 env 
 envsubst 
 find 
+git
 grep
 head 
 jq

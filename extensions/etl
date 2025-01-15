@@ -8,7 +8,7 @@ TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
 tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-all_directives='#(sync(_no_update)?|mode|l?join|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
+all_directives='#(sync(_no_update)?|mode|l?join|where|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
 working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/;s/(#[^ ]+ )/\1  /' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep "#")
 
 cat >"$TEMP_FILE" # include the previous pipe's data... then test it
@@ -47,7 +47,7 @@ function all_uni(tt_f, t_f, use_tt) {
   ttc_uni=cc_ws(ttc_uni, ",", tt_f);
   if (tt_f~/[^0-9]/) ugb=cc_ws(ugb, ",", tt_f);
   w_s=cc_ws(w_s,""," AND "tt_f" IS NOT NULL");
-  w=cc_ws(w, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
+  w_uni=cc_ws(w_uni, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
 function updatable(tt_f, t_f, use_tt, f_start) {
   f_end=if_or(gensub(/^#[^_]+_?(.*)?$/, "\\1", "g", f_start),"ifnull");
   odku=cc_ws(odku, ",", @f_end(t"."t_f, "VALUE("t_f")"));
@@ -56,6 +56,7 @@ function updatable(tt_f, t_f, use_tt, f_start) {
 $2~/^#explode/ {e[$3]=$1}
 $1~/^#join/ {j[$3]=1}
 $1~/^#ljoin/ {lj[$3]=1}
+$1~/^#where/ {w=cc_ws(w, " AND ", $3" "tail())}
 
 $1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
 $1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail(),1," AND ","")"\n  ";} 
@@ -92,13 +93,14 @@ END {
     else
       ext("could not find requested explode table "e_j)
   }
+  if (w) {w_s=cc_ws(w_s, " AND ", w);w="\n  WHERE "w;}
   if (f) {
     join_on=tt"."nf"="t"."f;
-    u_get_f="UPDATE "t" JOIN "tt" ON "w j_stmt" SET "join_on";";
+    u_get_f="UPDATE "t" JOIN "tt" ON "w_uni j_stmt" SET "join_on w";";
     w_not_key="\n  WHERE "nf" IS NULL"w_s;
-    row_not_in=f" NOT IN (SELECT "nf" FROM "tt j_stmt");";
+    row_not_in=f" NOT IN (SELECT "nf" FROM "tt j_stmt w");";
   } else {
-    join_on=w;
+    join_on=w_uni;
     if (tc_uni~/^[^,]+,/) {
       row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
       w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")"w_s;
@@ -106,13 +108,13 @@ END {
       row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
       w_not_key="\n  WHERE "ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
   }
-  uset=(!no_update && uset) ? "UPDATE "t" JOIN "tt" ON "join_on j_stmt" SET "uset";" : "";
+  uset=(!no_update && uset) ? "UPDATE "t" JOIN "tt" ON "join_on j_stmt" SET "uset w";" : "";
   if (mode == "ui_split") {
     p(u_get_f);
     p(uset);
     p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb ";");
   } else { # odku_ai
-    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE 1=1"w_s;} else {w_not_key="";}}
+    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE 1=1"w_s;} else {w_not_key=w;}}
     p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb odku";");
     if (mode != "odku") { p("ALTER TABLE "t" AUTO_INCREMENT = 1;"); }
   }

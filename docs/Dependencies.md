@@ -15,11 +15,12 @@ awk|Extensions: awk batch dir etl litsh sh slack<br />Includes: locking vcurl<br
 basename|Script<br />Includes: locking operations|
 cat|Global<br />Connections: oracle<br />Extensions: add dir dst email end env err etl g litsh null out outa py shard shebang slack sql vfs while wrap<br />Includes: connections operations vcurl<br />Post: slack_errors|
 curl|Extensions: slack<br />Includes: vcurl<br />Post: slack_errors|
-diff|Extensions: diff|# the default for .diff, can be overridden to, say, comm.
+diff|Extensions: diff<br />Includes: autogit|# the default for .diff, can be overridden to, say, comm. autogit uses git diff.
 dirname|Global<br />Script|
 env|Script<br />Extensions: env|
 envsubst|Extensions: dst sql<br />Includes: connections|
 find|Global<br />Extensions: dir etl py<br />Includes: locking|
+git|Includes: autogit|
 grep|Script<br />Connections: mssql<br />Extensions: etl shebang vfs while<br />Includes: autogit vcurl|
 head|Extensions: py shebang<br />Includes: vcurl|
 jq|Extensions: jq slack<br />Post: slack_errors|
@@ -40,6 +41,6 @@ sqlplus|Connections: oracle|
 sshpass|Connections: mysql|
 stat|Includes: locking|
 stdbuf|Global<br />Script<br />Extensions: para while|
-sync|Script<br />Extensions: etl<br />Includes: operations|
+sync|Script<br />Extensions: etl<br />Includes: autogit operations|
 tee|Extensions: g tee teea|
 which|Global|
