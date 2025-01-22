@@ -191,8 +191,9 @@ BEGIN {printf "cat <(echo)"}
 #TBL Command | Description
 #sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
 #mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
-#join | for the given table (first argument), JOIN in a given #explode sub-temp table (second argument)
+#join | For the given table (first argument), JOIN in a given #explode sub-temp table (second argument)
 #ljoin | #join, but do a LEFT JOIN instead of a JOIN
+#where | Add a WHERE clause to most queries.
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
