@@ -30,6 +30,7 @@ DIFF_EXT_OPERATION|Extensions: diff|$ext_opt|vclod_operation to optionally proce
 DIR_ERR_SHOULD_EXIT|Extensions: dir|1|1 means halt on error, 0 means continue even if there are errors
 DIR_EXT_CONTEXT|Extensions: dir||Any information you want displayed on error
 DIR_EXT_DIR|Extensions: dir|$INPUT_DIR|Directory to look for subscripts
+DIR_EXT_SCRIPT|Extensions: dir|[^./]+|Force only the files with the given name to run (allows you to isolate just a part of the directory)
 DIR_EXT_START|Extensions: dir|$base_filename|Begining regex to find subscripts. Overridden by ext_opt
 DST|Extensions: dst|VCLOD_DST_|Overrides the connection naming prefix.
 DST_EXT_ENVSUBST|Extensions: dst|1|0: Input is sent as a raw query.<br />1: first run input through envsubst before running it as a query

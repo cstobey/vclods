@@ -3,8 +3,10 @@
 : "${ext_opt:=${DIR_EXT_START:=$base_filename}}" # Begining regex to find subscripts. Overridden by ext_opt
 : "${DIR_EXT_CONTEXT:=}" # Any information you want displayed on error
 : "${DIR_ERR_SHOULD_EXIT:=1}" # 1 means halt on error, 0 means continue even if there are errors
+: "${DIR_EXT_SCRIPT:=[^./]+}" # Force only the files with the given name to run (allows you to isolate just a part of the directory)
 err_opt="$([ "$DIR_ERR_SHOULD_EXIT" -eq 1 ] && echo " || exit 1")"
 cat
-find "$DIR_EXT_DIR" ! -empty -xtype f -regextype posix-egrep -regex "^${DIR_EXT_DIR%/}/${ext_opt}([^./]*(\.($VCLOD_FILE_EXTS)(-[^./]+)?)*/)+[^./]+$" ! -name config | sort -n \
+
+find "$DIR_EXT_DIR" ! -empty -xtype f -regextype posix-egrep -regex "^${DIR_EXT_DIR%/}/${ext_opt}([^./]*(\.($VCLOD_FILE_EXTS)(-[^./]+)?)*/)+${DIR_EXT_SCRIPT}$" ! -name config | sort -n \
   | awk -F'/' -v e="$err_opt" -v d="${DIR_EXT_DIR%/}/$ext_opt" '{f=gensub("/[^./]*([^/]*)", "\\1", "g", gensub("^"d"(.+)/"$NF, $(NF)"/\\1", 1)); print "cat "$0" | vclod_operation "f e}' | . /dev/stdin \
   || { ret="$?" ; echo "$ext_opt Directory Failed $DIR_EXT_CONTEXT" >&2; exit "$ret"; }

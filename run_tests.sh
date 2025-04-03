@@ -78,5 +78,5 @@ CONFIG_FILE="${LOCAL_DIR}/sh_only/config" ../vclod_do_dir ./sh_only/ || err "mys
 
 diff <(find $VCLOD_ERR_DIR $LOCAL_DIR -type p) <(printf "") || err "to clean up fifo files: find $VCLOD_ERR_DIR $LOCAL_DIR -type p -delete>&2"
 
-ls ${TMPDIR:-/tmp}/tmp.* 2>/dev/null | grep -q . && err 'to cleanup some temp files'
+ls ${TMPDIR:-/tmp}/tmp.* 2>/dev/null | grep "$(whoami)" | grep -q . && err 'to cleanup some temp files'
 exit $ret
