@@ -46,7 +46,7 @@ function all_uni(tt_f, t_f, use_tt) {
   tc_uni=cc_ws(tc_uni, ",", t_f); 
   ttc_uni=cc_ws(ttc_uni, ",", tt_f);
   if (tt_f~/[^0-9]/) ugb=cc_ws(ugb, ",", tt_f);
-  w_s=cc_ws(w_s,""," AND "tt_f" IS NOT NULL");
+  w_s=cc_ws(w_s, " AND ", tt_f" IS NOT NULL");
   w_uni=cc_ws(w_uni, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
 function updatable(tt_f, t_f, use_tt, f_start) {
   f_end=if_or(gensub(/^#[^_]+_?(.*)?$/, "\\1", "g", f_start),"ifnull");
@@ -97,16 +97,16 @@ END {
   if (f) {
     join_on=tt"."nf"="t"."f;
     u_get_f="UPDATE "t" JOIN "tt" ON "w_uni j_stmt" SET "join_on w";";
-    w_not_key="\n  WHERE "nf" IS NULL"w_s;
+    w_not_key="\n  WHERE "cc_ws(w_s, " AND ", nf" IS NULL");
     row_not_in=f" NOT IN (SELECT "nf" FROM "tt j_stmt w");";
   } else {
     join_on=w_uni;
     if (tc_uni~/^[^,]+,/) {
       row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
-      w_not_key="\n  WHERE ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")"w_s;
+      w_not_key="\n  WHERE "cc_ws(w_s, " AND ", "ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")");
     } else if (tc_uni~/^[^,]+$/) {
       row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
-      w_not_key="\n  WHERE "ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")"w_s;}
+      w_not_key="\n  WHERE "cc_ws(w_s, " AND ", ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")");}
   }
   uset=(!no_update && uset) ? "UPDATE "t" JOIN "tt" ON "join_on j_stmt" SET "uset w";" : "";
   if (mode == "ui_split") {
@@ -114,7 +114,7 @@ END {
     p(uset);
     p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb ";");
   } else { # odku_ai
-    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE 1=1"w_s;} else {w_not_key=w;}}
+    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE "w_s;} else {w_not_key=w;}}
     p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb odku";");
     if (mode != "odku") { p("ALTER TABLE "t" AUTO_INCREMENT = 1;"); }
   }
