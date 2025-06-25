@@ -1,0 +1,83 @@
+@include "std" 
+@include "etl_map_modifiers" 
+
+BEGIN {mode="odku_ai"; uni_compare_type="not_exist";}
+
+function all(tt_f, t_f) {
+  tc=cc_ws(tc, ",", t_f); 
+  ttc=cc_ws(ttc, ",", tt_f);}
+function all_uni(tt_f, t_f, use_tt) {
+  tc_uni=cc_ws(tc_uni, ",", t_f); 
+  ttc_uni=cc_ws(ttc_uni, ",", tt_f);
+  if (tt_f~/[^0-9]/) ugb=cc_ws(ugb, ",", tt_f);
+  w_s=cc_ws(w_s, " AND ", tt_f" IS NOT NULL");
+  w_uni=cc_ws(w_uni, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
+function updatable(tt_f, t_f, use_tt, f_start) {
+  f_end=if_or(gensub(/^#[^_]+_?(.*)?$/, "\\1", "g", f_start),"ifnull");
+  odku=cc_ws(odku, ",", @f_end(t"."t_f, "VALUE("t_f")"));
+  uset=cc_ws(uset, ",", @f_end(t"."t_f, (use_tt ? tt"." : "") tt_f));}
+
+$2~/^#explode/ {e[$3]=$1}
+$1~/^#join/ {j[$3]=1}
+$1~/^#ljoin/ {lj[$3]=1}
+$1~/^#where/ {w=cc_ws(w, " AND ", $3" "tail4())}
+
+$1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail4();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
+$1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail4(),1," AND ","")"\n  ";} 
+$1~/^#sync_no_update$/ {no_update=1;}
+
+$1~/^#mode$/ && $3~/^(odku(_ai(_always)?)?|ui_split)$/ {mode=$3}
+$1~/^#mode$/ && $3~/^sparse$/ {use_sparse=1}
+$1~/^#mode$/ && $3~/^(not_exist|not_in)$/ {uni_compare_type=$3}
+
+$1~/^#generate/ {all(tail4(), $3);} # include _no_update and _unique
+$1~/^#pivot/ {all("MAX(IF("$4"."$5" = "$6", "$4".the_value, NULL))", $3);} # include _no_update and _unique
+$2~/^#(map|unique)/ {all($1, $4);} # include _no_update
+$1~/^#generate(_(ifnull|always|greatest|least))?$/ {updatable(tail4(), $3, 0, $1)}
+$1~/^#pivot(_(ifnull|always|greatest|least))?$/ {updatable("MAX(IF("$4"."$5" = "$6", "$4".the_value, NULL))", $3, 0, $1)}
+$2~/^#map(_(ifnull|always|greatest|least))?$/ {updatable($1, $4, 1, $2)}
+$2~/^#unique$/ {all_uni($1, $4, 1);}
+$1~/^#generate_unique$/ {all_uni(tail4(), $3, 0);}
+
+$2~/^#key$/ {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
+
+function append_j_stmt(e_j, join_type) {
+  if(e_j in e) j_stmt = cc_ws(j_stmt, "", "\n  "join_type" "e_j" ON "e_j".id = "tt"."e[e_j])
+  else ext("could not find requested explode table "e_j);}
+
+END {
+  if (should_exit) {exit 1;}
+  if (ugb) {ugb="\n  GROUP BY "ugb;}
+  if (odku && !no_update) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";odku="";}
+  if(!use_sparse) {w_s="";}
+  for (e_j in j)  append_j_stmt(e_j, "JOIN");
+  for (e_j in lj) append_j_stmt(e_j, "LEFT JOIN");
+  if (w) {w_s=cc_ws(w_s, " AND ", w);w="\n  WHERE "w;}
+  if (f) {
+    join_on=tt"."nf"="t"."f;
+    u_get_f="UPDATE "t" JOIN "tt" ON "w_uni j_stmt" SET "join_on w";";
+    w_not_key="\n  WHERE "cc_ws(w_s, " AND ", nf" IS NULL");
+    row_not_in=f" NOT IN (SELECT "nf" FROM "tt j_stmt w");";
+  } else {
+    join_on=w_uni;
+    if (tc_uni~/^[^,]+,/) {
+      row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
+      w_not_key="\n  WHERE "cc_ws(w_s, " AND ", "ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")");
+    } else if (tc_uni~/^[^,]+$/) {
+      row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
+      w_not_key="\n  WHERE "cc_ws(w_s, " AND ", ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")");}
+  }
+  uset=(!no_update && uset) ? "UPDATE "t" JOIN "tt" ON "join_on j_stmt" SET "uset w";" : "";
+  if (mode == "ui_split") {
+    p(u_get_f);
+    p(uset);
+    p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb ";");
+  } else { # odku_ai
+    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE "w_s;} else {w_not_key=w;}}
+    p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb odku";");
+    if (mode != "odku") { p("ALTER TABLE "t" AUTO_INCREMENT = 1;"); }
+  }
+  p(u_get_f);
+  if(snp && row_not_in) {print "UPDATE "t j_stmt" SET "snp row_not_in;};
+  if(dnp && row_not_in) {print "DELETE FROM "t j_stmt" WHERE "dnp row_not_in;};
+}

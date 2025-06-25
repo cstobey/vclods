@@ -1,0 +1,4 @@
+function greatest(t_f, tt_f) {return t_f"=GREATEST(IFNULL("tt_f","t_f"), IFNULL("t_f", "tt_f"))"}
+function least(t_f, tt_f) {return t_f"=LEAST(IFNULL("tt_f","t_f"), IFNULL("t_f", "tt_f"))"}
+function ifnull(t_f, tt_f) {return t_f"=IFNULL("tt_f","t_f")"}
+function always(t_f, tt_f) {return t_f"="tt_f}

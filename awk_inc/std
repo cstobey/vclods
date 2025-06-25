@@ -1,0 +1,14 @@
+function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
+function if_or(v, d) {return (v=="") ? d : v}
+function tail2() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail3() {ret=""; for (i=3; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail4() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail5() {ret=""; for (i=5; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail6() {ret=""; for (i=6; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail7() {ret=""; for (i=7; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail8() {ret=""; for (i=8; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail9() {ret=""; for (i=9; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function tail10() {ret=""; for (i=10; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
+function p(value) {if(value){print value;}}
+function ext(msg) {should_exit=1; print msg > "/dev/stderr"; exit 1;} # need to add "if (should_exit) {exit 1;}" to the begining of your END

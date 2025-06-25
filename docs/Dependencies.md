@@ -11,7 +11,7 @@ Post | log processing after the script has run
 
 Name | Scope | Note
 -----|-------|-----
-awk|Extensions: awk batch dir etl litsh sh slack<br />Includes: locking vcurl<br />Post: slack_errors|
+awk|Global<br />Extensions: awk batch dir etl litsh sh slack<br />Includes: locking vcurl<br />Post: slack_errors|# really gawk
 basename|Script<br />Includes: locking operations|
 cat|Global<br />Connections: oracle<br />Extensions: add dir dst email end env err etl g litsh null out outa py shard shebang slack sql vfs while wrap<br />Includes: connections operations vcurl<br />Post: slack_errors|
 curl|Extensions: slack<br />Includes: vcurl<br />Post: slack_errors|
@@ -19,7 +19,7 @@ diff|Extensions: diff<br />Includes: autogit|# the default for .diff, can be ove
 dirname|Global<br />Script|
 env|Script<br />Extensions: env|
 envsubst|Extensions: dst sql<br />Includes: connections|
-find|Global<br />Extensions: dir etl py<br />Includes: locking|
+find|Global<br />Extensions: dir py<br />Includes: locking|
 git|Includes: autogit|
 grep|Script<br />Connections: mssql<br />Extensions: etl shebang vfs while<br />Includes: autogit vcurl|
 head|Extensions: py shebang<br />Includes: vcurl|
