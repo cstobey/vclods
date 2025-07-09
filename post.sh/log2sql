@@ -13,8 +13,9 @@
 [ -z "$LOG_SQL_DB" ] && return 0 # only continue if we have somewhere to go
 [ "$SHOULD_PP_LOG2SQL" -eq 0 ] && return 0 # escape hatch
 
+sync "$LF"
 export SRC=LOG_SQL_ ETL_EXT_DIR="$VCLOD_BASE_DIR" SQL_EXT_ENVSUBST=0
 
 # Parse each line of a log file and ingest into the .etl_format. Expected format:
 # (<date> <time>) <pid> [<tag>] (<message>... <optional_value>)
-sed -r 's/"/\\"/g;s/\t/ /g;s#^(\S+\s+\S+)\s+(\S+)\s+(\[[^]]+\]|[^[] ]+)\s+(\S.*)$#("\1","\2","\3","'"$LOG_FILE"'","\4")#' "$LF" | vclod_operation pp_log2sql.sql.batch.etl-pp_etl_log2sql || mv "$LF" "$LF.sql_failed"
+sed -r 's/"/\\"/g;s/\t/ /g;s#^(\S+\s+\S+)\s+(\S+)\s+(\[[^]]+\]|[^[] ]+)\s+(\S.*)$#("\1","\2","\3","'"$LOG_FILE"'","\4")#' "$LF" | vclod_operation pp_log2sql.sql.batch.etl-pp_etl_log2sql || cp "$LF" "$LF.sql_failed"

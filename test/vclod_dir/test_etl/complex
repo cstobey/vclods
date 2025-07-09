@@ -1,4 +1,5 @@
 
+SET SESSION binlog_format='ROW';
 CREATE OR REPLACE TABLE tmp_col (
   entity_type_id INT(11) UNSIGNED NULL, 
   table_type VARCHAR(255), 
@@ -24,26 +25,53 @@ INSERT INTO tmp_col (table_type,table_name,table_comment,filename,column_type,co
 UPDATE tmp_col AS t # start added from get_entity_type
 JOIN entity_type AS et ON t.table_name LIKE et.name_like AND t.table_type = et.physical_type 
 SET t.entity_type_id = et.entity_type_id; # end added from get_entity_type
+SET @update_cnt=0;
 INSERT INTO entity (entity_type_id,master_location_id,name,description,definition_link,is_active)
   SELECT entity_type_id,master_location_id,table_name,table_comment,filename,1
   FROM tmp_col
   GROUP BY master_location_id,table_name
-  ON DUPLICATE KEY UPDATE entity.definition_link=IFNULL(VALUE(definition_link),entity.definition_link),entity.is_active=IFNULL(VALUE(is_active),entity.is_active);
-ALTER TABLE entity AUTO_INCREMENT = 1;
+  ON DUPLICATE KEY UPDATE entity.entity_id=IF(@update_cnt:=1,VALUES(entity_id),NULL),entity.definition_link=IFNULL(VALUE(definition_link), entity.definition_link),entity.is_active=IFNULL(VALUE(is_active),entity.is_active);
+DELIMITER |
+BEGIN NOT ATOMIC; IF @update_cnt THEN
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE entity AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+END IF;END|
+DELIMITER ;
 UPDATE entity JOIN tmp_col ON tmp_col.master_location_id<=>entity.master_location_id AND tmp_col.table_name<=>entity.name SET tmp_col.entity_id=entity.entity_id;
-UPDATE entity SET is_active=0 WHERE master_location_id=${ml_id} AND entity_id NOT IN (SELECT entity_id FROM tmp_col);
-INSERT IGNORE INTO data_type (sql_type,name)
+UPDATE entity SET is_active=0 WHERE master_location_id=${ml_id} AND NOT EXISTS (SELECT 1 FROM tmp_col
+  WHERE tmp_col.entity_id=entity.entity_id);
+SET @update_cnt=0;
+INSERT INTO data_type (sql_type,name)
   SELECT LOWER(tmp_col.column_type),SUBSTRING_INDEX(ttc.column_type,'(',1)
   FROM tmp_col
-  GROUP BY LOWER(tmp_col.column_type);
-ALTER TABLE data_type AUTO_INCREMENT = 1;
+  GROUP BY LOWER(tmp_col.column_type)
+  ON DUPLICATE KEY UPDATE data_type.data_type_id=IF(@update_cnt:=1,VALUES(data_type_id),NULL);
+DELIMITER |
+BEGIN NOT ATOMIC; IF @update_cnt THEN
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE data_type AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+END IF;END|
+DELIMITER ;
 UPDATE data_type JOIN tmp_col ON LOWER(tmp_col.column_type)<=>data_type.sql_type SET tmp_col.data_type_id=data_type.data_type_id;
+SET @update_cnt=0;
 INSERT INTO field (entity_id,data_type_id,is_active,name,field_authorization,is_nullable,default_value,description,order_by)
   SELECT entity_id,data_type_id,1,column_name,field_authorization,is_nullable,default_value,column_comment,column_position
   FROM tmp_col
   GROUP BY entity_id,column_name
-  ON DUPLICATE KEY UPDATE field.data_type_id=IFNULL(VALUE(data_type_id),field.data_type_id),field.is_active=IFNULL(VALUE(is_active),field.is_active),field.field_authorization=IFNULL(VALUE(field_authorization),field.field_authorization),field.is_nullable=IFNULL(VALUE(is_nullable),field.is_nullable),field.default_value=IFNULL(VALUE(default_value),field.default_value),field.order_by=IFNULL(VALUE(order_by),field.order_by);
-ALTER TABLE field AUTO_INCREMENT = 1;
-UPDATE field SET is_active=0 WHERE entity_id IN (SELECT DISTINCT entity_id FROM tmp_col) AND ROW(entity_id,name) NOT IN (SELECT entity_id,column_name FROM tmp_col);
+  ON DUPLICATE KEY UPDATE field.entity_id=IF(@update_cnt:=1,VALUES(entity_id),NULL), field.data_type_id=IFNULL(VALUE(data_type_id),field.data_type_id),field.is_active=IFNULL(VALUE(is_active),field.is_active),field.field_authorization=IFNULL(VALUE(field_authorization),field.field_authorization),field.is_nullable=IFNULL(VALUE(is_nullable),field.is_nullable),field.default_value=IFNULL(VALUE(default_value),field.default_value),field.order_by=IFNULL(VALUE(order_by),field.order_by);
+DELIMITER |
+BEGIN NOT ATOMIC; IF @update_cnt THEN
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE field AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+END IF;END|
+DELIMITER ;
+UPDATE field SET is_active=0 WHERE entity_id IN (SELECT DISTINCT entity_id FROM tmp_col) AND NOT EXISTS (SELECT 1 FROM tmp_col
+  WHERE tmp_col.entity_id<=>field.entity_id AND tmp_col.column_name<=>field.name);
 UPDATE tmp_col SET entity_id = NULL WHERE entity_id IS NULL;
 

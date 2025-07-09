@@ -1,6 +1,7 @@
-function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
+function cc_ws(value, sep, new) {return (value=="") ? new : ((new=="") ? value : value sep new)}
 function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
 function if_or(v, d) {return (v=="") ? d : v}
+function pre_if(pre, v) {return (v=="") ? "" : pre v}
 function tail2() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
 function tail3() {ret=""; for (i=3; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
 function tail4() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}

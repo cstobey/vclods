@@ -22,7 +22,10 @@ vclod_log() { # PRIVATE $1=is_error
 
 logger_leave () { # PRIVATE
   sync ; sync ; sync # apparently 3 syncs are better than 1
-  DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post >"$PELF" 2>"$PELF"
+  ### this still isnt enough in testing... might have to be more aggressive somehow
+  # actually sync... but wait at most 5 seconds
+  for i in {1..50} ; do sync && [ "$(awk '$1~/^Dirty:/{print $2;exit}' /proc/meminfo)" -eq 0 ] && echo $i && break || sleep 0.1 ; done >/dev/null # | awk '{i=$1}END{if(!i)print 31}'
+  : | DIR_ERR_SHOULD_EXIT=0 DIR_EXT_DIR="$VCLOD_BASE_DIR" vclod_operation post.dir-post >"$PELF" 2>"$PELF"
   [ "$RM_ERR_FILE" == 1 ] && rm -f "$ELF"
   [ -s "$PELF" ] || rm -f "$PELF"  # remove if empty
 }

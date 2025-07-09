@@ -3,6 +3,7 @@ ETL_TBL_TEMP_FILE="$(mktemp)"; add_file_cleanup "$ETL_TBL_TEMP_FILE"
 TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
 : "${ETL_EXT_ERR_ON_EMPTY:=1}" # If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
+: "${ETL_EXT_ROW_REP:=1}" # If 1, force ROW based replication.
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
@@ -15,6 +16,7 @@ cat >"$TEMP_FILE" # include the previous pipe's data... then test it
 [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
 awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
 
+[ "$ETL_EXT_ROW_REP" -eq 1 ] && echo "SET SESSION binlog_format='ROW';"
 cat - "$TEMP_FILE" << EOF  # sed gets rid of directives to avoid confusing other potential stream readers
 $(sed '/^ *#/ d;s/#.*$//' "$ETL_TBL_TEMP_FILE")
 #RESET
@@ -71,10 +73,13 @@ BEGIN {printf "cat <(echo)"}
 ## #mode Options
 # Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
 #TBL Option | Group | Description
-# odku | Format | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
-# odku_ai | Format | The default: same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
-# ui_split | Format | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+# odku | Layout | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
+# odku_ai_always | Layout | Same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
+# odku_ai | Layout | The default: same as odku_always does its best to avoid needing to run the ALTER TABLE.
+# ui_split | Layout | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
 # sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
+# not_exists | Presence_Test | The default: use a NOT EXISTS subselect to force absence when needed.
+# not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.
 
 ## #sync Optional Parameters
 # These follow a destination table name
