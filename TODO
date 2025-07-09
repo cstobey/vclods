@@ -1,5 +1,14 @@
 
-extensions/etl Line 28:
+awk_inc/etl_main_layout Line 12:  if(no_update) { discover_existing_tt_ids(); }
+do I want to do this? 
+
+awk_inc/etl_main_layout Line 13:
+ignore and odku variable .. need to update the variable name to not conflict
+
+awk_inc/etl_main_presence_test Line 16:  #else {}
+should I print an error if there is not key or unique column?
+
+extensions/etl Line 30:
 generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
 
 extensions/slack Line 9:

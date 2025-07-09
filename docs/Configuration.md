@@ -45,6 +45,7 @@ ENV_EXT_OPERATION|Extensions: env|sh|Operations to use of awk file to run. Overr
 ETL_EXT_DIR|Extensions: etl|$INPUT_DIR|Directory to look for .etl temp table definition files
 ETL_EXT_ERR_ON_EMPTY|Extensions: etl|1|If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
 ETL_EXT_FILE|Extensions: etl|$base_filename|temp table definition filename.
+ETL_EXT_ROW_REP|Extensions: etl|1|If 1, force ROW based replication.
 EXTRA_ERROR_EMAIL|Post: extra_error_email||must have an email to send to
 HEREDOC_DELIMITER|Extensions: litsh|MSG|If multiple literate_source layers deep, use this to override the heredoc delimiter
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq programs in.
