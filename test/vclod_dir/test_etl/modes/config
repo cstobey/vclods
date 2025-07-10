@@ -1,0 +1,2 @@
+ETL_EXT_DIR="$INPUT_DIR/etl"
+DIFF_EXT_DIR="$INPUT_DIR/diff"

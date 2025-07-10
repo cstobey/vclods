@@ -8,7 +8,7 @@ function _reset_auto_inc() {
   p("  SET SESSION sql_log_bin = @old_sql_log_bin;");
 }
 
-function odku() {
+function _odku() {
   if(no_update) { discover_existing_tt_ids(); } # TODO: do I want to do this? 
   # TODO: ignore and odku variable .. need to update the variable name to not conflict
   if (!odku_v) { ignore=" IGNORE"; }
@@ -19,16 +19,16 @@ function odku() {
     pre_if("\n  GROUP BY ", ugb) \
     pre_if("\n  ON DUPLICATE KEY UPDATE ", odku_v) ";");
 }
+function odku() { if(no_update) { odku_v=""; } _odku(); }
 function odku_ai_always() { odku(); _reset_auto_inc(); }
 function odku_ai() {
+  if(!(f || w_uni)) { return odku_ai_always(); }
   if(no_update) { odku_v=""; }
-  if(no_update || !(f || w_uni)) { 
-    return odku_ai_always(); }
 
   p("SET @update_cnt=0;");
   did_update_field=if_or(f, gensub(/^([^,]+)(,.*)?$/, "\\1", "g", tc_uni));
   odku_v=cc_ws(t"."did_update_field"=IF(@update_cnt:=1,VALUES("did_update_field"),NULL)", ", ", odku_v);
-  odku();
+  _odku();
   p("DELIMITER |");
   p("BEGIN NOT ATOMIC; IF @update_cnt THEN");
   _reset_auto_inc();
