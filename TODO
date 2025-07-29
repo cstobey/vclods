@@ -1,7 +1,4 @@
 
-extensions/etl Line 29:
-generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
-
 extensions/slack Line 9:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 
@@ -14,11 +11,14 @@ make this mimic .tee
 includes/awk/etl_main_layout Line 12:  if(no_update) { discover_existing_tt_ids(); }
 do I want to do this? 
 
-includes/awk/etl_main_layout Line 13:
-ignore and odku variable .. need to update the variable name to not conflict
-
 includes/awk/etl_main_presence_test Line 16:  #else {}
 should I print an error if there is not key or unique column?
+
+includes/sh/etl Line 2:
+generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
+
+includes/sh/etl Line 54:    vclod_op "etlsql_coroutine.$1" 
+&|pass ext_opt from env?
 
 includes/sh/locking Line 17:  add_file_cleanup "$MY_LOCK"
 need to setup PID namespaces or cgroups to make killing children easier without a race condition.

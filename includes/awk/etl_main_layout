@@ -10,7 +10,6 @@ function _reset_auto_inc() {
 
 function _odku() {
   if(no_update) { discover_existing_tt_ids(); } # TODO: do I want to do this? 
-  # TODO: ignore and odku variable .. need to update the variable name to not conflict
   if (!odku_v) { ignore=" IGNORE"; }
   p("INSERT"ignore" INTO "t" ("tc")");
   p("  SELECT "ttc"");

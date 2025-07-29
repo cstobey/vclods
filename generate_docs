@@ -104,7 +104,7 @@ done
 for e in sh awk ; do cat << EOF >> docs/${e}.md; done
 Collection | Description
 -----------|------------
-$(grep '^#' includes/$e/* | sed -r '/# *NOTE[: ]/d;s@^[^:]+/([^:/]+):\s*#\s*(.*?)$@\1|\2@' | awk -F'|' '$1==cur {printf "<br />"$2} $1!=cur {if (cur) printf "\n"; printf $1"|"$2; cur=$1} END {printf "\n"}')
+$(grep '^#' includes/$e/* | sed -r '/# *(NOTE|TODO|RESET|start INSERT)([: ]|$)/d;s@^[^:]+/([^:/]+):\s*#\s*(.*?)$@\1|\2@' | awk -F'|' '$1==cur {printf "<br />"$2} $1!=cur {if (cur) printf "\n"; printf $1"|"$2; cur=$1} END {printf "\n"}')
 
 The available functions are described below (Arguments may not be known):
 
