@@ -5,7 +5,7 @@
 # This script fulfills the VCLOD logger contract, but could technically work with any properly structured log file.
 
 # Argument validation: LF is the actual log file. NOTE: most arguments have multiple names for legacy purposes.
-: "${LOG_FILE:?}" "${LF:?}" # derived from includes/script.run_script()
+: "${LOG_FILE:?}" "${LF:?}" # derived from includes/sh/script.run_script()
 : "${LOG_SQL_HOST:=} ${LOG_SQL_USER:=$LOG_USER} ${LOG_SQL_PASSWORD:=$LOG_PW} ${LOG_SQL_DB:=} ${LOG_SQL_ENGINE:=$LOG_ENGINE}" # Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 : "${SHOULD_PP_LOG2SQL:=1}" # Set to 0 to turn off SQL queryable logs
 [ -s "$LF" ] || return 0 # if the output file is empty, dont try to store it

@@ -17,12 +17,12 @@ Name | Scope | Defaults | Description
 -----|-------|----------|------------
 ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR|directory to find files.
 ADD_EXT_FILE|Extensions: add end wrap|$base_filename|the filename. Overridden by ext_opt.
-AUTOGIT_BRANCH|Includes: autogit|origin/master|what branch to force when local change conflict with the source.
+AUTOGIT_BRANCH|Includes: autogit.sh|origin/master|what branch to force when local change conflict with the source.
 AWK_EXT_DIR|Extensions: awk|$INPUT_DIR|directory to find awk files.
 AWK_EXT_FILE|Extensions: awk|$base_filename|filename of awk file to run. Overridden by ext_opt.
 CONFIG_ENV_PATH|Global|/etc|Where to find the global config. Fully Qualified version is $CONFIG_FILE
 CONFIG_FILE|Global|${CONFIG_ENV_PATH:-/etc}/vclods|Where to find the global config. Fully Qualified version is $CONFIG_FILE
-DEBUG_SHOULD_TIME_IT|Script|$IS_TERMINAL|1 prints [START] and [FINISH] log lines at the begining and end of the extension pipe; 0 does not
+DEBUG_SHOULD_TIME_IT|Includes: script.sh|$IS_TERMINAL|1 prints [START] and [FINISH] log lines at the begining and end of the extension pipe; 0 does not
 DIFF_EXT_CMD|Extensions: diff|diff -w|what diff program to use (maybe try comm -13)
 DIFF_EXT_DIR|Extensions: diff|$INPUT_DIR|What directory to look for "static"
 DIFF_EXT_FILE|Extensions: diff|${ext_opt:-$base_filename}|What to use as the "static" file. defaults to self if the base_filename of either ext_opt or self doesn't exist.
@@ -67,7 +67,7 @@ OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguis
 PARA_EXT_JOBS|Extensions: para|10|number of parallel jobs to run at the same time.
 PARA_EXT_OPERATION|Extensions: para|sh-$base_filename|what vclod_operation to use to process a line of stdin
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
-RM_ERR_FILE|Script|1|1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
+RM_ERR_FILE|Includes: script.sh|1|1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
 SHARD_EXT_COUNT|Extensions: shard||the number of times to loop
 SHARD_EXT_OPERATION|Extensions: shard|${ext_opt:-sh}|what vclod_operation to use to process stdin
 SHARD_EXT_SLEEP_INTERVAL|Extensions: shard|0|positive integer if you want to to sleep some between backgrounded process invocations.<br />-1 to run in series.<br />0 to run in parallel.<br />Any number will sleep that number of seconds between batchs.<br />Anything else will be treated as a shell command (so you can choose to sleep based on some dynamic criteria).
@@ -86,11 +86,11 @@ SUPPORT_EMAIL|Extensions: email|$OPERATIONS_EMAIL|Email address to send to. Erro
 TEE_EXT_DIR|Extensions: tee teea|$INPUT_DIR|Directory to put program output
 TEE_EXT_FILE_SHARD|Extensions: tee teea|$(date +%F)|A way to save and distinguish between different runs
 TEE_EXT_OPERATION|Extensions: tee|$ext_opt|vclod_operation to optionally process "static" file. Must not output anything
-VCLOD_BATCH_JOBS|Includes: locking|1|How many instances of one script can be run at the same time
+VCLOD_BATCH_JOBS|Includes: locking.sh|1|How many instances of one script can be run at the same time
 VCLOD_DB|Connections: mssql mysql oracle postgres||Base level default db
-VCLOD_ENGINE|Includes: connections|mysql|
+VCLOD_ENGINE|Includes: connections.sh|mysql|
 VCLOD_ERR_DIR|Global||Where to store error files (/dev/shm is a good option)
-VCLOD_EXIT_ERR|Includes: operations|$(basename "$1")|
+VCLOD_EXIT_ERR|Includes: operations.sh|$(basename "$1")|
 VCLOD_HOST|Connections: mssql mysql oracle postgres||Base level default host
 VCLOD_JOBS|Global|10|How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 VCLOD_LOCK_DIR|Global|/dev/shm/|Where to put lock files (and internal fifos). Generally /dev/shm
@@ -112,7 +112,7 @@ VCLOD_POSTGRES_HOST|Connections: postgres|$VCLOD_HOST|Default host for postgres 
 VCLOD_POSTGRES_PASSWORD|Connections: postgres|$VCLOD_PASSWORD|Default password for postgres connections
 VCLOD_POSTGRES_USER|Connections: postgres|$VCLOD_USER|Default user for postgres connections
 VCLOD_USER|Connections: mssql mysql oracle postgres||Base level default user
-VCURL_OPTIONS|Includes: vcurl||Addtional curl options you want to use every time
-VCURL_RECURSION_LIMIT|Includes: vcurl|10|how many times to retry a curl 429 HTTP return code
+VCURL_OPTIONS|Includes: vcurl.sh||Addtional curl options you want to use every time
+VCURL_RECURSION_LIMIT|Includes: vcurl.sh|10|how many times to retry a curl 429 HTTP return code
 WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin
 WHILE_EXT_REQUIRE_OUTPUT|Extensions: while|0|if true, operation must return something to stdout to continue running

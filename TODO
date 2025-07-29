@@ -1,14 +1,5 @@
 
-awk_inc/etl_main_layout Line 12:  if(no_update) { discover_existing_tt_ids(); }
-do I want to do this? 
-
-awk_inc/etl_main_layout Line 13:
-ignore and odku variable .. need to update the variable name to not conflict
-
-awk_inc/etl_main_presence_test Line 16:  #else {}
-should I print an error if there is not key or unique column?
-
-extensions/etl Line 30:
+extensions/etl Line 29:
 generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
 
 extensions/slack Line 9:
@@ -20,10 +11,19 @@ make docs discover this
 extensions/teea Line 8:
 make this mimic .tee
 
-includes/locking Line 17:  add_file_cleanup "$MY_LOCK"
+includes/awk/etl_main_layout Line 12:  if(no_update) { discover_existing_tt_ids(); }
+do I want to do this? 
+
+includes/awk/etl_main_layout Line 13:
+ignore and odku variable .. need to update the variable name to not conflict
+
+includes/awk/etl_main_presence_test Line 16:  #else {}
+should I print an error if there is not key or unique column?
+
+includes/sh/locking Line 17:  add_file_cleanup "$MY_LOCK"
 need to setup PID namespaces or cgroups to make killing children easier without a race condition.
 
-includes/vcurl Line 71:
+includes/sh/vcurl Line 71:
 need to be able to optionally pass in data files... or maybe it is better to force those to be created and used on the commandline?
 
 post.sh/slack_errors Line 7:

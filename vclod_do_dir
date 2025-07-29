@@ -8,7 +8,7 @@ set -a
 : "${1:?Missing a directory or file to process}"
 IS_TERMINAL=$([ -t 1 ] && echo 1 || echo 0)
 
-cat "$CONFIG_FILE" "${VCLOD_BASE_DIR%/}"/includes/* "${VCLOD_BASE_DIR%/}"/connections/* | . /dev/stdin || exit $?
+cat "$CONFIG_FILE" "${VCLOD_BASE_DIR%/}"/includes/sh/* "${VCLOD_BASE_DIR%/}"/connections/* | . /dev/stdin || exit $?
 
 VCLOD_FILE_EXTS="$(ls -1 "${VCLOD_BASE_DIR%/}/extensions/" | paste -sd'|')"
 VCLOD_FILE_REGEX='^.*[^.]+(\.('$VCLOD_FILE_EXTS')(-[^.]+)?)+$'
@@ -18,7 +18,7 @@ VCLOD_FILE_REGEX='^.*[^.]+(\.('$VCLOD_FILE_EXTS')(-[^.]+)?)+$'
 : "${VCLOD_JOBS:=10}" # How many scripts to run in parallel. Must be at least 1 or nothing will happen.
 : "${OPERATIONS_EMAIL:?}" # Email address list to send error output to
 MAIL_ELF="${LOG_BASE_DIR}/$$.err" # used to send batched error emails.
-AWKPATH="$VCLOD_BASE_DIR/awk_inc${AWKPATH:+:${AWKPATH}}"
+AWKPATH="$VCLOD_BASE_DIR/includes/awk${AWKPATH:+:${AWKPATH}}"
 set +a
 check_dirs
 [ -s "$MAIL_ELF" ] && : >"$MAIL_ELF" # force it to start empty

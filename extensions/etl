@@ -7,7 +7,7 @@ TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
 sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
-tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
+tmp_tbl=$(grep -Em1 '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
 ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
 all_directives='#(sync(_no_update)?|mode|l?join|where|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
 working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/;s/(#[^ ]+ )/\1  /' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep "#")
@@ -26,7 +26,6 @@ echo '#RESET'
 
 function sync_tbl {
   tbl=$1
-  shift
 # TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
   grep -E "#([^ ]+\s+$tbl(\s|$)|explode)" <<<"$working_fields" | awk -v t="${tbl%%@*}" -v tt="$tmp_tbl" -f etl_main
 }
