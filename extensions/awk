@@ -3,3 +3,4 @@
 : "${ext_opt:=${AWK_EXT_FILE:=$base_filename}}" # filename of awk file to run. Overridden by ext_opt.
 
 awk -f"$AWK_EXT_DIR/$ext_opt"
+#CMD Collections are groups of functions as references the Includes Scope in the Variables documentation and in the functions defined below.

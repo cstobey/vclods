@@ -5,7 +5,7 @@ Name | Used by:
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
 Connections | used in .sql and .dst as defaults
-Includes | Used at the script level or inside the .sh extension [See more](/docs/sh.md)
+Includes | Used at the script level or inside the listed extension [See more .sh](/docs/sh.md) [See more .awk](/docs/awk.md)
 Extensions | the given dot extensions
 Post | log processing after the script has run
 

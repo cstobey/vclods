@@ -5,7 +5,7 @@ Name | Used by:
 Global | the whole directory. Only Editable in the Global config file
 Script | a single script
 Connections | used in .sql and .dst as defaults
-Includes | Used at the script level or inside the .sh extension [See more](/docs/sh.md)
+Includes | Used at the script level or inside the listed extension [See more .sh](/docs/sh.md) [See more .awk](/docs/awk.md)
 Extensions | the given dot extensions
 Post | log processing after the script has run
 
@@ -33,7 +33,7 @@ psql|Connections: postgres|
 python3|Extensions: py|
 readlink|Global|
 sed|Script<br />Connections: mssql oracle<br />Extensions: etl vfs<br />Includes: trap.sh vcurl.sh<br />Post: log2sql|
-sh|Script<br />Extensions: env para shard split while|
+sh|Global<br />Script<br />Extensions: env para shard split while|
 sleep|Script<br />Extensions: shard<br />Includes: vcurl.sh|
 sort|Global<br />Extensions: dir py|
 sqlcmd|Connections: mssql|

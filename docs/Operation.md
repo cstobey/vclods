@@ -14,7 +14,7 @@ Many extensions have the abilty to accept one and only one option in the .extens
 Name | Location | Option Default | Description
 -----|----------|----------------|------------
 add|PIPE|${ADD_EXT_FILE:=$base_filename}|Prepend a file's contents to the extension pipe
-awk|PIPE|${AWK_EXT_FILE:=$base_filename}|Run awk program
+awk|PIPE|${AWK_EXT_FILE:=$base_filename}|Run awk program [See more](/docs/awk.md)
 batch|PIPE|Used, No Default|aggregate input into batch SQL statements [See more](/docs/batch.md)
 diff|TERM|Used, No Default|diff extension pipe with a "static" file (or generate output based on provided operation)
 dir|WRAP|${DIR_EXT_START:=$base_filename}|Runs all scripts in any subdirectory that starts with $DIR_EXT_START where the .extensions are mined from all directory names between $DIR_EXT_DIR and the filename and disallowed on the filename.
