@@ -1,45 +1,10 @@
 #PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch.
-ETL_TBL_TEMP_FILE="$(mktemp)"; add_file_cleanup "$ETL_TBL_TEMP_FILE"
-TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
 : "${ETL_EXT_ERR_ON_EMPTY:=1}" # If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
 : "${ETL_EXT_ROW_REP:=1}" # If 1, force ROW based replication.
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
-sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
-tmp_tbl=$(grep -Em1 '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
-ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-all_directives='#(sync(_no_update)?|mode|l?join|where|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
-working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/;s/(#[^ ]+ )/\1  /' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep "#")
-
-cat >"$TEMP_FILE" # include the previous pipe's data... then test it
-[ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
-awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
-
-[ "$ETL_EXT_ROW_REP" -eq 1 ] && echo "SET SESSION binlog_format='ROW';"
-cat - "$TEMP_FILE" << EOF  # sed gets rid of directives to avoid confusing other potential stream readers
-$(sed '/^ *#/ d;s/#.*$//' "$ETL_TBL_TEMP_FILE")
-#RESET
-#start INSERT INTO $tmp_tbl ($ingest_fields) VALUES
-EOF
-echo '#RESET'
-
-function sync_tbl {
-  tbl=$1
-# TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
-  grep -E "#([^ ]+\s+$tbl(\s|$)|explode)" <<<"$working_fields" | awk -v t="${tbl%%@*}" -v tt="$tmp_tbl" -f etl_main
-}
-
-grep '#explode_json_deep' -q <<<"$working_fields" && echo 'SET SESSION standard_compliant_cte = 0;'
-grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" -f etl_explode
-
-grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
-function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
-function tail() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
-BEGIN {printf "cat <(echo)"} 
-/^#include/ {printf "%s", " $ETL_EXT_DIR/"$2} 
-/^#append/ {printf "%s", " <(echo \x22"tail()"\x22)";} 
-/^#sync/ {printf "%s", " <(sync_tbl "$2")"}' | . /dev/stdin
+etl_run
 
 #CMD Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
