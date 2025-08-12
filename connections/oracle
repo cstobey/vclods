@@ -2,7 +2,7 @@ vclod_oracle_connection() {
   # For more on SET variables: https://docs.oracle.com/en/database/oracle/oracle-database/23/sqpug/SET-system-variable-summary.html
   
   # If using a TNS-based connection, the hostname must be omitted (since it should be handled by the tnsnames.ora file)
-  [ -z "$1" ] && connstr="$2" || connstr="(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=$1)(Port=1521))(CONNECT_DATA=(SID=$2)))"
+  [[ "$1" =~ [.] ]] && connstr="(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=$1)(Port=1521))(CONNECT_DATA=(SID=$2)))" || connstr="$2"
   (cat /dev/fd/5 -) 5<< 'EOF' | sqlplus -S "$3/\"$4\"@$connstr" | sed -Ezu 's/([^\n]{80})\n/\1/g;s/\s*`{80}/\n/g'
 SET ECHO OFF;
 SET ESC OFF;
