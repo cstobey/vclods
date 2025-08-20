@@ -48,9 +48,8 @@ function run_script { # PRIVATE
   : "${DEBUG_SHOULD_TIME_IT:=$IS_TERMINAL}" # 1 prints [START] and [FINISH] log lines at the begining and end of the extension pipe; 0 does not
   : "${RM_ERR_FILE:=1}" # 1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
   INPUT_DIR="$(dirname "$S")"
-  [ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
-  env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
   set +a
+  vclod_load_local_config
 
   check_dirs
   get_semaphore_lock "$S"

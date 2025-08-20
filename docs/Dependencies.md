@@ -17,11 +17,11 @@ cat|Global<br />Connections: oracle<br />Extensions: add dir dst email end env e
 curl|Extensions: slack<br />Includes: vcurl.sh<br />Post: slack_errors|
 diff|Extensions: diff<br />Includes: autogit.sh|# the default for .diff, can be overridden to, say, comm. autogit uses git diff.
 dirname|Global<br />Script|
-env|Script<br />Extensions: env|
+env|Extensions: env<br />Includes: configuration.sh|
 envsubst|Extensions: dst sql<br />Includes: connections.sh|
 find|Global<br />Extensions: dir py<br />Includes: etl_main.awk locking.sh|
 git|Includes: autogit.sh|
-grep|Script<br />Connections: mssql<br />Extensions: shebang vfs while<br />Includes: autogit.sh etl.sh vcurl.sh|
+grep|Connections: mssql<br />Extensions: shebang vfs while<br />Includes: autogit.sh configuration.sh etl.sh vcurl.sh|
 head|Extensions: py shebang<br />Includes: vcurl.sh|
 jq|Extensions: jq slack<br />Post: slack_errors|
 ksh|Global<br />Extensions: shebang<br />Post: log2sql|
@@ -32,7 +32,7 @@ mysql|Connections: mysql<br />Includes: connections.sh|# the Include connection 
 psql|Connections: postgres|
 python3|Extensions: py|
 readlink|Global|
-sed|Script<br />Connections: mssql oracle<br />Extensions: vfs<br />Includes: etl.sh trap.sh vcurl.sh<br />Post: log2sql|
+sed|Connections: mssql oracle<br />Extensions: vfs<br />Includes: configuration.sh etl.sh trap.sh vcurl.sh<br />Post: log2sql|
 sh|Global<br />Script<br />Extensions: env para shard split while|
 sleep|Script<br />Extensions: shard<br />Includes: vcurl.sh|
 sort|Global<br />Extensions: dir py|
