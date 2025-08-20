@@ -15,7 +15,7 @@ function etl_explode_extra_tbls_using_sql { # PRIVATE
   grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" -f etl_explode
 }
 function etl_explode_extra_tbls_using_coroutine { # PRIVATE
-  grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" -f etl_explode
+  grep '#explode' <<<"$working_fields" | etl_explode_coroutine
 }
 function etl_process_tbls { # PRIVATE
   grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
