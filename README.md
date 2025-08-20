@@ -26,8 +26,8 @@ An open-source directory based ksh framework to productionize programs from comp
 * Encoding Timing and Configuration in script absolute path, allows complex behavior
 * Automatic human readable process reporting
 * Connections are easy (see the connections/ directory)
-  * InfluxDB, MongoDB, Redis, Postgres would be easy to add
-  * MySQL/MariaDB, MSSQL already implemented
+  * MySQL/MariaDB, MSSQL, Oracle, and Postgres already implemented
+  * InfluxDB, MongoDB, Redis would be easy to add
 * Use your own language (shebang) - Javascript/Node, Ruby, Go
 * Scripts/programs can focus on their purpose without dealing with their infrastructure
 * Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
@@ -60,7 +60,7 @@ There is a global config file to make life easier (`/etc/vclods`), then each dir
 Each script file automatically locks out redundant execution (or allows up to `VCLOD_BATCH_JOBS` number of instances to run).
 
 ## Operation
-Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. [Here is a list of all the .extension Operations](/docs/Operation.md).
+Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. Some extensions recurse further, letting you specify what amounts to subscripts within their context, for example, `.diff-f+dst.sql` will run a `.sql` script and diff the output to the contents of the `f` file piped through the `.dst` extension. [Here is a list of all the .extension Operations](/docs/Operation.md).
 
 ## Destination
 Log output (anything in stdout at pipe's end) can go to the following locations: 
