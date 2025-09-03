@@ -11,9 +11,9 @@ Post | log processing after the script has run
 
 Name | Scope | Note
 -----|-------|-----
-awk|Global<br />Script<br />Extensions: awk batch dir litsh sh slack<br />Includes: etl.sh locking.sh vcurl.sh<br />Post: slack_errors|# really gawk
+awk|Global<br />Script<br />Extensions: awk batch dir litsh sh slack<br />Includes: etl.sh etl_explode.sh locking.sh vcurl.sh<br />Post: slack_errors|# really gawk
 basename|Script<br />Includes: locking.sh operations.sh|
-cat|Global<br />Connections: oracle<br />Extensions: add dir dst email end env err g litsh null out outa py shard shebang slack sql vfs while wrap<br />Includes: connections.sh etl.sh etl_explode.awk operations.sh vcurl.sh<br />Post: slack_errors|
+cat|Global<br />Connections: oracle<br />Extensions: add dir dst email end env err g litsh null out outa py shard shebang slack sql vfs while wrap<br />Includes: connections.sh etl.sh etl_explode.awk etl_explode.sh operations.sh vcurl.sh<br />Post: slack_errors|
 curl|Extensions: slack<br />Includes: vcurl.sh<br />Post: slack_errors|
 diff|Extensions: diff<br />Includes: autogit.sh|# the default for .diff, can be overridden to, say, comm. autogit uses git diff.
 dirname|Global<br />Script|
@@ -21,9 +21,9 @@ env|Extensions: env<br />Includes: configuration.sh|
 envsubst|Extensions: dst sql<br />Includes: connections.sh|
 find|Global<br />Extensions: dir py<br />Includes: etl_main.awk locking.sh|
 git|Includes: autogit.sh|
-grep|Connections: mssql<br />Extensions: shebang vfs while<br />Includes: autogit.sh configuration.sh etl.sh vcurl.sh|
+grep|Connections: mssql<br />Extensions: shebang vfs while<br />Includes: autogit.sh configuration.sh etl.sh etl_explode.sh vcurl.sh|
 head|Extensions: py shebang<br />Includes: vcurl.sh|
-jq|Extensions: jq slack<br />Post: slack_errors|
+jq|Extensions: jq slack<br />Includes: etl_explode.sh<br />Post: slack_errors|
 ksh|Global<br />Extensions: shebang<br />Post: log2sql|
 mail|Global<br />Extensions: email<br />Post: extra_error_email|
 mkfifo|Global<br />Extensions: para vfs|
@@ -32,7 +32,7 @@ mysql|Connections: mysql<br />Includes: connections.sh|# the Include connection 
 psql|Connections: postgres|
 python3|Extensions: py|
 readlink|Global|
-sed|Connections: mssql oracle<br />Extensions: vfs<br />Includes: configuration.sh etl.sh trap.sh vcurl.sh<br />Post: log2sql|
+sed|Connections: mssql oracle<br />Extensions: vfs<br />Includes: configuration.sh etl.sh etl_explode.sh trap.sh vcurl.sh<br />Post: log2sql|
 sh|Global<br />Script<br />Extensions: env para shard split while|
 sleep|Script<br />Extensions: shard<br />Includes: vcurl.sh|
 sort|Global<br />Extensions: dir py|

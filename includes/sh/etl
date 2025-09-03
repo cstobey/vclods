@@ -55,6 +55,6 @@ function etl_run { # PRIVATE
     etl_populate_tmp_tbl | vclod_op b.batch | while read l ; do print -p "$l" ; done
     etl_explode_extra_tbls_using_coroutine
     etl_process_tbls | while read l ; do print -p "$l" ; done
-    print -p "quit" ; wait
+    print -p "quit"
   fi
 }

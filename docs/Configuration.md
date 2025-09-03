@@ -116,3 +116,4 @@ VCURL_OPTIONS|Includes: vcurl.sh||Addtional curl options you want to use every t
 VCURL_RECURSION_LIMIT|Includes: vcurl.sh|10|how many times to retry a curl 429 HTTP return code
 WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin
 WHILE_EXT_REQUIRE_OUTPUT|Extensions: while|0|if true, operation must return something to stdout to continue running
+WHILE_EXT_STOP|Extensions: while|0|if 1, stop after we finish the current loop. You can set this on the fly in the config, as it is reloaded every loop.

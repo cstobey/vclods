@@ -20,6 +20,15 @@ generate a subselect the same as with the odku case so #generate_unique works...
 includes/sh/etl Line 54:    vclod_op "etlsql_coroutine.$1" 
 &|pass ext_opt from env?
 
+includes/sh/etl_explode Line 6:
+build the sub_tmp_table... need to get the id type from the main table, remembering to take off any PRIMARY KEY clause
+
+includes/sh/etl_explode Line 7:
+pull the data and do something with it, then put it back
+
+includes/sh/etl_explode Line 8:
+at some point, need to figure out how to do a #run?
+
 includes/sh/locking Line 17:  add_file_cleanup "$MY_LOCK"
 need to setup PID namespaces or cgroups to make killing children easier without a race condition.
 

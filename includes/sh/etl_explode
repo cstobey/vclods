@@ -2,11 +2,11 @@ etl_explode_coroutine () {
   while read tmp_tbl_id explode_type sub_tmp_tbl sub_tmp_tbl_source ; do 
     :>"$COROUTINE_FILE"
     print -p "CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ("
-    print -p "  $(grep -wm1 "$tmp_tbl_id" "$ETL_TBL_TEMP_FILE" | sed 's/^\s*\S+(.*)(\s+(PRIMARY\s+KEY|AUTO_INCREMENT|UNIQUE(\s+KEY)?))*\s*,\s*#.*$/id\1,/')"
+    print -p "  $(grep -wm1 "$tmp_tbl_id" "$ETL_TBL_TEMP_FILE" | sed -r 's/^\s*\S+(.*)(\s+(PRIMARY\s+KEY|AUTO_INCREMENT|UNIQUE(\s+KEY)?))*\s*,\s*#.*$/id\1,/')"
     # TODO: build the sub_tmp_table... need to get the id type from the main table, remembering to take off any PRIMARY KEY clause
     # TODO: pull the data and do something with it, then put it back
     # TODO: at some point, need to figure out how to do a #run?
-    case explode_type in
+    case "$explode_type" in
       "#explode_csv") 
         print -p "  the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));"
         print -p "SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};SELECT '#END NOW';"
