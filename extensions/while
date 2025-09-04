@@ -7,13 +7,13 @@ cat >"$TEMP_FILE"
 
 if [ "$WHILE_EXT_REQUIRE_OUTPUT" == "0" ] ; then
   while ( vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE" ) || return 0 ; do
-    vclod_load_local_config ; [ "$WHILE_EXT_STOP" == 1 ] && return 42 
+    vclod_load_local_config ; [ "$WHILE_EXT_STOP" != 1 ] || return 42
   done # force a 0 exit status to continue
 else
   while { { { {
       ( vclod_op "while_$base_filename.$WHILE_EXT_OPERATION" <"$TEMP_FILE"; ) ; 
       printf '%d' "$?" >&3;
     } | stdbuf -i0 -o0 -e0 grep . >&4; printf '%d\n' "$?" >&3; } 3>&1; } | ( read xs; return $xs; ) } 4>&1 ; do  
-   vclod_load_local_config ; [ "$WHILE_EXT_STOP" == 1 ] && return 42 
+   vclod_load_local_config ; [ "$WHILE_EXT_STOP" != 1 ] || return 42
  done # force both a 0 exit status and log data to continue
 fi

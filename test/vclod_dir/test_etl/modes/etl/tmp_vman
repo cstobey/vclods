@@ -4,5 +4,5 @@ CREATE TEMPORARY TABLE tmp_vman (
   idx INT UNSIGNED NOT NULL
 );
 SELECT '#start INSERT INTO tmp_vman (id, val, idx) VALUES';
-SELECT CONCAT('(', CONCAT_WS(',', id, QUOTE(SUBSTRING_INDEX(two, ',', 1)), 0), ')') FROM tmp;
-SELECT CONCAT('(', CONCAT_WS(',', id, QUOTE(SUBSTRING_INDEX(two, ',', -1)), 1), ')') FROM tmp;
+SELECT CONCAT('(', CONCAT_WS(',', t_id, QUOTE(SUBSTRING_INDEX(two, ',', 1)), 0), ')') FROM tmp;
+SELECT CONCAT('(', CONCAT_WS(',', t_id, QUOTE(SUBSTRING_INDEX(two, ',', -1)), 1), ')') FROM tmp;

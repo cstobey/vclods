@@ -1,5 +1,5 @@
 CREATE OR REPLACE TEMPORARY TABLE tmp (
- id INT UNSIGNED NOT NULL, #map deep id #map shallow id #explode_json_deep tmp_deep tmp.json #explode_json_shallow tmp_shallow tmp.json
+ t_id INT UNSIGNED NOT NULL, #map deep id #map shallow id #explode_json_deep tmp_deep tmp.json #explode_json_shallow tmp_shallow tmp.json
  json JSON NOT NULL #ingest
  #generate deep    jpath tmp_deep.the_jpath
  #generate deep    k   tmp_deep.the_key

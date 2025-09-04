@@ -1,5 +1,5 @@
 CREATE OR REPLACE TEMPORARY TABLE tmp (
- id INT UNSIGNED NOT NULL, #map csv id #explode_csv tmp_csv tmp.csv
+ t_id INT UNSIGNED NOT NULL, #map csv id #explode_csv tmp_csv tmp.csv
  csv VARCHAR(255) NOT NULL #ingest
  #generate csv val tmp_csv.the_value
  #generate csv idx tmp_csv.index_number

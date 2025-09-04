@@ -1,22 +1,13 @@
 CREATE OR REPLACE TEMPORARY TABLE tmp (
- id INT UNSIGNED NOT NULL, #map man id #map vman id #explode_manual tmp_man tmp.two #explode_manual tmp_vman.batch tmp.two
+ t_id INT UNSIGNED NOT NULL, #map man id #explode_manual tmp_man tmp_man
  two VARCHAR(255) NOT NULL #ingest
  #generate man  val tmp_man.val
  #generate man  idx tmp_man.idx
- #generate vman val tmp_vman.val
- #generate vman idx tmp_vman.idx
 );
-#sync man #join man tmp_csv
-#sync vman #join vman tmp_csv
+#sync man #join man tmp_man
 #append SELECT CONCAT_WS(' ', id, val, idx) FROM man ORDER BY 1;
-#append SELECT CONCAT_WS(' ', id, val, idx) FROM vman ORDER BY 1;
 
 CREATE OR REPLACE TABLE man (
-  id INT UNSIGNED NOT NULL,
-  val VARCHAR(50) NOT NULL,
-  idx INT UNSIGNED NOT NULL
-) ENGINE=InnoDB;
-CREATE OR REPLACE TABLE vman (
   id INT UNSIGNED NOT NULL,
   val VARCHAR(50) NOT NULL,
   idx INT UNSIGNED NOT NULL
