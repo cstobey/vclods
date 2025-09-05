@@ -12,6 +12,8 @@ CREATE OR REPLACE TEMPORARY TABLE tmp (
 #append SELECT CONCAT_WS(' ', id, jpath, k, val) FROM deep ORDER BY 1;
 #append SELECT CONCAT_WS(' ', id, k, val) FROM shallow ORDER BY 1;
 
+DROP TABLE IF EXISTS tmp_deep, tmp_shallow;
+
 CREATE OR REPLACE TABLE deep (
   id INT UNSIGNED NOT NULL,
   jpath VARCHAR(255) NOT NULL,

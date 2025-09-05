@@ -7,6 +7,8 @@ CREATE OR REPLACE TEMPORARY TABLE tmp (
 #sync man #join man tmp_man
 #append SELECT CONCAT_WS(' ', id, val, idx) FROM man ORDER BY 1;
 
+DROP TABLE IF EXISTS tmp_man;
+
 CREATE OR REPLACE TABLE man (
   id INT UNSIGNED NOT NULL,
   val VARCHAR(50) NOT NULL,

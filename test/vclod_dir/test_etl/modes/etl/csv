@@ -7,6 +7,8 @@ CREATE OR REPLACE TEMPORARY TABLE tmp (
 #sync csv #join csv tmp_csv
 #append SELECT CONCAT_WS(' ', id, val, idx) FROM csv ORDER BY 1;
 
+DROP TABLE IF EXISTS tmp_csv;
+
 CREATE OR REPLACE TABLE csv (
   id INT UNSIGNED NOT NULL,
   val VARCHAR(50) NOT NULL,
