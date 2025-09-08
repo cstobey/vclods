@@ -1,5 +1,5 @@
 function pipe_to_coroutine { # PRIVATE
-  while read l ; do print -p "$l" || return 1 ; done
+  while read l ; do print -p "$l" ; done
 }
 function etl_sync_tbl { # PRIVATE
 # TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
@@ -54,7 +54,8 @@ function etl_run { # PRIVATE
     etl_explode_extra_tbls_using_sql
     etl_process_tbls
   else 
-    vclod_op "etlsql_coroutine.$1" |& # 2>"$COROUTINE_ERR_FILE" |& # TODO: pass ext_opt from env?
+    LD_PRELOAD=/usr/libexec/coreutils/libstdbuf.so; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E=0; export LD_PRELOAD _STDBUF_I _STDBUF_O _STDBUF_E
+    vclod_op "etlsql_coroutine.$1" |& # TODO: pass ext_opt from env?
     etl_populate_tmp_tbl | vclod_op b.batch | pipe_to_coroutine &&
       etl_explode_extra_tbls_using_coroutine &&
       etl_process_tbls | pipe_to_coroutine &&
