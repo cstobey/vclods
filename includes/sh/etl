@@ -1,6 +1,9 @@
 function pipe_to_coroutine { # PRIVATE
   while read l ; do print -p "$l" ; done # && echo >&2 "$l"
 }
+function flush_coroutine {
+  print -p "SELECT '#END NOW';" && while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done
+}
 function etl_sync_tbl { # PRIVATE
 # TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
   grep -E "#([^ ]+\s+$1(\s|$)|explode)" <<<"$working_fields" | awk -v t="${1%%@*}" -v tt="$tmp_tbl" -f etl_main
@@ -21,13 +24,34 @@ function etl_explode_extra_tbls_using_coroutine { # PRIVATE
   grep '#explode' <<<"$working_fields" | etl_explode_coroutine
 }
 function etl_process_tbls { # PRIVATE
-  grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
-function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
-function tail2() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
-BEGIN {printf "cat <(echo)"} 
-/^#include/ {printf "%s", " $ETL_EXT_DIR/"$2} 
-/^#append/ {printf "%s", " <(echo \x22"tail2()"\x22)";} 
-/^#sync/ {printf "%s", " <(etl_sync_tbl "$2")"}' | . /dev/stdin
+  grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | while read d t m ; do
+    case "$d" in
+      "#include")
+        if [ -z "$1" ] ; then # passthrough or coroutine
+          cat "${ETL_EXT_DIR}/$t" || return 1
+        else
+          f="${t%%.*}"
+          if [ -s "${ETL_EXT_DIR}/$f" ] ; then
+            pipe_to_coroutine <"${ETL_EXT_DIR}/$f"
+            if [ "$f" != "$t" ] ; then
+              flush_coroutine | vclod_operation "$t" | pipe_to_coroutine
+            fi
+          else
+            echo >&2 "#include file ${ETL_EXT_DIR}/$f does not exist"
+            return 1
+          fi
+          flush_coroutine
+        fi
+        ;;
+      "#append") if [ -z "$1" ] ; then echo "$t $m"; else
+          print -p "$t $m"
+          if [[ "$t$m" =~ [;]$ ]] ; then flush_coroutine; fi # because append could be just a part of a statement, make sure the last character is ; before flushing
+        fi
+        ;;
+      "#sync"*) if [ -z "$1" ] ; then etl_sync_tbl "$t"; else etl_sync_tbl "$t" | pipe_to_coroutine; fi
+        ;;
+    esac
+  done
 }
 function etl_run { # PRIVATE
   #setup files
@@ -48,7 +72,7 @@ function etl_run { # PRIVATE
   awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
 
   # execute
-  if [ -z "$1" ] ; then # use_coroutine
+  if [ -z "$1" ] ; then # passthrough or coroutine
     etl_populate_tmp_tbl
     echo '#RESET'
     etl_explode_extra_tbls_using_sql
@@ -56,11 +80,10 @@ function etl_run { # PRIVATE
   else 
     LD_PRELOAD=/usr/libexec/coreutils/libstdbuf.so; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'; export LD_PRELOAD _STDBUF_I _STDBUF_O _STDBUF_E
     vclod_op "etlsql_coroutine.$1" |& # TODO: pass ext_opt from env?
-    print -p "SELECT CONNECTION_ID();" ; read -p connid ; echo >&2 "CONNECTION_ID: $connid"
+    [ "$ETL_EXT_DEBUG" -eq 1 ] && { print -p "SELECT CONNECTION_ID();" ; read -p connid ; echo >&2 "CONNECTION_ID: $connid"; }
     etl_populate_tmp_tbl | vclod_op b.batch | pipe_to_coroutine &&
       etl_explode_extra_tbls_using_coroutine &&
-      etl_process_tbls | pipe_to_coroutine &&
-      print -p "SELECT '#END NOW';" && while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done
+      etl_process_tbls "$1"
     ret="$?"
     print -p "quit"
     return "$ret"

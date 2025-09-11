@@ -1,0 +1,2 @@
+SELECT CONCAT("awk -v q='", '"', "' '{print ", '" SELECT "q $2 q" AS n;"', "}' <<<", '"', name, '"') FROM tmp ORDER BY t_id;
+# TODO: for some reason, the order is always randomly wrong... doing the diff in the test itself

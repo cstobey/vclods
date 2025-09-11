@@ -9,7 +9,6 @@ CREATE TEMPORARY TABLE tmp (
 #start INSERT INTO tmp (name,is_happy) VALUES
 ("some data goes here")
 #RESET
-
 UPDATE a JOIN tmp ON tmp.name<=>a.name SET tmp.a_id=a.a_id;
 UPDATE a JOIN tmp ON tmp.a_id=a.a_id SET a.is_happy=IFNULL(tmp.is_happy,a.is_happy);
 INSERT INTO a (name,is_happy)

@@ -14,14 +14,11 @@ do I want to do this?
 includes/awk/etl_main_presence_test Line 16:  #else {}
 should I print an error if there is not key or unique column?
 
-includes/sh/etl Line 58:    vclod_op "etlsql_coroutine.$1" 
+includes/sh/etl Line 82:    vclod_op "etlsql_coroutine.$1" 
 &|pass ext_opt from env?
 
-includes/sh/etl Line 5:
+includes/sh/etl Line 8:
 generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
-
-includes/sh/etl_explode Line 6:
-at some point, need to figure out how to do a #run?
 
 includes/sh/locking Line 17:  add_file_cleanup "$MY_LOCK"
 need to setup PID namespaces or cgroups to make killing children easier without a race condition.
@@ -34,3 +31,6 @@ should I add a retry?
 
 pp_etl_log2sql_compute_variables Line 1:
 should I validate that tag is surrounded by `[]`s?
+
+test/vclod_dir/test_etl/modes/etl/co_inc_find Line 2:
+for some reason, the order is always randomly wrong... doing the diff in the test itself

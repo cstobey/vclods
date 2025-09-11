@@ -9,7 +9,6 @@ CREATE TEMPORARY TABLE tmp (
 #start INSERT INTO tmp (name,is_happy) VALUES
 ("some data goes here")
 #RESET
-
 SET @update_cnt=0;
 INSERT INTO a (name,is_happy)
   SELECT name,is_happy
