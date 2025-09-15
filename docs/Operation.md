@@ -14,7 +14,7 @@ Many extensions have the abilty to accept one and only one option in the .extens
 Name | Location | Option Default | Description
 -----|----------|----------------|------------
 add|PIPE|${ADD_EXT_FILE:=$base_filename}|Prepend a file's contents to the extension pipe
-awk|PIPE|${AWK_EXT_FILE:=$base_filename}|Run awk program
+awk|PIPE|${AWK_EXT_FILE:=$base_filename}|Run awk program [See more](/docs/awk.md)
 batch|PIPE|Used, No Default|aggregate input into batch SQL statements [See more](/docs/batch.md)
 diff|TERM|Used, No Default|diff extension pipe with a "static" file (or generate output based on provided operation)
 dir|WRAP|${DIR_EXT_START:=$base_filename}|Runs all scripts in any subdirectory that starts with $DIR_EXT_START where the .extensions are mined from all directory names between $DIR_EXT_DIR and the filename and disallowed on the filename.
@@ -24,6 +24,8 @@ end|PIPE|${ADD_EXT_FILE:=$base_filename}|Postpend a file's contents to the exten
 env|ANY|Used, No Default|run an extra config file as the env context for the given operations. ext_opt is of the form `<config_filename>+<operations>`. Each piece may be overridden.
 err|TERM|Not Used|Everything to this point is an error. Great for Data tests.
 etl|PIPE|${ETL_EXT_FILE:=$base_filename}|Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch. [See more](/docs/etl.md)
+etldst|PIPE|${ETL_EXT_FILE:=$base_filename}|Shortcut for .dst.batch.etl with addtional #run directive that Preform advanced ETL operations based on additional temp table definitions.
+etlsql|PIPE|${ETL_EXT_FILE:=$base_filename}|Shortcut for .sql.batch.etl with addtional #run directive that Preform advanced ETL operations based on additional temp table definitions.
 g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
 jq|PIPE|$base_filename|Run stdin through the jq utility to parse JSON
 litsh|PIPE|$HEREDOC_DELIMITER|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose. Use with caution!

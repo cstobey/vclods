@@ -1,0 +1,18 @@
+# A standard library for awk
+function cc_ws(value, sep, new) { # concat with separator, ignore empty on either side
+  return (value=="") ? new : ((new=="") ? value : value sep new)}
+function cc_if(value, cond, true_str, false_str) { # concat if: prepend value to the right str
+  return (value=="") ? "" : (cond ? value true_str : value false_str);}
+function if_or(v, d) {return (v=="") ? d : v} # defaults empty v to d
+function pre_if(pre, v) {return (v=="") ? "" : pre v} # if v: pre + v
+function tail2() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 1 head value
+function tail3() {ret=""; for (i=3; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 2 head values
+function tail4() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 3 head values
+function tail5() {ret=""; for (i=5; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 4 head values
+function tail6() {ret=""; for (i=6; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 5 head values
+function tail7() {ret=""; for (i=7; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 6 head values
+function tail8() {ret=""; for (i=8; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 7 head values
+function tail9() {ret=""; for (i=9; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 8 head values
+function tail10() {ret=""; for (i=10; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret} # $0 - 9 head values
+function p(value) {if(value){print value;}} # print if not empty
+function ext(msg) {should_exit=1; print msg > "/dev/stderr"; exit 1;} # exit script with an error; need to add "if (should_exit) {exit 1;}" to the begining of any END

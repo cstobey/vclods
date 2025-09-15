@@ -1,186 +1,10 @@
 #PIPE Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch.
-ETL_TBL_TEMP_FILE="$(mktemp)"; add_file_cleanup "$ETL_TBL_TEMP_FILE"
-TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 : "${ETL_EXT_DIR:=$INPUT_DIR}" # Directory to look for .etl temp table definition files
 : "${ETL_EXT_ERR_ON_EMPTY:=1}" # If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
+: "${ETL_EXT_ROW_REP:=1}" # If 1, force ROW based replication.
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 
-sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
-tmp_tbl=$(grep -E '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
-ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
-all_directives='#(sync(_no_update)?|mode|l?join|where|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
-working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/;s/(#[^ ]+ )/\1  /' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep "#")
-
-cat >"$TEMP_FILE" # include the previous pipe's data... then test it
-[ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
-awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
-
-cat - "$TEMP_FILE" << EOF  # sed gets rid of directives to avoid confusing other potential stream readers
-$(sed '/^ *#/ d;s/#.*$//' "$ETL_TBL_TEMP_FILE")
-#RESET
-#start INSERT INTO $tmp_tbl ($ingest_fields) VALUES
-EOF
-echo '#RESET'
-
-function sync_tbl {
-  tbl=$1
-  shift
-# TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
-  grep -E "#([^ ]+\s+$tbl(\s|$)|explode)" <<<"$working_fields" | awk -v t="${tbl%%@*}" -v tt="$tmp_tbl" '
-function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
-function cc_if(value, cond, true_str, false_str) {return (value=="") ? "" : (cond ? value true_str : value false_str);}
-function if_or(v, d) {return (v=="") ? d : v}
-function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
-function p(value) {if(value){print value;}}
-function ext(msg) {should_exit=1; print msg > "/dev/stderr"; exit 1;}
-
-function greatest(t_f, tt_f) {return t_f"=GREATEST(IFNULL("tt_f","t_f"), IFNULL("t_f", "tt_f"))"}
-function least(t_f, tt_f) {return t_f"=LEAST(IFNULL("tt_f","t_f"), IFNULL("t_f", "tt_f"))"}
-function ifnull(t_f, tt_f) {return t_f"=IFNULL("tt_f","t_f")"}
-function always(t_f, tt_f) {return t_f"="tt_f}
-
-function all(tt_f, t_f) {
-  tc=cc_ws(tc, ",", t_f); 
-  ttc=cc_ws(ttc, ",", tt_f);}
-function all_uni(tt_f, t_f, use_tt) {
-  tc_uni=cc_ws(tc_uni, ",", t_f); 
-  ttc_uni=cc_ws(ttc_uni, ",", tt_f);
-  if (tt_f~/[^0-9]/) ugb=cc_ws(ugb, ",", tt_f);
-  w_s=cc_ws(w_s, " AND ", tt_f" IS NOT NULL");
-  w_uni=cc_ws(w_uni, " AND ", (use_tt ? tt"." : "") tt_f"<=>"t"."t_f);}
-function updatable(tt_f, t_f, use_tt, f_start) {
-  f_end=if_or(gensub(/^#[^_]+_?(.*)?$/, "\\1", "g", f_start),"ifnull");
-  odku=cc_ws(odku, ",", @f_end(t"."t_f, "VALUE("t_f")"));
-  uset=cc_ws(uset, ",", @f_end(t"."t_f, (use_tt ? tt"." : "") tt_f));}
-
-$2~/^#explode/ {e[$3]=$1}
-$1~/^#join/ {j[$3]=1}
-$1~/^#ljoin/ {lj[$3]=1}
-$1~/^#where/ {w=cc_ws(w, " AND ", $3" "tail())}
-
-$1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
-$1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail(),1," AND ","")"\n  ";} 
-$1~/^#sync_no_update$/ {no_update=1;}
-
-$1~/^#mode$/ && $3~/^(odku(_ai)?|ui_split)$/ {mode=$3}
-$1~/^#mode$/ && $3~/^sparse$/ {use_sparse=1}
-
-$1~/^#generate/ {all(tail(), $3);} # include _no_update and _unique
-$1~/^#pivot/ {all("MAX(IF("$4"."$5" = "$6", "$4".the_value, NULL))", $3);} # include _no_update and _unique
-$2~/^#(map|unique)/ {all($1, $4);} # include _no_update
-$1~/^#generate(_(ifnull|always|greatest|least))?$/ {updatable(tail(), $3, 0, $1)}
-$1~/^#pivot(_(ifnull|always|greatest|least))?$/ {updatable("MAX(IF("$4"."$5" = "$6", "$4".the_value, NULL))", $3, 0, $1)}
-$2~/^#map(_(ifnull|always|greatest|least))?$/ {updatable($1, $4, 1, $2)}
-$2~/^#unique$/ {all_uni($1, $4, 1);}
-$1~/^#generate_unique$/ {all_uni(tail(), $3, 0);}
-
-$2~/^#key$/ {if(f){ext("detected 2 surrogate keys for table "t);} nf=$1;f=$4;}
-
-END {
-  if (should_exit) {exit 1;}
-  if (ugb) {ugb="\n  GROUP BY "ugb;}
-  if (odku && !no_update) {odku="\n  ON DUPLICATE KEY UPDATE "odku;} else {ignore=" IGNORE";odku="";}
-  if(!use_sparse) {w_s="";}
-  for (e_j in j) {
-    if(e_j in e)
-      j_stmt = cc_ws(j_stmt, "", "\n  JOIN "e_j" ON "e_j".id = "tt"."e[e_j])
-    else
-      ext("could not find requested explode table "e_j)
-  }
-  for (e_j in lj) {
-    if(e_j in e)
-      j_stmt = cc_ws(j_stmt, "", "\n  LEFT JOIN "e_j" ON "e_j".id = "tt"."e[e_j])
-    else
-      ext("could not find requested explode table "e_j)
-  }
-  if (w) {w_s=cc_ws(w_s, " AND ", w);w="\n  WHERE "w;}
-  if (f) {
-    join_on=tt"."nf"="t"."f;
-    u_get_f="UPDATE "t" JOIN "tt" ON "w_uni j_stmt" SET "join_on w";";
-    w_not_key="\n  WHERE "cc_ws(w_s, " AND ", nf" IS NULL");
-    row_not_in=f" NOT IN (SELECT "nf" FROM "tt j_stmt w");";
-  } else {
-    join_on=w_uni;
-    if (tc_uni~/^[^,]+,/) {
-      row_not_in="ROW("tc_uni") NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
-      w_not_key="\n  WHERE "cc_ws(w_s, " AND ", "ROW("ttc_uni") NOT IN (SELECT "tc_uni" FROM "t")");
-    } else if (tc_uni~/^[^,]+$/) {
-      row_not_in=tc_uni" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt");";
-      w_not_key="\n  WHERE "cc_ws(w_s, " AND ", ttc_uni" NOT IN (SELECT "tc_uni" FROM "t")");}
-  }
-  uset=(!no_update && uset) ? "UPDATE "t" JOIN "tt" ON "join_on j_stmt" SET "uset w";" : "";
-  if (mode == "ui_split") {
-    p(u_get_f);
-    p(uset);
-    p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb ";");
-  } else { # odku_ai
-    if(no_update) {p(u_get_f);} else {if(w_s) {w_not_key="\n  WHERE "w_s;} else {w_not_key=w;}}
-    p("INSERT"ignore" INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt w_not_key ugb odku";");
-    if (mode != "odku") { p("ALTER TABLE "t" AUTO_INCREMENT = 1;"); }
-  }
-  p(u_get_f);
-  if(snp && row_not_in) {print "UPDATE "t j_stmt" SET "snp row_not_in;};
-  if(dnp && row_not_in) {print "DELETE FROM "t j_stmt" WHERE "dnp row_not_in;};
-}'
-}
-
-grep '#explode_json_deep' -q <<<"$working_fields" && echo 'SET SESSION standard_compliant_cte = 0;'
-grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" 'function tbl(sub_tt) {print "CREATE OR REPLACE TEMPORARY TABLE "sub_tt" (KEY (id)) AS"}
-function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
-function tail() {ret=""; for (i=4; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
-function csv(tt_id, sub_tt, source) {print "SELECT "tt"."tt_id" AS id, SUBSTRING_INDEX(SUBSTRING_INDEX("source", \x27,\x27, s.seq+1), \x27,\x27, -1) AS the_value, s.seq AS index_number\nFROM "tt" JOIN seq_0_to_1000 AS s ON s.seq <= LENGTH("source") - LENGTH(REPLACE("source", \x27,\x27, \x27\x27)) AND LENGTH("source");";
-  print "ALTER TABLE "sub_tt" ADD INDEX (index_number);"}
-function json_shallow(tt_id, sub_tt, source) {print "WITH t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt ")\
-  SELECT\
-    t.id,\
-    CASE JSON_TYPE(t.j)\
-      WHEN \x27ARRAY\x27 THEN s.seq\
-      WHEN \x27OBJECT\x27 THEN JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
-      ELSE NULL\
-    END AS the_key,\
-    CASE JSON_TYPE(t.j)\
-      WHEN \x27ARRAY\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
-      WHEN \x27OBJECT\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$.\x27, JSON_QUOTE(JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27)))))\
-      ELSE t.j\
-    END AS the_value\
-  FROM t\
-  JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j);";
-  print "ALTER TABLE "sub_tt" ADD INDEX (the_key(555));"}
-function json_deep(tt_id, sub_tt, source) {print "WITH RECURSIVE t AS (SELECT "tt_id" AS id, "source" AS j FROM " tt "),\
-  r AS (SELECT\
-    t.id, t.j AS full, 1 AS depth,\
-    CONCAT(\x27$\x27, CASE JSON_TYPE(t.j) WHEN \x27OBJECT\x27 THEN CONCAT(\x27.\x27, JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27))) WHEN \x27ARRAY\x27 THEN CONCAT(\x27[\x27, s.seq, \x27]\x27) ELSE \x27\x27 END) AS the_jpath,\
-    JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27)) AS the_key,\
-    CASE JSON_TYPE(t.j)\
-      WHEN \x27ARRAY\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
-      WHEN \x27OBJECT\x27 THEN JSON_EXTRACT(t.j, CONCAT(\x27$.\x27, JSON_QUOTE(JSON_VALUE(JSON_KEYS(t.j), CONCAT(\x27$[\x27, s.seq, \x27]\x27)))))\
-      ELSE t.j\
-    END AS the_value\
-  FROM t\
-  JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(t.j)\
-  UNION ALL\
-  SELECT\
-    r.id, r.full, r.depth + 1 AS depth,\
-    CONCAT(r.the_jpath, IFNULL(CONCAT(\x27.\x27, JSON_VALUE(JSON_KEYS(r.the_value), CONCAT(\x27$[\x27, s.seq, \x27]\x27))), CONCAT(\x27[\x27, s.seq, \x27]\x27))) AS the_jpath,\
-    JSON_VALUE(JSON_KEYS(r.the_value), CONCAT(\x27$[\x27, s.seq, \x27]\x27)) AS the_key,\
-    CASE JSON_TYPE(r.the_value)\
-      WHEN \x27ARRAY\x27 THEN JSON_EXTRACT(r.the_value, CONCAT(\x27$[\x27, s.seq, \x27]\x27))\
-      WHEN \x27OBJECT\x27 THEN JSON_EXTRACT(r.the_value, CONCAT(\x27$.\x27, JSON_QUOTE(JSON_VALUE(JSON_KEYS(r.the_value), CONCAT(\x27$[\x27, s.seq, \x27]\x27)))))\
-    END AS the_value\
-  FROM r\
-  JOIN seq_0_to_1000 AS s ON s.seq < JSON_LENGTH(r.the_value) AND JSON_TYPE(r.the_value) IN (\x27ARRAY\x27, \x27OBJECT\x27))\
-SELECT id, the_jpath, the_key, NULLIF(JSON_UNQUOTE(the_value), \x27null\x27) AS the_value FROM r WHERE IFNULL(JSON_TYPE(r.the_value), \x27\x27) NOT IN (\x27ARRAY\x27, \x27OBJECT\x27) OR the_value IN (\x27[]\x27, \x27{}\x27);";
-  print "ALTER TABLE "sub_tt" ADD INDEX (the_key(555)), ADD INDEX (the_jpath(555));"}
-function manual(tt_id, sub_tt, source) {system("cat \x22$ETL_EXT_DIR/"source"\x22")}
-$2~/^#explode_(csv|json_(shallow|deep)|manual)$/ {tbl($3); f_type=gensub(/^#explode_(.*)$/, "\\1", "g", $2); @f_type($1, $3, tail());}'
-
-grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | awk '
-function cc_ws(value, sep, new) {return (value=="") ? new : value sep new}
-function tail() {ret=""; for (i=2; i<=NF; i++) ret=cc_ws(ret," ",$i); return ret}
-BEGIN {printf "cat <(echo)"} 
-/^#include/ {printf "%s", " $ETL_EXT_DIR/"$2} 
-/^#append/ {printf "%s", " <(echo \x22"tail()"\x22)";} 
-/^#sync/ {printf "%s", " <(sync_tbl "$2")"}' | . /dev/stdin
+etl_run
 
 #CMD Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
@@ -195,7 +19,7 @@ BEGIN {printf "cat <(echo)"}
 #ljoin | #join, but do a LEFT JOIN instead of a JOIN
 #where | Add a WHERE clause to most queries.
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
-#append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
+#append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore. `;` must be the last character at the end of a group of #appends.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
 #pivot | #generate but for #join fields that need to be pivoted on. After the field name, takes the #join table name, field, and expected value. 
@@ -213,10 +37,13 @@ BEGIN {printf "cat <(echo)"}
 ## #mode Options
 # Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
 #TBL Option | Group | Description
-# odku | Format | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
-# odku_ai | Format | The default: same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
-# ui_split | Format | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+# odku | Layout | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
+# odku_ai_always | Layout | Same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
+# odku_ai | Layout | The default: same as odku_always does its best to avoid needing to run the ALTER TABLE.
+# ui_split | Layout | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
 # sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
+# not_exists | Presence_Test | The default: use a NOT EXISTS subselect to force absence when needed.
+# not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.
 
 ## #sync Optional Parameters
 # These follow a destination table name

@@ -1,0 +1,42 @@
+SET SESSION binlog_format='ROW';
+CREATE TEMPORARY TABLE tmp (
+  a_id INT UNSIGNED NULL DEFAULT NULL,
+  name VARCHAR(50) NOT NULL,
+  is_happy TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+  KEY (name)
+) ENGINE=InnoDB;
+#RESET
+#start INSERT INTO tmp (name,is_happy) VALUES
+("some data goes here")
+#RESET
+INSERT INTO a (name,is_happy)
+  SELECT name,is_happy
+  FROM tmp
+  GROUP BY name
+  ON DUPLICATE KEY UPDATE a.is_happy=IFNULL(VALUE(is_happy),a.is_happy);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE a AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+UPDATE a JOIN tmp ON tmp.name<=>a.name SET tmp.a_id=a.a_id;
+DELETE FROM a WHERE
+  NOT EXISTS (SELECT 1 FROM tmp
+  WHERE tmp.a_id=a.a_id);
+INSERT IGNORE INTO b (a_id,a_name)
+  SELECT a_id,name
+  FROM tmp
+  WHERE NOT EXISTS (SELECT 1 FROM b
+  WHERE tmp.a_id<=>b.a_id)
+  GROUP BY a_id;
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE b AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+INSERT INTO c (is_happy)
+  SELECT is_happy
+  FROM tmp
+  ON DUPLICATE KEY UPDATE c.is_happy=IFNULL(VALUE(is_happy),c.is_happy);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE c AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;

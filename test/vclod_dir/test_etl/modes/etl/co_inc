@@ -1,0 +1,5 @@
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+  t_id INT UNSIGNED NOT NULL, #ingest
+  name VARCHAR(255) NOT NULL #ingest
+#include co_inc_find.sh
+);

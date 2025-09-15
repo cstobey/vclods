@@ -1,0 +1,7 @@
+# Helper functions for configuration management
+function vclod_load_local_config { # loads or reloads the local config file, maintaining any O_* overrides. 
+  set -a
+  [ -f "$INPUT_DIR/config" ] && . "$INPUT_DIR/config"
+  env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
+  set +a
+}

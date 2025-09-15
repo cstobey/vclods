@@ -14,7 +14,7 @@ Command | Description
 #ljoin | #join, but do a LEFT JOIN instead of a JOIN
 #where | Add a WHERE clause to most queries.
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
-#append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore.
+#append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore. `;` must be the last character at the end of a group of #appends.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
 #pivot | #generate but for #join fields that need to be pivoted on. After the field name, takes the #join table name, field, and expected value. 
@@ -34,10 +34,13 @@ Command | Description
 Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
 Option | Group | Description
 --|--|--
-odku | Format | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
-odku_ai | Format | The default: same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
-ui_split | Format | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+odku | Layout | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
+odku_ai_always | Layout | Same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
+odku_ai | Layout | The default: same as odku_always does its best to avoid needing to run the ALTER TABLE.
+ui_split | Layout | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
 sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
+not_exists | Presence_Test | The default: use a NOT EXISTS subselect to force absence when needed.
+not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.
 
 ## #sync Optional Parameters
 These follow a destination table name

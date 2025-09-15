@@ -1,0 +1,27 @@
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, #map deep id #map shallow id #explode_json_deep tmp_deep tmp.json #explode_json_shallow tmp_shallow tmp.json
+ json JSON NOT NULL #ingest
+ #generate deep    jpath tmp_deep.the_jpath
+ #generate deep    k   tmp_deep.the_key
+ #generate deep    val   tmp_deep.the_value
+ #generate shallow k   tmp_shallow.the_key
+ #generate shallow val   tmp_shallow.the_value
+);
+#sync deep    #join deep    tmp_deep
+#sync shallow #join shallow tmp_shallow
+#append SELECT CONCAT_WS(' ', id, jpath, k, val) FROM deep ORDER BY 1;
+#append SELECT CONCAT_WS(' ', id, k, val) FROM shallow ORDER BY 1;
+
+DROP TABLE IF EXISTS tmp_deep, tmp_shallow;
+
+CREATE OR REPLACE TABLE deep (
+  id INT UNSIGNED NOT NULL,
+  jpath VARCHAR(255) NOT NULL,
+  k VARCHAR(50) NOT NULL,
+  val VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+CREATE OR REPLACE TABLE shallow (
+  id INT UNSIGNED NOT NULL,
+  k VARCHAR(50) NOT NULL,
+  val VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;

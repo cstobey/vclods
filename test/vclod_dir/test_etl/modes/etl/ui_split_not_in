@@ -1,0 +1,9 @@
+CREATE TEMPORARY TABLE tmp (
+  a_id INT UNSIGNED NULL DEFAULT NULL, #key a a_id #unique b a_id
+  name VARCHAR(50) NOT NULL, #unique a name #map b a_name
+  is_happy TINYINT(1) UNSIGNED NOT NULL DEFAULT 1, #map a is_happy #map c is_happy
+  KEY (name)
+) ENGINE=InnoDB;
+#mode a ui_split #mode a not_in #sync a DELETE_NOT_PRESENT
+#mode b ui_split #mode b not_in #sync_no_update b
+#mode c ui_split #mode c not_in #sync c

@@ -1,0 +1,18 @@
+@include "std" 
+
+function not_exists(is_not_present) {
+  if (!is_not_present && f) { return tt"."nf" IS NULL"; }
+  if (!f && !w_uni) { return ""; }
+  return "NOT EXISTS (SELECT 1 FROM "(is_not_present ? tt : t) j_stmt pre_if("\n WHERE ", cc_ws(w, " AND ", ((f) ? tt"."nf"="t"."f : w_uni))) ")";
+}
+function not_in(is_not_present) {
+  if (is_not_present) {
+    if (f) { return f" NOT IN (SELECT "tt"."nf" FROM "tt j_stmt pre_if("\n  WHERE ", w)")"; }
+    else if (tc_uni) { return ((tc_uni~/,/) ? ("ROW("tc_uni")") : tc_uni)" NOT IN (SELECT "ttc_uni" FROM "tt j_stmt pre_if("\n  WHERE ", w)")";
+  }}
+  else {
+    if (f) { return tt"."nf" IS NULL"; }
+    else if (tc_uni) { return ((tc_uni~/,/) ? ("ROW("tc_uni")") : tc_uni)" NOT IN (SELECT "tc_uni" FROM "t")"; }
+  #else {} # TODO: should I print an error if there is not key or unique column?
+  }
+}

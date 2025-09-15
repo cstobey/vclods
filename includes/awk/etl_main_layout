@@ -1,0 +1,41 @@
+@include "std" 
+@include "etl_main_presence_test" 
+
+function _reset_auto_inc() {
+  p("  SET @old_sql_log_bin = @@sql_log_bin;");
+  p("  SET SESSION sql_log_bin = 0;");
+  p("    ALTER TABLE "t" AUTO_INCREMENT = 1;"); 
+  p("  SET SESSION sql_log_bin = @old_sql_log_bin;");
+}
+
+function _odku() {
+  if(no_update) { discover_existing_tt_ids(); } # TODO: do I want to do this? 
+  if (!odku_v) { ignore=" IGNORE"; }
+  p("INSERT"ignore" INTO "t" ("tc")");
+  p("  SELECT "ttc"");
+  p("  FROM "tt j_stmt \
+    pre_if("\n  WHERE ", cc_ws(w_s, " AND ", no_update ? @mode_presence_test(0) : "" )) \
+    pre_if("\n  GROUP BY ", ugb) \
+    pre_if("\n  ON DUPLICATE KEY UPDATE ", odku_v) ";");
+}
+function odku() { if(no_update) { odku_v=""; } _odku(); }
+function odku_ai_always() { odku(); _reset_auto_inc(); }
+function odku_ai() {
+  if(!(f || w_uni)) { return odku_ai_always(); }
+  if(no_update) { odku_v=""; }
+
+  p("SET @update_cnt=0;");
+  did_update_field=if_or(f, gensub(/^([^,]+)(,.*)?$/, "\\1", "g", tc_uni));
+  odku_v=cc_ws(t"."did_update_field"=IF(@update_cnt:=1,VALUES("did_update_field"),NULL)", ", ", odku_v);
+  _odku();
+  p("DELIMITER |");
+  p("BEGIN NOT ATOMIC; IF @update_cnt THEN");
+  _reset_auto_inc();
+  p("END IF;END|");
+  p("DELIMITER ;"); # best effort to avoid the ALTER
+}
+function ui_split() {
+  discover_existing_tt_ids();
+  if(!no_update && uset) p("UPDATE "t" JOIN "tt" ON "((f) ? tt"."nf"="t"."f : w_uni) j_stmt" SET "uset pre_if("\n  WHERE ", w)";");
+  p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt pre_if("\n  WHERE ", cc_ws(@mode_presence_test(0), " AND ", w_s)) pre_if("\n  GROUP BY ", ugb) ";");
+}

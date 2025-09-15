@@ -1,0 +1,44 @@
+etl_explode_coroutine () {
+  while read tmp_tbl_id explode_type sub_tmp_tbl sub_tmp_tbl_source ; do 
+    :>"$COROUTINE_FILE"
+    id_def="$(grep -wm1 "$tmp_tbl_id" "$ETL_TBL_TEMP_FILE" | sed -r 's/^\s*\S+(.*)(\s+(PRIMARY\s+KEY|AUTO_INCREMENT|UNIQUE(\s+KEY)?))*\s*,\s*#.*$/id\1,/')"
+    case "$explode_type" in
+      "#explode_csv")
+        print -p "CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));"
+        print -p "SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};SELECT '#END NOW';"
+        while read -p i l || return 1 ; do
+          [ "$i $l" != "#END NOW" ] && echo "$i,$l" || break
+        done | sed -r 's/"/\\"/g;s/(^|$)/"/g;s/,/","/g' | awk -F',' '{for (i=2; i<=NF; i++) print "("$1","$i","(i-2)")"}' >$COROUTINE_FILE
+        ;;
+      "#explode_json_shallow")
+        print -p "CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));"
+        print -p "SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};SELECT '#END NOW';"
+        while read -p i l || return 1 ; do
+          [ "$i $l" != "#END NOW" ] || break
+          jq -r --arg i "$i" --arg q "'" 'to_entries[] | "(\($i),\(.key | @json),\($q)\(.value | @json)\($q))"' <<<"$l"
+        done >$COROUTINE_FILE
+        ;;
+      "#explode_json_deep")
+        print -p "CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));"
+        print -p "SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};SELECT '#END NOW';"
+        while read -p i l || return 1 ; do
+          [ "$i $l" != "#END NOW" ] || break
+          jq -r --stream --arg i "$i" --arg q "'" 'select(has(1)) | "(\($i),\($q)$\(first | map(if type == "number" then "["+(.|tostring)+"]" else "."+. end) | join(""))\($q),\(first[-1] | if type == "number" then "" else . end | @json),JSON_UNQUOTE(\($q)\(last | @json)\($q)))"' <<<"$l"
+        done >$COROUTINE_FILE
+        ;;
+      "#explode_manual")
+        f="${sub_tmp_tbl_source%%.*}"
+        if [ -s "${ETL_EXT_DIR}/$f" ] ; then
+          pipe_to_coroutine <"${ETL_EXT_DIR}/$f"
+          if [ "$f" != "$sub_tmp_tbl_source" ] ; then
+            flush_coroutine | vclod_operation "$sub_tmp_tbl_source" | pipe_to_coroutine
+          fi
+        else
+          echo >&2 "#explode_manual file ${ETL_EXT_DIR}/$f does not exist"
+          return 1
+        fi ;;
+    esac
+    [ -s "$COROUTINE_FILE" ] && cat <(echo "#start INSERT INTO $sub_tmp_tbl VALUES") "$COROUTINE_FILE" | vclod_operation explode_input_batch.batch | pipe_to_coroutine
+  done
+  return 0
+}

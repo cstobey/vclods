@@ -1,0 +1,16 @@
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, #map csv id #explode_csv tmp_csv tmp.csv
+ csv VARCHAR(255) NOT NULL #ingest
+ #generate csv val tmp_csv.the_value
+ #generate csv idx tmp_csv.index_number
+);
+#sync csv #join csv tmp_csv
+#append SELECT CONCAT_WS(' ', id, val, idx) FROM csv ORDER BY 1;
+
+DROP TABLE IF EXISTS tmp_csv;
+
+CREATE OR REPLACE TABLE csv (
+  id INT UNSIGNED NOT NULL,
+  val VARCHAR(50) NOT NULL,
+  idx INT UNSIGNED NOT NULL
+) ENGINE=InnoDB;
