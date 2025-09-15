@@ -29,7 +29,7 @@ function odku_ai() {
   odku_v=cc_ws(t"."did_update_field"=IF(@update_cnt:=1,VALUES("did_update_field"),NULL)", ", ", odku_v);
   _odku();
   p("DELIMITER |");
-  p("BEGIN NOT ATOMIC; IF @update_cnt THEN");
+  p("BEGIN NOT ATOMIC IF @update_cnt THEN");
   _reset_auto_inc();
   p("END IF;END|");
   p("DELIMITER ;"); # best effort to avoid the ALTER

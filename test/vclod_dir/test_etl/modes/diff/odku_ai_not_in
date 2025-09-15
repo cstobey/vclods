@@ -16,7 +16,7 @@ INSERT INTO a (name,is_happy)
   GROUP BY name
   ON DUPLICATE KEY UPDATE a.a_id=IF(@update_cnt:=1,VALUES(a_id),NULL), a.is_happy=IFNULL(VALUE(is_happy),a.is_happy);
 DELIMITER |
-BEGIN NOT ATOMIC; IF @update_cnt THEN
+BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;
   SET SESSION sql_log_bin = 0;
     ALTER TABLE a AUTO_INCREMENT = 1;
@@ -34,7 +34,7 @@ INSERT INTO b (a_id,a_name)
   GROUP BY a_id
   ON DUPLICATE KEY UPDATE b.a_id=IF(@update_cnt:=1,VALUES(a_id),NULL);
 DELIMITER |
-BEGIN NOT ATOMIC; IF @update_cnt THEN
+BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;
   SET SESSION sql_log_bin = 0;
     ALTER TABLE b AUTO_INCREMENT = 1;

@@ -32,7 +32,7 @@ INSERT INTO entity (entity_type_id,master_location_id,name,description,definitio
   GROUP BY master_location_id,table_name
   ON DUPLICATE KEY UPDATE entity.entity_id=IF(@update_cnt:=1,VALUES(entity_id),NULL),entity.definition_link=IFNULL(VALUE(definition_link), entity.definition_link),entity.is_active=IFNULL(VALUE(is_active),entity.is_active);
 DELIMITER |
-BEGIN NOT ATOMIC; IF @update_cnt THEN
+BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;
   SET SESSION sql_log_bin = 0;
     ALTER TABLE entity AUTO_INCREMENT = 1;
@@ -49,7 +49,7 @@ INSERT INTO data_type (sql_type,name)
   GROUP BY LOWER(tmp_col.column_type)
   ON DUPLICATE KEY UPDATE data_type.data_type_id=IF(@update_cnt:=1,VALUES(data_type_id),NULL);
 DELIMITER |
-BEGIN NOT ATOMIC; IF @update_cnt THEN
+BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;
   SET SESSION sql_log_bin = 0;
     ALTER TABLE data_type AUTO_INCREMENT = 1;
@@ -64,7 +64,7 @@ INSERT INTO field (entity_id,data_type_id,is_active,name,field_authorization,is_
   GROUP BY entity_id,column_name
   ON DUPLICATE KEY UPDATE field.entity_id=IF(@update_cnt:=1,VALUES(entity_id),NULL), field.data_type_id=IFNULL(VALUE(data_type_id),field.data_type_id),field.is_active=IFNULL(VALUE(is_active),field.is_active),field.field_authorization=IFNULL(VALUE(field_authorization),field.field_authorization),field.is_nullable=IFNULL(VALUE(is_nullable),field.is_nullable),field.default_value=IFNULL(VALUE(default_value),field.default_value),field.order_by=IFNULL(VALUE(order_by),field.order_by);
 DELIMITER |
-BEGIN NOT ATOMIC; IF @update_cnt THEN
+BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;
   SET SESSION sql_log_bin = 0;
     ALTER TABLE field AUTO_INCREMENT = 1;
