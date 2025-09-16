@@ -14,7 +14,7 @@ INSERT INTO a (name,is_happy)
   SELECT name,is_happy
   FROM tmp
   GROUP BY name
-  ON DUPLICATE KEY UPDATE a.a_id=IF(@update_cnt:=1,VALUES(a_id),NULL), a.is_happy=IFNULL(VALUE(is_happy),a.is_happy);
+  ON DUPLICATE KEY UPDATE a.a_id=IF(@update_cnt:=1,a.a_id,NULL), a.is_happy=IFNULL(VALUE(is_happy),a.is_happy);
 DELIMITER |
 BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;
@@ -34,7 +34,7 @@ INSERT INTO b (a_id,a_name)
   WHERE NOT EXISTS (SELECT 1 FROM b
   WHERE tmp.a_id<=>b.a_id)
   GROUP BY a_id
-  ON DUPLICATE KEY UPDATE b.a_id=IF(@update_cnt:=1,VALUES(a_id),NULL);
+  ON DUPLICATE KEY UPDATE b.a_id=IF(@update_cnt:=1,b.a_id,NULL);
 DELIMITER |
 BEGIN NOT ATOMIC IF @update_cnt THEN
   SET @old_sql_log_bin = @@sql_log_bin;

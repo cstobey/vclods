@@ -26,7 +26,7 @@ function odku_ai() {
 
   p("SET @update_cnt=0;");
   did_update_field=if_or(f, gensub(/^([^,]+)(,.*)?$/, "\\1", "g", tc_uni));
-  odku_v=cc_ws(t"."did_update_field"=IF(@update_cnt:=1,VALUES("did_update_field"),NULL)", ", ", odku_v);
+  odku_v=cc_ws(t"."did_update_field"=IF(@update_cnt:=1,"t"."did_update_field",NULL)", ", ", odku_v);
   _odku();
   p("DELIMITER |");
   p("BEGIN NOT ATOMIC IF @update_cnt THEN");
