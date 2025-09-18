@@ -1,5 +1,5 @@
 
-extensions/slack Line 9:
+extensions/slack Line 11:
 if the data is too big, need to either shorten it, or batch it. currently just shortening it, might want to make that an option. might want the awk commands to be centralized between the 2 places
 
 extensions/tee Line 8:  tfn="$TEE_EXT_DIR/${ext_opt:-$base_filename}-$TEE_EXT_FILE_SHARD"

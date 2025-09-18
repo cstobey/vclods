@@ -78,6 +78,8 @@ SLACK_CHANNEL|Post: slack_errors|vclod_errors|Thus this only works if the bot is
 SLACK_EMOJI|Post: slack_errors|:robot_face:|Give it some style ;)
 SLACK_EXT_CHANNEL|Extensions: slack|vclod_logs|Thus this only works if the bot is configured for multichannel use
 SLACK_EXT_EMOJI|Extensions: slack|:robot_face:|Give it some style ;)
+SLACK_EXT_NAME|Extensions: slack|$(hostname -s)|The username to use for the post
+SLACK_EXT_USE_RAW_TEXT|Extensions: slack|0|if 1, use the input stream as the text, otherwise, use the script and log file paths
 SPLIT_EXT_COUNT|Extensions: split|10000|how many lines to process in each batch
 SPLIT_EXT_OPERATION|Extensions: split|${ext_opt:-sh}|what vclod_operation to use to process stdin
 SQL_EXT_ENVSUBST|Extensions: sql|1|0: Input is sent as a raw query.<br />1: first run input through envsubst before running it as a query
