@@ -1,0 +1,41 @@
+
+SET SESSION binlog_format='ROW';
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, 
+ csv VARCHAR(255) NOT NULL 
+);
+DROP TABLE IF EXISTS tmp_csv;
+CREATE OR REPLACE TABLE csv (
+  id INT UNSIGNED NOT NULL,
+  val VARCHAR(50) NOT NULL,
+  idx INT UNSIGNED NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO tmp (t_id,csv) VALUES
+(12345, 'a,b,c')
+,(345, '0,1,2')
+,(789, 'funny,silly')
+;
+CREATE OR REPLACE TEMPORARY TABLE tmp_csv (id INT UNSIGNED NOT NULL, the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));
+SELECT tmp.t_id, tmp.csv FROM tmp;
+SELECT '#END NOW';
+INSERT INTO tmp_csv VALUES
+("12345","a",0)
+,("12345","b",1)
+,("12345","c",2)
+,("345","0",0)
+,("345","1",1)
+,("345","2",2)
+,("789","funny",0)
+,("789","silly",1)
+;
+INSERT INTO csv (id,val,idx)
+  SELECT t_id,tmp_csv.the_value,tmp_csv.index_number
+  FROM tmp
+  JOIN tmp_csv ON tmp_csv.id = tmp.t_id
+  ON DUPLICATE KEY UPDATE csv.id=IFNULL(VALUE(id),csv.id),csv.val=IFNULL(VALUE(val),csv.val),csv.idx=IFNULL(VALUE(idx),csv.idx);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE csv AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+SELECT CONCAT_WS(' ', id, val, idx) FROM csv ORDER BY 1;

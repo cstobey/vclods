@@ -1,0 +1,64 @@
+
+SET SESSION binlog_format='ROW';
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, 
+ two VARCHAR(255) NOT NULL 
+);
+DROP TABLE IF EXISTS tmp_man, tmp_vman;
+CREATE OR REPLACE TABLE man (
+  id INT UNSIGNED NOT NULL,
+  val VARCHAR(50) NOT NULL,
+  idx INT UNSIGNED NOT NULL
+) ENGINE=InnoDB;
+CREATE OR REPLACE TABLE vman (
+  id INT UNSIGNED NOT NULL,
+  val VARCHAR(50) NOT NULL,
+  idx INT UNSIGNED NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO tmp (t_id,two) VALUES
+(12345, 'a,b')
+,(345, '0,1')
+,(789, 'funny,silly')
+;
+CREATE TEMPORARY TABLE tmp_man (
+  id INT UNSIGNED NOT NULL,
+  val VARCHAR(50) NOT NULL,
+  idx INT UNSIGNED NOT NULL
+) AS SELECT t_id AS id, SUBSTRING_INDEX(two, ',', 1) AS val, 0 AS idx FROM tmp UNION ALL SELECT t_id AS id, SUBSTRING_INDEX(two, ',', -1), 1 FROM tmp;
+CREATE TEMPORARY TABLE tmp_vman (
+  id INT UNSIGNED NOT NULL,
+  val VARCHAR(50) NOT NULL,
+  idx INT UNSIGNED NOT NULL
+);
+SELECT '#start INSERT INTO tmp_vman (id, val, idx) VALUES';
+SELECT CONCAT('(', CONCAT_WS(',', t_id, QUOTE(SUBSTRING_INDEX(two, ',', 1)), 0), ')') FROM tmp;
+SELECT CONCAT('(', CONCAT_WS(',', t_id, QUOTE(SUBSTRING_INDEX(two, ',', -1)), 1), ')') FROM tmp;
+INSERT INTO tmp_vman (id, val, idx) VALUES
+(12345,'a',0)
+,(345,'0',0)
+,(789,'funny',0)
+,(12345,'b',1)
+,(345,'1',1)
+,(789,'silly',1)
+;
+INSERT INTO man (id,val,idx)
+  SELECT t_id,tmp_man.val,tmp_man.idx
+  FROM tmp
+  JOIN tmp_man ON tmp_man.id = tmp.t_id
+  ON DUPLICATE KEY UPDATE man.id=IFNULL(VALUE(id),man.id),man.val=IFNULL(VALUE(val),man.val),man.idx=IFNULL(VALUE(idx),man.idx);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE man AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+INSERT INTO vman (id,val,idx)
+  SELECT t_id,tmp_vman.val,tmp_vman.idx
+  FROM tmp
+  JOIN tmp_vman ON tmp_vman.id = tmp.t_id
+  ON DUPLICATE KEY UPDATE vman.id=IFNULL(VALUE(id),vman.id),vman.val=IFNULL(VALUE(val),vman.val),vman.idx=IFNULL(VALUE(idx),vman.idx);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE vman AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+SELECT CONCAT_WS(' ', id, val, idx) FROM man ORDER BY 1;
+SELECT CONCAT_WS(' ', id, val, idx) FROM vman ORDER BY 1;

@@ -1,0 +1,75 @@
+
+SET SESSION binlog_format='ROW';
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, 
+ json JSON NOT NULL 
+);
+DROP TABLE IF EXISTS tmp_deep, tmp_shallow;
+CREATE OR REPLACE TABLE deep (
+  id INT UNSIGNED NOT NULL,
+  jpath VARCHAR(255) NOT NULL,
+  k VARCHAR(50) NOT NULL,
+  val VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+CREATE OR REPLACE TABLE shallow (
+  id INT UNSIGNED NOT NULL,
+  k VARCHAR(50) NOT NULL,
+  val VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO tmp (t_id,json) VALUES
+(12345, '{"a":1,"b":"c","d":{"e":2, "f":[3,[4,5]], "g":{}, "h": []}}')
+,(345, '[0,1,2]')
+,(789, '{"a": "b", "1":"2"}')
+;
+CREATE OR REPLACE TEMPORARY TABLE tmp_deep (id INT UNSIGNED NOT NULL, the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
+SELECT tmp.t_id, tmp.json FROM tmp;
+SELECT '#END NOW';
+INSERT INTO tmp_deep VALUES
+(12345,'$.a',"a",JSON_UNQUOTE('1'))
+,(12345,'$.b',"b",JSON_UNQUOTE('"c"'))
+,(12345,'$.d.e',"e",JSON_UNQUOTE('2'))
+,(12345,'$.d.f[0]',"",JSON_UNQUOTE('3'))
+,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE('4'))
+,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE('5'))
+,(12345,'$.d.g',"g",JSON_UNQUOTE('{}'))
+,(12345,'$.d.h',"h",JSON_UNQUOTE('[]'))
+,(345,'$[0]',"",JSON_UNQUOTE('0'))
+,(345,'$[1]',"",JSON_UNQUOTE('1'))
+,(345,'$[2]',"",JSON_UNQUOTE('2'))
+,(789,'$.a',"a",JSON_UNQUOTE('"b"'))
+,(789,'$.1',"1",JSON_UNQUOTE('"2"'))
+;
+CREATE OR REPLACE TEMPORARY TABLE tmp_shallow (id INT UNSIGNED NOT NULL, the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));
+SELECT tmp.t_id, tmp.json FROM tmp;
+SELECT '#END NOW';
+INSERT INTO tmp_shallow VALUES
+(12345,"a",'1')
+,(12345,"b",'"c"')
+,(12345,"d",'{"e":2,"f":[3,[4,5]],"g":{},"h":[]}')
+,(345,0,'0')
+,(345,1,'1')
+,(345,2,'2')
+,(789,"a",'"b"')
+,(789,"1",'"2"')
+;
+INSERT INTO deep (id,jpath,k,val)
+  SELECT t_id,tmp_deep.the_jpath,tmp_deep.the_key,tmp_deep.the_value
+  FROM tmp
+  JOIN tmp_deep ON tmp_deep.id = tmp.t_id
+  ON DUPLICATE KEY UPDATE deep.id=IFNULL(VALUE(id),deep.id),deep.jpath=IFNULL(VALUE(jpath),deep.jpath),deep.k=IFNULL(VALUE(k),deep.k),deep.val=IFNULL(VALUE(val),deep.val);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE deep AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+INSERT INTO shallow (id,k,val)
+  SELECT t_id,tmp_shallow.the_key,tmp_shallow.the_value
+  FROM tmp
+  JOIN tmp_shallow ON tmp_shallow.id = tmp.t_id
+  ON DUPLICATE KEY UPDATE shallow.id=IFNULL(VALUE(id),shallow.id),shallow.k=IFNULL(VALUE(k),shallow.k),shallow.val=IFNULL(VALUE(val),shallow.val);
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE shallow AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+SELECT CONCAT_WS(' ', id, jpath, k, val) FROM deep ORDER BY 1;
+SELECT CONCAT_WS(' ', id, k, val) FROM shallow ORDER BY 1;

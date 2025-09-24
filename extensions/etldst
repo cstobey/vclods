@@ -4,5 +4,6 @@
 : "${ETL_EXT_ROW_REP:=1}" # If 1, force ROW based replication.
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 : "${ETL_EXT_DEBUG:=0}" # when set to 1, gives the CONNECTION_ID of the coroutine for dubugging purposes.
+: "${ETL_EXT_DEBUG_TEE:=0}" # if 1, .teea all the inputs into the sql coroutine.
 
 etl_run dst

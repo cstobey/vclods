@@ -1,0 +1,106 @@
+
+SET SESSION binlog_format='ROW';
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, 
+ json JSON NOT NULL 
+);
+/* tmp_deep
+key_id 
+value_id 
+the_jpath 
+the_key 
+the_value 
+*/
+DROP TABLE IF EXISTS tmp_deep;
+CREATE OR REPLACE TABLE deep_sync_key (
+  deep_sync_key_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  jpath VARCHAR(255) NOT NULL UNIQUE,
+  k VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+CREATE OR REPLACE TABLE deep_sync_value (
+  deep_sync_value_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  val VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+INSERT INTO deep_sync_value (val) VALUES ('should be deleted');
+CREATE OR REPLACE TABLE deep_sync (
+  deep_sync_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id INT UNSIGNED NOT NULL,
+  deep_sync_key_id VARCHAR(50) NOT NULL,
+  deep_sync_value_id VARCHAR(50) NOT NULL,
+  UNIQUE (id, deep_sync_key_id, deep_sync_value_id)
+) ENGINE=InnoDB;
+
+INSERT INTO tmp (t_id,json) VALUES
+(12345, '{"a":1,"b":"c","d":{"e":2, "f":[3,[4,5]], "g":{}, "h": []}}')
+,(345, '[0,1,2]')
+,(789, '{"a": "b", "1":"2"}')
+;
+CREATE OR REPLACE TEMPORARY TABLE tmp_deep (id INT UNSIGNED NOT NULL, the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
+SELECT tmp.t_id, tmp.json FROM tmp;
+SELECT '#END NOW';
+INSERT INTO tmp_deep VALUES
+(12345,'$.a',"a",JSON_UNQUOTE('1'))
+,(12345,'$.b',"b",JSON_UNQUOTE('"c"'))
+,(12345,'$.d.e',"e",JSON_UNQUOTE('2'))
+,(12345,'$.d.f[0]',"",JSON_UNQUOTE('3'))
+,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE('4'))
+,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE('5'))
+,(12345,'$.d.g',"g",JSON_UNQUOTE('{}'))
+,(12345,'$.d.h',"h",JSON_UNQUOTE('[]'))
+,(345,'$[0]',"",JSON_UNQUOTE('0'))
+,(345,'$[1]',"",JSON_UNQUOTE('1'))
+,(345,'$[2]',"",JSON_UNQUOTE('2'))
+,(789,'$.a',"a",JSON_UNQUOTE('"b"'))
+,(789,'$.1',"1",JSON_UNQUOTE('"2"'))
+;
+ALTER TABLE tmp_deep ADD COLUMN key_id INT UNSIGNED NULL DEFAULT NULL, ADD COLUMN value_id INT UNSIGNED NULL DEFAULT NULL;
+SET @update_cnt=0;
+INSERT INTO deep_sync_key (jpath,k)
+  SELECT the_jpath,the_key
+  FROM tmp_deep
+  GROUP BY the_jpath
+  ON DUPLICATE KEY UPDATE deep_sync_key.deep_sync_key_id=IF(@update_cnt:=1,deep_sync_key.deep_sync_key_id,NULL);
+DELIMITER |
+BEGIN NOT ATOMIC IF @update_cnt THEN
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE deep_sync_key AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+END IF;END|
+DELIMITER ;
+UPDATE deep_sync_key JOIN tmp_deep ON tmp_deep.the_jpath<=>deep_sync_key.jpath SET tmp_deep.key_id=deep_sync_key.deep_sync_key_id;
+SET @update_cnt=0;
+INSERT INTO deep_sync_value (val)
+  SELECT the_value
+  FROM tmp_deep
+  GROUP BY the_value
+  ON DUPLICATE KEY UPDATE deep_sync_value.deep_sync_value_id=IF(@update_cnt:=1,deep_sync_value.deep_sync_value_id,NULL);
+DELIMITER |
+BEGIN NOT ATOMIC IF @update_cnt THEN
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE deep_sync_value AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+END IF;END|
+DELIMITER ;
+UPDATE deep_sync_value JOIN tmp_deep ON tmp_deep.the_value<=>deep_sync_value.val SET tmp_deep.value_id=deep_sync_value.deep_sync_value_id;
+DELETE FROM deep_sync_value WHERE 
+  NOT EXISTS (SELECT 1 FROM tmp_deep
+ WHERE tmp_deep.value_id=deep_sync_value.deep_sync_value_id);
+SET @update_cnt=0;
+INSERT INTO deep_sync (id,deep_sync_key_id,deep_sync_value_id)
+  SELECT t_id,key_id,value_id
+  FROM tmp
+  JOIN tmp_deep ON tmp_deep.id = tmp.t_id
+  GROUP BY t_id,key_id,value_id
+  ON DUPLICATE KEY UPDATE deep_sync.id=IF(@update_cnt:=1,deep_sync.id,NULL);
+DELIMITER |
+BEGIN NOT ATOMIC IF @update_cnt THEN
+  SET @old_sql_log_bin = @@sql_log_bin;
+  SET SESSION sql_log_bin = 0;
+    ALTER TABLE deep_sync AUTO_INCREMENT = 1;
+  SET SESSION sql_log_bin = @old_sql_log_bin;
+END IF;END|
+DELIMITER ;
+SELECT CONCAT_WS(' ', id, jpath, k, val) FROM deep_sync JOIN deep_sync_key USING (deep_sync_key_id) JOIN deep_sync_value USING (deep_sync_value_id) ORDER BY 1;
+SELECT val FROM deep_sync_value ORDER BY 1;

@@ -1,0 +1,37 @@
+CREATE OR REPLACE TEMPORARY TABLE tmp (
+ t_id INT UNSIGNED NOT NULL, #unique deep_sync id #explode_json_deep tmp_deep tmp.json
+ json JSON NOT NULL #ingest
+);
+/* tmp_deep
+#append ALTER TABLE tmp_deep ADD COLUMN key_id INT UNSIGNED NULL DEFAULT NULL, ADD COLUMN value_id INT UNSIGNED NULL DEFAULT NULL;
+key_id #key deep_sync_key deep_sync_key_id #unique deep_sync deep_sync_key_id
+value_id #key deep_sync_value deep_sync_value_id #unique deep_sync deep_sync_value_id
+the_jpath #ignore #unique deep_sync_key jpath
+the_key #ignore #map_no_update deep_sync_key k
+the_value #ignore #unique deep_sync_value val
+*/
+#sync deep_sync_key tmp_deep
+#sync deep_sync_value tmp_deep DELETE_NOT_PRESENT
+#sync deep_sync                #join deep_sync tmp_deep
+#append SELECT CONCAT_WS(' ', id, jpath, k, val) FROM deep_sync JOIN deep_sync_key USING (deep_sync_key_id) JOIN deep_sync_value USING (deep_sync_value_id) ORDER BY 1;
+#append SELECT val FROM deep_sync_value ORDER BY 1;
+
+DROP TABLE IF EXISTS tmp_deep;
+
+CREATE OR REPLACE TABLE deep_sync_key (
+  deep_sync_key_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  jpath VARCHAR(255) NOT NULL UNIQUE,
+  k VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+CREATE OR REPLACE TABLE deep_sync_value (
+  deep_sync_value_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  val VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+INSERT INTO deep_sync_value (val) VALUES ('should be deleted');
+CREATE OR REPLACE TABLE deep_sync (
+  deep_sync_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id INT UNSIGNED NOT NULL,
+  deep_sync_key_id VARCHAR(50) NOT NULL,
+  deep_sync_value_id VARCHAR(50) NOT NULL,
+  UNIQUE (id, deep_sync_key_id, deep_sync_value_id)
+) ENGINE=InnoDB;

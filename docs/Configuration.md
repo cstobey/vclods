@@ -43,6 +43,7 @@ ENV_EXT_DIR|Extensions: env|$INPUT_DIR|Directory to look for files referenced by
 ENV_EXT_FILE|Extensions: env|$base_filename|Filename of env config file to run. Overridden by the first part of ext_opt. If not present, defaults to reimporting the base config
 ENV_EXT_OPERATION|Extensions: env|sh|Operations to use of awk file to run. Overridden by all the extensions in ext_opt (everything after a required `+`).
 ETL_EXT_DEBUG|Extensions: etldst etlsql|0|when set to 1, gives the CONNECTION_ID of the coroutine for dubugging purposes.
+ETL_EXT_DEBUG_TEE|Extensions: etldst etlsql|0|if 1, .teea all the inputs into the sql coroutine.
 ETL_EXT_DIR|Extensions: etl etldst etlsql|$INPUT_DIR|Directory to look for .etl temp table definition files
 ETL_EXT_ERR_ON_EMPTY|Extensions: etl etldst etlsql|1|If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
 ETL_EXT_FILE|Extensions: etl etldst etlsql|$base_filename|temp table definition filename.

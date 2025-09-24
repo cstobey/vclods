@@ -1,3 +1,4 @@
 ETL_EXT_DIR="$INPUT_DIR/etl"
 DIFF_EXT_DIR="$INPUT_DIR/diff"
 VCLOD_MYSQL_DB=test
+ETL_EXT_DEBUG_TEE="$([ "$(basename $S)" == "co_inc.etldst" ] ; echo $?)" # that one has sort issues

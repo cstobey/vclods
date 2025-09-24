@@ -1,12 +1,12 @@
 function pipe_to_coroutine { # PRIVATE
-  while read l ; do print -p "$l" ; done # && echo >&2 "$l"
+  if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat ; fi >&p
 }
 function flush_coroutine {
   print -p "SELECT '#END NOW';" && while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done
 }
 function etl_sync_tbl { # PRIVATE
 # TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
-  grep -E "#([^ ]+\s+$1(\s|$)|explode)" <<<"$working_fields" | awk -v t="${1%%@*}" -v tt="$tmp_tbl" -f etl_main
+  grep -E "#([^ ]+\s+$1(\s|$)|explode)" <<<"$working_fields" | awk -v t="${1%%@*}" -v tt="${2:-$tmp_tbl}" -f etl_main
 }
 function etl_populate_tmp_tbl { # PRIVATE
   [ "$ETL_EXT_ROW_REP" -eq 1 ] && echo "SET SESSION binlog_format='ROW';"
@@ -44,11 +44,13 @@ function etl_process_tbls { # PRIVATE
         fi
         ;;
       "#append") if [ -z "$1" ] ; then echo "$t $m"; else
-          print -p "$t $m"
+          pipe_to_coroutine <<<"$t $m"
           if [[ "$t$m" =~ [;]$ ]] ; then flush_coroutine; fi # because append could be just a part of a statement, make sure the last character is ; before flushing
         fi
         ;;
-      "#sync"*) if [ -z "$1" ] ; then etl_sync_tbl "$t"; else etl_sync_tbl "$t" | pipe_to_coroutine; fi
+      "#sync"*)
+        m="$(sed -r 's/(SET|DELETE)_NOT_PRESENT.*$//' <<<"$m")" # need to isolate the table name.
+        if [ -z "$1" ] ; then etl_sync_tbl $t $m ; else etl_sync_tbl $t $m | pipe_to_coroutine; fi
         ;;
     esac
   done
@@ -59,7 +61,7 @@ function etl_run { # PRIVATE
   TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
   COROUTINE_FILE="$(mktemp)"; add_file_cleanup "$COROUTINE_FILE"
 
-  # prep variables  
+  # prep variables
   sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
   tmp_tbl=$(grep -Em1 '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
   ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
@@ -77,8 +79,9 @@ function etl_run { # PRIVATE
     echo '#RESET'
     etl_explode_extra_tbls_using_sql
     etl_process_tbls
-  else 
+  else
     LD_PRELOAD=/usr/libexec/coreutils/libstdbuf.so; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'; export LD_PRELOAD _STDBUF_I _STDBUF_O _STDBUF_E
+    real_bfn="$base_filename" # NOTE: for some reason, $base_filename gets updated when calling .teea in pipe_to_coroutine, so force it to stay consistent
     vclod_op "etlsql_coroutine.$1" |& # TODO: pass ext_opt from env?
     [ "$ETL_EXT_DEBUG" -eq 1 ] && { print -p "SELECT CONNECTION_ID();" ; read -p connid ; echo >&2 "CONNECTION_ID: $connid"; }
     etl_populate_tmp_tbl | vclod_op b.batch | pipe_to_coroutine &&

@@ -24,8 +24,10 @@ $1~/^#join/ {j[$3]=1}
 $1~/^#ljoin/ {lj[$3]=1}
 $1~/^#where/ {w=cc_ws(w, " AND ", $3" "tail4())}
 
-$1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail4();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");} 
-$1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail4(),1," AND ","")"\n  ";} 
+$1~/^#sync/ && $3=="SET_NOT_PRESENT" {snp=tail4();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");}
+$1~/^#sync/ && $3=="DELETE_NOT_PRESENT" {dnp=cc_if(tail4(),1," AND ","")"\n  ";}
+$1~/^#sync/ && $4=="SET_NOT_PRESENT" {snp=tail5();snp=cc_if(snp,snp ~ /WHERE/, " AND ", " WHERE ");}
+$1~/^#sync/ && $4=="DELETE_NOT_PRESENT" {dnp=cc_if(tail5(),1," AND ","")"\n  ";}
 $1~/^#sync_no_update$/ {no_update=1;}
 
 $1~/^#mode$/ && $3~/^(odku(_ai(_always)?)?|ui_split)$/ {mode_layout=$3}
