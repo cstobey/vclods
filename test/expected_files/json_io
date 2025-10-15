@@ -23,7 +23,8 @@ INSERT INTO tmp (t_id,json) VALUES
 ,(789, '{"a": "b", "1":"2"}')
 ;
 CREATE OR REPLACE TEMPORARY TABLE tmp_deep (id INT UNSIGNED NOT NULL, the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
-SELECT tmp.t_id, tmp.json FROM tmp;
+SELECT tmp.t_id, tmp.json FROM tmp
+WHERE tmp.t_id != '' AND tmp.json != '';
 SELECT '#END NOW';
 INSERT INTO tmp_deep VALUES
 (12345,'$.a',"a",JSON_UNQUOTE('1'))
@@ -41,7 +42,8 @@ INSERT INTO tmp_deep VALUES
 ,(789,'$.1',"1",JSON_UNQUOTE('"2"'))
 ;
 CREATE OR REPLACE TEMPORARY TABLE tmp_shallow (id INT UNSIGNED NOT NULL, the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));
-SELECT tmp.t_id, tmp.json FROM tmp;
+SELECT tmp.t_id, tmp.json FROM tmp
+WHERE tmp.t_id != '' AND tmp.json != '';
 SELECT '#END NOW';
 INSERT INTO tmp_shallow VALUES
 (12345,"a",'1')

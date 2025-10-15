@@ -6,7 +6,8 @@ etl_explode_coroutine () {
       "#explode_csv")
         pipe_to_coroutine << STMT
 CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));
-SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};
+SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl}
+WHERE ${tmp_tbl}.${tmp_tbl_id} != '' AND ${sub_tmp_tbl_source} != '';
 SELECT '#END NOW';
 STMT
         while read -p i l || return 1 ; do
@@ -16,7 +17,8 @@ STMT
       "#explode_json_shallow")
         pipe_to_coroutine << STMT
 CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));
-SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};
+SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl}
+WHERE ${tmp_tbl}.${tmp_tbl_id} != '' AND ${sub_tmp_tbl_source} != '';
 SELECT '#END NOW';
 STMT
         while read -p i l || return 1 ; do
@@ -27,7 +29,8 @@ STMT
       "#explode_json_deep")
         pipe_to_coroutine << STMT
 CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
-SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl};
+SELECT ${tmp_tbl}.${tmp_tbl_id}, ${sub_tmp_tbl_source} FROM ${tmp_tbl}
+WHERE ${tmp_tbl}.${tmp_tbl_id} != '' AND ${sub_tmp_tbl_source} != '';
 SELECT '#END NOW';
 STMT
         while read -p i l || return 1 ; do
