@@ -11,7 +11,7 @@ Post | log processing after the script has run
 
 Name | Scope | Note
 -----|-------|-----
-awk|Global<br />Script<br />Extensions: awk batch dir litsh sh slack<br />Includes: etl.sh etl_explode.sh locking.sh vcurl.sh<br />Post: slack_errors|# really gawk
+awk|Global<br />Script<br />Extensions: awk batch dir litsh sh slack<br />Includes: etl.sh locking.sh vcurl.sh<br />Post: slack_errors|# really gawk
 basename|Script<br />Includes: locking.sh operations.sh|
 cat|Global<br />Connections: oracle<br />Extensions: add dir dst email end env err g litsh null out outa py shard shebang slack sql vfs while wrap<br />Includes: connections.sh etl.sh etl_explode.awk etl_explode.sh operations.sh vcurl.sh<br />Post: slack_errors|
 curl|Extensions: slack<br />Includes: vcurl.sh<br />Post: slack_errors|

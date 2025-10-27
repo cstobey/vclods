@@ -25,13 +25,13 @@ CREATE OR REPLACE TABLE deep_sync_key (
 ) ENGINE=InnoDB;
 CREATE OR REPLACE TABLE deep_sync_value (
   deep_sync_value_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  val VARCHAR(50) NOT NULL UNIQUE
+  val VARCHAR(255) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 INSERT INTO deep_sync_value (val) VALUES ('should be deleted');
 CREATE OR REPLACE TABLE deep_sync (
   deep_sync_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   id INT UNSIGNED NOT NULL,
-  deep_sync_key_id VARCHAR(50) NOT NULL,
-  deep_sync_value_id VARCHAR(50) NOT NULL,
+  deep_sync_key_id INT UNSIGNED NOT NULL,
+  deep_sync_value_id INT UNSIGNED NOT NULL,
   UNIQUE (id, deep_sync_key_id, deep_sync_value_id)
 ) ENGINE=InnoDB;

@@ -9,51 +9,52 @@ CREATE OR REPLACE TABLE deep (
   id INT UNSIGNED NOT NULL,
   jpath VARCHAR(255) NOT NULL,
   k VARCHAR(50) NOT NULL,
-  val VARCHAR(50) NOT NULL
+  val VARCHAR(255) NOT NULL
 ) ENGINE=InnoDB;
 CREATE OR REPLACE TABLE shallow (
   id INT UNSIGNED NOT NULL,
   k VARCHAR(50) NOT NULL,
-  val VARCHAR(50) NOT NULL
+  val VARCHAR(255) NOT NULL
 ) ENGINE=InnoDB;
 
 INSERT INTO tmp (t_id,json) VALUES
-(12345, '{"a":1,"b":"c","d":{"e":2, "f":[3,[4,5]], "g":{}, "h": []}}')
+(12345, '{"a":1,"b":"c","d":{"e":2, "f":[3,[4,5],"(\'\\n\')"], "g":{}, "h": []}}')
 ,(345, '[0,1,2]')
 ,(789, '{"a": "b", "1":"2"}')
 ;
 CREATE OR REPLACE TEMPORARY TABLE tmp_deep (id INT UNSIGNED NOT NULL, the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
-SELECT tmp.t_id, tmp.json FROM tmp
+SELECT tmp.t_id, REPLACE(TO_BASE64(tmp.json), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.json != '';
 SELECT '#END NOW';
 INSERT INTO tmp_deep VALUES
-(12345,'$.a',"a",JSON_UNQUOTE('1'))
-,(12345,'$.b',"b",JSON_UNQUOTE('"c"'))
-,(12345,'$.d.e',"e",JSON_UNQUOTE('2'))
-,(12345,'$.d.f[0]',"",JSON_UNQUOTE('3'))
-,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE('4'))
-,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE('5'))
-,(12345,'$.d.g',"g",JSON_UNQUOTE('{}'))
-,(12345,'$.d.h',"h",JSON_UNQUOTE('[]'))
-,(345,'$[0]',"",JSON_UNQUOTE('0'))
-,(345,'$[1]',"",JSON_UNQUOTE('1'))
-,(345,'$[2]',"",JSON_UNQUOTE('2'))
-,(789,'$.a',"a",JSON_UNQUOTE('"b"'))
-,(789,'$.1',"1",JSON_UNQUOTE('"2"'))
+(12345,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('MQ==')))
+,(12345,'$.b',"b",JSON_UNQUOTE(FROM_BASE64('ImMi')))
+,(12345,'$.d.e',"e",JSON_UNQUOTE(FROM_BASE64('Mg==')))
+,(12345,'$.d.f[0]',"",JSON_UNQUOTE(FROM_BASE64('Mw==')))
+,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE(FROM_BASE64('NA==')))
+,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE(FROM_BASE64('NQ==')))
+,(12345,'$.d.f[2]',"",JSON_UNQUOTE(FROM_BASE64('IignXG4nKSI=')))
+,(12345,'$.d.g',"g",JSON_UNQUOTE(FROM_BASE64('e30=')))
+,(12345,'$.d.h',"h",JSON_UNQUOTE(FROM_BASE64('W10=')))
+,(345,'$[0]',"",JSON_UNQUOTE(FROM_BASE64('MA==')))
+,(345,'$[1]',"",JSON_UNQUOTE(FROM_BASE64('MQ==')))
+,(345,'$[2]',"",JSON_UNQUOTE(FROM_BASE64('Mg==')))
+,(789,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('ImIi')))
+,(789,'$.1',"1",JSON_UNQUOTE(FROM_BASE64('IjIi')))
 ;
 CREATE OR REPLACE TEMPORARY TABLE tmp_shallow (id INT UNSIGNED NOT NULL, the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));
-SELECT tmp.t_id, tmp.json FROM tmp
+SELECT tmp.t_id, REPLACE(TO_BASE64(REPLACE(tmp.json, '\\', '\\\\')), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.json != '';
 SELECT '#END NOW';
 INSERT INTO tmp_shallow VALUES
-(12345,"a",'1')
-,(12345,"b",'"c"')
-,(12345,"d",'{"e":2,"f":[3,[4,5]],"g":{},"h":[]}')
-,(345,0,'0')
-,(345,1,'1')
-,(345,2,'2')
-,(789,"a",'"b"')
-,(789,"1",'"2"')
+(12345,FROM_BASE64('YQ=='),FROM_BASE64('MQ=='))
+,(12345,FROM_BASE64('Yg=='),FROM_BASE64('ImMi'))
+,(12345,FROM_BASE64('ZA=='),FROM_BASE64('eyJlIjoyLCJmIjpbMyxbNCw1XSwiKCdcXG4nKSJdLCJnIjp7fSwiaCI6W119'))
+,(345,FROM_BASE64('MA=='),FROM_BASE64('MA=='))
+,(345,FROM_BASE64('MQ=='),FROM_BASE64('MQ=='))
+,(345,FROM_BASE64('Mg=='),FROM_BASE64('Mg=='))
+,(789,FROM_BASE64('YQ=='),FROM_BASE64('ImIi'))
+,(789,FROM_BASE64('MQ=='),FROM_BASE64('IjIi'))
 ;
 INSERT INTO deep (id,jpath,k,val)
   SELECT t_id,tmp_deep.the_jpath,tmp_deep.the_key,tmp_deep.the_value

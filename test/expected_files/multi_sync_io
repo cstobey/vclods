@@ -19,14 +19,14 @@ CREATE OR REPLACE TABLE deep_sync_key (
 ) ENGINE=InnoDB;
 CREATE OR REPLACE TABLE deep_sync_value (
   deep_sync_value_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  val VARCHAR(50) NOT NULL UNIQUE
+  val VARCHAR(255) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 INSERT INTO deep_sync_value (val) VALUES ('should be deleted');
 CREATE OR REPLACE TABLE deep_sync (
   deep_sync_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   id INT UNSIGNED NOT NULL,
-  deep_sync_key_id VARCHAR(50) NOT NULL,
-  deep_sync_value_id VARCHAR(50) NOT NULL,
+  deep_sync_key_id INT UNSIGNED NOT NULL,
+  deep_sync_value_id INT UNSIGNED NOT NULL,
   UNIQUE (id, deep_sync_key_id, deep_sync_value_id)
 ) ENGINE=InnoDB;
 
@@ -36,23 +36,23 @@ INSERT INTO tmp (t_id,json) VALUES
 ,(789, '{"a": "b", "1":"2"}')
 ;
 CREATE OR REPLACE TEMPORARY TABLE tmp_deep (id INT UNSIGNED NOT NULL, the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
-SELECT tmp.t_id, tmp.json FROM tmp
+SELECT tmp.t_id, REPLACE(TO_BASE64(tmp.json), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.json != '';
 SELECT '#END NOW';
 INSERT INTO tmp_deep VALUES
-(12345,'$.a',"a",JSON_UNQUOTE('1'))
-,(12345,'$.b',"b",JSON_UNQUOTE('"c"'))
-,(12345,'$.d.e',"e",JSON_UNQUOTE('2'))
-,(12345,'$.d.f[0]',"",JSON_UNQUOTE('3'))
-,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE('4'))
-,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE('5'))
-,(12345,'$.d.g',"g",JSON_UNQUOTE('{}'))
-,(12345,'$.d.h',"h",JSON_UNQUOTE('[]'))
-,(345,'$[0]',"",JSON_UNQUOTE('0'))
-,(345,'$[1]',"",JSON_UNQUOTE('1'))
-,(345,'$[2]',"",JSON_UNQUOTE('2'))
-,(789,'$.a',"a",JSON_UNQUOTE('"b"'))
-,(789,'$.1',"1",JSON_UNQUOTE('"2"'))
+(12345,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('MQ==')))
+,(12345,'$.b',"b",JSON_UNQUOTE(FROM_BASE64('ImMi')))
+,(12345,'$.d.e',"e",JSON_UNQUOTE(FROM_BASE64('Mg==')))
+,(12345,'$.d.f[0]',"",JSON_UNQUOTE(FROM_BASE64('Mw==')))
+,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE(FROM_BASE64('NA==')))
+,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE(FROM_BASE64('NQ==')))
+,(12345,'$.d.g',"g",JSON_UNQUOTE(FROM_BASE64('e30=')))
+,(12345,'$.d.h',"h",JSON_UNQUOTE(FROM_BASE64('W10=')))
+,(345,'$[0]',"",JSON_UNQUOTE(FROM_BASE64('MA==')))
+,(345,'$[1]',"",JSON_UNQUOTE(FROM_BASE64('MQ==')))
+,(345,'$[2]',"",JSON_UNQUOTE(FROM_BASE64('Mg==')))
+,(789,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('ImIi')))
+,(789,'$.1',"1",JSON_UNQUOTE(FROM_BASE64('IjIi')))
 ;
 ALTER TABLE tmp_deep ADD COLUMN key_id INT UNSIGNED NULL DEFAULT NULL, ADD COLUMN value_id INT UNSIGNED NULL DEFAULT NULL;
 SET @update_cnt=0;

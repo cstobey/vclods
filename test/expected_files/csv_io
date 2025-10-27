@@ -14,21 +14,22 @@ CREATE OR REPLACE TABLE csv (
 INSERT INTO tmp (t_id,csv) VALUES
 (12345, 'a,b,c')
 ,(345, '0,1,2')
-,(789, 'funny,silly')
+,(789, 'funny man,silly woman,(\'\\n\')')
 ;
 CREATE OR REPLACE TEMPORARY TABLE tmp_csv (id INT UNSIGNED NOT NULL, the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));
-SELECT tmp.t_id, tmp.csv FROM tmp
+SELECT tmp.t_id, REPLACE(TO_BASE64(REPLACE(tmp.csv, '\\', '\\\\')), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.csv != '';
 SELECT '#END NOW';
 INSERT INTO tmp_csv VALUES
-("12345","a",0)
-,("12345","b",1)
-,("12345","c",2)
-,("345","0",0)
-,("345","1",1)
-,("345","2",2)
-,("789","funny",0)
-,("789","silly",1)
+(12345,FROM_BASE64('YQ=='),0)
+,(12345,FROM_BASE64('Yg=='),1)
+,(12345,FROM_BASE64('Yw=='),2)
+,(345,FROM_BASE64('MA=='),0)
+,(345,FROM_BASE64('MQ=='),1)
+,(345,FROM_BASE64('Mg=='),2)
+,(789,FROM_BASE64('ZnVubnkgbWFu'),0)
+,(789,FROM_BASE64('c2lsbHkgd29tYW4='),1)
+,(789,FROM_BASE64('KCdcXG4nKQ=='),2)
 ;
 INSERT INTO csv (id,val,idx)
   SELECT t_id,tmp_csv.the_value,tmp_csv.index_number

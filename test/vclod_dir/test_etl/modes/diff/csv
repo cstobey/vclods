@@ -4,5 +4,6 @@
 345 0 0 
 345 1 1 
 345 2 2 
-789 funny 0
-789 silly 1
+789 ('\n') 2
+789 funny man 0
+789 silly woman 1
