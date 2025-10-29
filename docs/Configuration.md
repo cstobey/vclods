@@ -68,6 +68,7 @@ OUT_EXT_FILE|Extensions: out outa|$base_filename|the filename. Overridden by ext
 OUT_EXT_FILE_SHARD|Extensions: out outa|$(date +%F)|A way to save and distinguish between different runs
 PARA_EXT_JOBS|Extensions: para|10|number of parallel jobs to run at the same time.
 PARA_EXT_OPERATION|Extensions: para|sh-$base_filename|what vclod_operation to use to process a line of stdin
+PARA_EXT_STOP|Extensions: para|0|if 1, stop after we finish the currently started threads. You can set this on the fly in the config, as it is reloaded at the start of every thread.
 PY_EXT_DIR|Extensions: py|$INPUT_DIR|directory to look for python files. If not a VCLOD directory, then they can have the normal .py ending.
 RM_ERR_FILE|Includes: script.sh|1|1 will detele error files after they post processing;<br />0 will leave them around.<br />The default is recommended since Error files are redundant
 SHARD_EXT_COUNT|Extensions: shard||the number of times to loop
