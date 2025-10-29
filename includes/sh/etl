@@ -89,6 +89,7 @@ function etl_run { # PRIVATE
       etl_process_tbls "$1"
     ret="$?"
     print -p "quit"
+    [ -n "$(jobs -p)" ] && wait
     return "$ret"
   fi
 }
