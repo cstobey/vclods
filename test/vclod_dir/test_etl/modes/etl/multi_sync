@@ -6,9 +6,9 @@ CREATE OR REPLACE TEMPORARY TABLE tmp (
 #append ALTER TABLE tmp_deep ADD COLUMN key_id INT UNSIGNED NULL DEFAULT NULL, ADD COLUMN value_id INT UNSIGNED NULL DEFAULT NULL;
 key_id #key deep_sync_key deep_sync_key_id #unique deep_sync deep_sync_key_id
 value_id #key deep_sync_value deep_sync_value_id #unique deep_sync deep_sync_value_id
-the_jpath #ignore #unique deep_sync_key jpath
-the_key #ignore #map_no_update deep_sync_key k
-the_value #ignore #unique deep_sync_value val
+the_jpath #unique deep_sync_key jpath
+the_key #map_no_update deep_sync_key k
+the_value #unique deep_sync_value val
 */
 #sync deep_sync_key tmp_deep
 #sync deep_sync_value tmp_deep DELETE_NOT_PRESENT
