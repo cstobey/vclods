@@ -1,5 +1,5 @@
 #FLOW Run multiple input rows in parallel. Retains all functions and args that are in the enviornment. Access the current line we are processing through $PARA_LINE.
-: "${ext_opt:=${PARA_EXT_OPERATION:=sh-$base_filename}}" # what vclod_operation to use to process a line of stdin
+: "${ext_opt:=${PARA_EXT_OPERATION:=sh-$base_filename}}" # what vclod_operation to use to process a line of stdin.<br />NOTE: When specifying this in the config, do NOT self-reference or you can produce a fork bomb.
 : "${PARA_EXT_JOBS:=10}" # number of parallel jobs to run at the same time.
 : "${PARA_EXT_STOP:=0}" # if 1, stop after we finish the currently started threads. You can set this on the fly in the config, as it is reloaded at the start of every thread.
 _FIFO="${VCLOD_LOCK_DIR%/}/para.$MYPID.fifo" ; mkfifo "$_FIFO" ; exec 8<>"$_FIFO" ; add_file_cleanup "$_FIFO"

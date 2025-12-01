@@ -34,6 +34,9 @@ etl_run
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.
 #explode | Generate a sub-temp table that explodes a column (or virtual column like #generate). Attach this command to an id column (not called id) for the temp table. Use with #join to extend the main temp table or you can #sync off it directly ([Details below](#sync-optional-parameters)).<br />There are several methods of exploding with different generated columns. [See details below](#modifiers-for-explode).
+#addex | Add a column to the given #explode table name. Used inside a multiline comment (`/**/`), the field name must be followed by a field definition like in the main temp table.
+#addex_index | Add an index to the given #explode table name. Used inside a multiline comment (`/**/`), the index may be 1) a single field name, 2) one or more field names inside parentheses, or 3) an index name followed by one or more field names inside parentheses.
+#addex_with_index | A logical union of the #addex and the first form of the #addex_index commands.
 
 ## #mode Options
 # Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
@@ -47,7 +50,7 @@ etl_run
 # not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.
 
 ## #sync Optional Parameters
-# After the destination table name that we are #syncing to, you may optionally add a temp table name to sync off of. These extra temp tables start as an #explode command, but to specify the field commands, you need to specify the all the fields you are #syncing from the #explode table (and any additional fields you want to add to it) in a multiline comment (`/*<each field and commands on its own line>*/`). It is recommended to start the multiline comment with the temp table name that is being manipulated. All fields specified within the multiline comment are automatically #ignored as they reference fields off the main temp table.
+# After the destination table name that we are #syncing to, you may optionally add a temp table name to sync off of. These extra temp tables start as an #explode command, but to specify the field commands, you need to specify the all the fields you are #syncing from the #explode table (and any additional fields you want to add to it) in a multiline comment (`/*<each field and commands on its own line>*/` -- cannot be part of another line). It is recommended to start the multiline comment with the temp table name that is being manipulated. All fields specified within the multiline comment are automatically #ignored as they reference fields off the main temp table.
 # Currently, you may not #join or #ljoin to any of these extra temp tables. This means that you need to add #append or #include commands to ALTER the #exploded temp table to add any new columns you need and then UPDATE those columns from the main temp table.
 # After the destination table and any optional temp table names, you may add one of the following modifiers to clean up any records missing from the current ingestion. These only work if the full data is being ingested for whatever slice of the table that is under review (ie, you have to be very careful batching the .etl ingestion with these).
 #TBL Option | Format | Description
