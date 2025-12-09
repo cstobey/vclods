@@ -24,19 +24,19 @@ A KSH-based Data Pipelining framework that uses the directory structure and file
 ## Features and Key Concepts
 * A Script is an executable unit. It is a single file that may reference and pull in other files based on its Extensions.
 * A Script has Extensions.
-  * The simplest Script has a single Extension (like .sql or .sh), but extensions can be chained similar to the pipe (`|`) operator in shell scripting
+  * The simplest Script has a single Extension (like .sql or .sh), but extensions can be chained, similar to the pipe (`|`) operator in shell scripting
   * Extensions are read right to left instead of left to right. For example, `do_something.sql.sh` will run the file as a shell script (`.sh`) and feed its output into a SQL connection (`.sql`).
   * Just like with shell scripting, extensions pass their stdout as the stdin for the next extension.
     * The initial input is the script file.
     * Whatever is output after the last extension goes to the Logging system for storage and any alerting.
-    * stderr acts like in shell scripting where it bypasses the remaining Extension and goes straight to the Logging system.
+    * stderr acts like in shell scripting, where it bypasses the remaining Extension and goes straight to the Logging system.
 * A Script exists inside a Directory.
   * A Directory has a `config` file that defines the operational environment variables that all Scripts (really their Extensions) within that directory will use.
   * While VCLODs can run individual Scripts (or even virtual scripts from stdin), in production systems, the normal way to execute Scripts is to run VCLODs on whole Directories. When you run a Directory,
     * all Scripts that exist within the Directory and all subDirectories are executed
     * in alphabetical order (number prefixes in filenames are treated as numbers instead of strings to simplify precedence control).
     * such that only `$VCLOD_JOBS` (default of 10) Scripts are running at a time.
-  * Because Directories are executable, you can simplify crontab to specify a limited set of timing intervals to run Scripts at and use the directory structure to signal which timing interal to use for each script.
+  * Because Directories are executable, you can simplify crontab to specify a limited set of timing intervals to run Scripts at and use the directory structure to signal which timing interval to use for each script.
 
 ![discriptive diagram of how VCLODs works](/VCLODs.png)  
 
@@ -46,6 +46,33 @@ The goal is to have everything be tunable. As a framework, VCLODs tries to be pe
 ### Configuration
 There is a global config file to make life easier (`/etc/vclods` -- since it is sourced, you may reference any other global configuration files you wish within it), then each directory has its own configs to fine-tune what all the scripts in a given directory will do. [Here is a list of all the Configuration Variables](/docs/Configuration.md).
 
+#### Connections (See the [connections/](/connections) directory)
+The most powerful Configuration Variables are for Connections. You always have access to 2 connections: one for .sql and one for .dst. Connections have prefixes and variables. The Variables that are actually used to form a connection are `prefix`+`variable`, for instance, `VCLOD_SRC_HOST` has the prefix `VCLOD_SRC_` and the Variable `HOST`. The 2 extensions that use connections specify their primary prefix as follows:
+
+Extension | Variable Prefix | Default 
+----------|-----------------|--------
+`.sql` | `$SRC` | VCLOD_SRC_
+`.dst` | `$DST` | VCLOD_DST_
+
+This means you can setup multiple users with default hosts globally and then specify the ones to use for the primary and secondary connections in the local config file. If the variables with those prefixes are blank, they fall back to the Engine prefixes below. If those are blank, the `VCLOD_` prefix is used. 
+
+Engine | Preix Fall back Variable | Description 
+-------|--------------------------|------------
+mysql | VCLOD_MYSQL_ | The default Engine. Used to connect to mysql and mariadb 
+mssql | VCLOD_MSSQL_ | Used to connect to mssql (Microsoft's SQL Server)
+oracle | VCLOD_OORACLE_ | Used to connect to Oracle. You can use TNS by leaving the HOST variable empty and putting the TNS string in DB variable.
+postgres | VCLOD_POSTGRES_ |Used to connect to postgres 
+
+Given the found prefix, the following 5 variables are used to make the connection:
+
+Variable | Description
+---------|------------
+ENGINE | Which Engine to use (from the above table). This variable skips the Engine Prefix fallback.
+HOST | The hostname of the server to connect to.
+USER | The username to use. It is recommended to put this in a separate config folder and either source it in the global or local config files.
+PASSWORD | The password for the given USER. It is recommended to put this in the USER's config file and source it with the USER.
+DB | The database name to connect to.
+
 ### Locking
 Each Script file automatically locks out redundant execution for the same Script in the same Directory. Simlinks are treated as different Scripts, so you can use the same program with different configurations without copying the code. You can tune how many instances you want of each Script to run at once by setting `$VCLOD_BATCH_JOBS`.
 
@@ -53,20 +80,20 @@ Each Script file automatically locks out redundant execution for the same Script
 Based on the file extension list, different operations can be assigned. If the extension is `.sh`, then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run SQL on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. Some extensions recurse further, letting you specify what amounts to subscripts within their context, for example, `.diff-f+dst.sql` will run a `.sql` script and diff the output to the contents of the `f` file piped through the `.dst` extension. [Here is a list of all the .extension Operations](/docs/Operation.md).
 
 ### Destination - The Logging system
-Log output (anything in stdout at pipe's end) can go to the following locations: 
+Log output (anything in stdout at the pipe's end) can go to the following locations: 
 Control | Where | Description
 --------|-------|------------
 Always | log files | in $LOG_BASE_DIR and $VCLOD_ERR_DIR
 Always | syslog | This can be pulled in by systems like graylog and datadog
 Conditional | stdout | if you are manually running the script in a terminal
 Conditional | email | stderr goes to the `$OPERATIONS_EMAIL` email for alerting
-Optional | Slack | stderr goes to slack when configured for alerting
+Optional | Slack | stderr goes to Slack when configured for alerting
 Optional | SQL database | Use the provided DDL (pp_log2sql_table.sql) to setup the tables, then configure the LOG_DB_ connection to store all logs for relational querying
 Optional | post process script | As defined in $LOG_POST_PROCESS
 
 ## Examples
-### Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self descriptive
-* For more examples, look in this repo's test directory. Output is compared to `test/expected`
+### Pseudocode Examples: Note `.` is shorthand for `|`, so VCLODScript names are self-descriptive
+* For more examples, look in this repo's test directory. Output is compared to `test/expected_*`
 * script.sh: run a script in directory context (VCLODs handles Timing, Configuration, Locking, Logging, ...)
 * script.sql.sh: script.sh except it spits out SQL to avoid connection call
 * script.sh.sql: a query generates a shell script (usually curl)
@@ -76,7 +103,7 @@ Optional | post process script | As defined in $LOG_POST_PROCESS
 * script.sql.tee-file.batch.sql: run a query, batch the output, stash batched statements into a file for auditing, run generated batch statements
 
 ### Example Crontab
-Specify when you want which directories to run and then everything in them run
+Specifies when you want which directories to run, which runs all scripts recursively in that directory.
 
     44 4 1 1 *   /usr/local/bin/vclod /vclod/yearly/
     15 2 1 * *   /usr/local/bin/vclod /vclod/monthly/
@@ -116,8 +143,8 @@ Output will be: `[Log] Hello World` in all 3 cases.
 
 ## Testing
 
-First create and setup the `./test/secure_config` file to have the right mysql permissions (need to specify `$VCLOD_MYSQL_HOST`, `$VCLOD_MYSQL_USER`, `$VCLOD_MYSQL_PASSWORD`, and `$LOG_SQL_HOST`).
+First, create and setup the `./test/secure_config` file to have the right MySQL permissions (need to specify `$VCLOD_MYSQL_HOST`, `$VCLOD_MYSQL_USER`, `$VCLOD_MYSQL_PASSWORD`, and `$LOG_SQL_HOST`).
 
-`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; check post_process log2sql; prints all output to the terminal
+`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; checks post_process log2sql; prints all output to the terminal
 
 `./run_test.sh | cat` - does the same thing, but with no output except on test error.
