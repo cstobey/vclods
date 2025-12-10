@@ -19,7 +19,12 @@
 </svg>![VCLODs](https://github.com/cstobey/vclods/assets/1664158/87ce9b58-481b-40e9-9b98-d048ae57b5b6)
 # VCLODs: Variable Configuration Locking Operation Destination Scripts
 
-A KSH-based Data Pipelining framework that uses the directory structure and filenames of scripts as a sublanguage to control program behavior and flow. As the name suggests, most aspects of writing productionized scripts are managed by the framework; however, VCLODs is designed to be open, allowing you to drop down into any language to tweak behavior as needed.
+A KSH-based Data Pipelining framework that uses the directory structure and filenames of scripts as a sublanguage to control program behavior and flow. As the name suggests, most aspects of writing productionized scripts are managed by the framework; however, VCLODs is designed to be open, allowing you to drop down into any language to tweak behavior as needed. VCLODs shines when you want to:
+* Build scheduled data pipelines (ETL, data migrations, backups, reporting)
+* Rapidly prototype data or maintenance scripts without boilerplate
+* Maintain consistent logging, alerting, locking, and scheduling across many small scripts
+* Migrate or sync data between multiple databases (e.g. primary → secondary)
+* Provide a flexible framework where scripts can be written in various languages, yet share the same operational infrastructure
 
 ## Features and Key Concepts
 * A Script is an executable unit. It is a single file that may reference and pull in other files based on its Extensions.
@@ -60,7 +65,7 @@ Engine | Preix Fall back Variable | Description
 -------|--------------------------|------------
 mysql | VCLOD_MYSQL_ | The default Engine. Used to connect to mysql and mariadb 
 mssql | VCLOD_MSSQL_ | Used to connect to mssql (Microsoft's SQL Server)
-oracle | VCLOD_OORACLE_ | Used to connect to Oracle. You can use TNS by leaving the HOST variable empty and putting the TNS string in DB variable.
+oracle | VCLOD_ORACLE_ | Used to connect to Oracle. You can use TNS by leaving the HOST variable empty and putting the TNS string in DB variable.
 postgres | VCLOD_POSTGRES_ |Used to connect to postgres 
 
 Given the found prefix, the following 5 variables are used to make the connection:
@@ -83,13 +88,13 @@ Based on the file extension list, different operations can be assigned. If the e
 Log output (anything in stdout at the pipe's end) can go to the following locations: 
 Control | Where | Description
 --------|-------|------------
-Always | log files | in $LOG_BASE_DIR and $VCLOD_ERR_DIR
+Always | log files | in `$LOG_BASE_DIR` and `$VCLOD_ERR_DIR`
 Always | syslog | This can be pulled in by systems like graylog and datadog
 Conditional | stdout | if you are manually running the script in a terminal
 Conditional | email | stderr goes to the `$OPERATIONS_EMAIL` email for alerting
 Optional | Slack | stderr goes to Slack when configured for alerting
 Optional | SQL database | Use the provided DDL (pp_log2sql_table.sql) to setup the tables, then configure the LOG_DB_ connection to store all logs for relational querying
-Optional | post process script | As defined in $LOG_POST_PROCESS
+Optional | post process script | As defined in `$LOG_POST_PROCESS`
 
 ## Examples
 ### Pseudocode Examples: Note `.` is shorthand for `|`, so VCLODScript names are self-descriptive
