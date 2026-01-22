@@ -18,80 +18,87 @@
 
 </svg>![VCLODs](https://github.com/cstobey/vclods/assets/1664158/87ce9b58-481b-40e9-9b98-d048ae57b5b6)
 # VCLODs: Variable Configuration Locking Operation Destination Scripts
-## What are VCLODs?
-An open-source directory based ksh framework to productionize programs from component scripts using dot extension lists as a functional pipe specification. Especially useful for data pipelines.
 
-## What are the benefits?
-* Build from simple scripts
-* Encoding Timing and Configuration in script absolute path, allows complex behavior
-* Automatic human readable process reporting
-* Connections are easy (see the connections/ directory)
-  * MySQL/MariaDB, MSSQL, Oracle, and Postgres already implemented
-  * InfluxDB, MongoDB, Redis would be easy to add
-* Use your own language (shebang) - Javascript/Node, Ruby, Go
-* Scripts/programs can focus on their purpose without dealing with their infrastructure
-* Fast dev, Fast execution, Dev mobility, Extensibility - Especially for Data tasks
-  * ~500 C program lines convert to 14 VCLODs lines
-  * At a glance debugging
+A KSH-based Data Pipelining framework that uses the directory structure and filenames of scripts as a sublanguage to control program behavior and flow. As the name suggests, most aspects of writing productionized scripts are managed by the framework; however, VCLODs is designed to be open, allowing you to drop down into any language to tweak behavior as needed. VCLODs shines when you want to:
+* Build scheduled data pipelines (ETL, data migrations, backups, reporting)
+* Rapidly prototype data or maintenance scripts without boilerplate
+* Maintain consistent logging, alerting, locking, and scheduling across many small scripts
+* Migrate or sync data between multiple databases (e.g. primary → secondary)
+* Provide a flexible framework where scripts can be written in various languages, yet share the same operational infrastructure
 
-## How does it work?
-* ~400 ksh lines that provide...
-* Modularizing simple scripts/programs to automate ~95% of the boilerplate needed to productionize
-  * Configuration
-  * Locking 
-  * Logging
-  * Alerting
-  * Timing (cron over directories)
-    * Precedence (alpha order)
-    * Parallelization
-  * Database Connections
-  * Piped Operations: Batching, Alerting, Advanced Logging ... 
+## Features and Key Concepts
+* A Script is an executable unit. It is a single file that may reference and pull in other files based on its Extensions.
+* A Script has Extensions.
+  * The simplest Script has a single Extension (like .sql or .sh), but extensions can be chained, similar to the pipe (`|`) operator in shell scripting
+  * Extensions are read right to left instead of left to right. For example, `do_something.sql.sh` will run the file as a shell script (`.sh`) and feed its output into a SQL connection (`.sql`).
+  * Just like with shell scripting, extensions pass their stdout as the stdin for the next extension.
+    * The initial input is the script file.
+    * Whatever is output after the last extension goes to the Logging system for storage and any alerting.
+    * stderr acts like in shell scripting, where it bypasses the remaining Extension and goes straight to the Logging system.
+* A Script exists inside a Directory.
+  * A Directory has a `config` file that defines the operational environment variables that all Scripts (really their Extensions) within that directory will use.
+  * While VCLODs can run individual Scripts (or even virtual scripts from stdin), in production systems, the normal way to execute Scripts is to run VCLODs on whole Directories. When you run a Directory,
+    * all Scripts that exist within the Directory and all subDirectories are executed
+    * in alphabetical order (number prefixes in filenames are treated as numbers instead of strings to simplify precedence control).
+    * such that only `$VCLOD_JOBS` (default of 10) Scripts are running at a time.
+  * Because Directories are executable, you can simplify crontab to specify a limited set of timing intervals to run Scripts at and use the directory structure to signal which timing interval to use for each script.
 
 ![discriptive diagram of how VCLODs works](/VCLODs.png)  
 
-# VCLODs Detailed How it Works
-## Variable
-The goal is to have everything be tunable. As a Framework, VCLODs trys to be permissive instead of opinionated, allowing for overriding behavior at every level as much as possible. You can even use stdin to simulate a script file (or use .vfs to simulate multiple files) as needed and every Configuration variable can be overridden at the command line by prepending it with `O_`. This allows you to use the same tool for development and one-off scripts that you use for automated daemons.
+### Variable
+The goal is to have everything be tunable. As a framework, VCLODs tries to be permissive instead of opinionated, allowing for overriding behavior at every level as much as possible. You can even use stdin to simulate a script file (or use .vfs to simulate multiple files) as needed, and every Configuration variable can be overridden at the command line by prepending it with `O_`. This allows you to use the same tool for development and one-off scripts that you use for automated daemons. You can even make virtual subScripts within a `.sh` Script by using the `vclod_operation` function.
 
-## Configuration
-There is a global config file to make life easier (`/etc/vclods`), then each directory has its own configs to fine tune what all the scripts in a given directory will do. [Here is a list of all the Configuration Variables](/docs/Configuration.md).
+### Configuration
+There is a global config file to make life easier (`/etc/vclods` -- since it is sourced, you may reference any other global configuration files you wish within it), then each directory has its own configs to fine-tune what all the scripts in a given directory will do. [Here is a list of all the Configuration Variables](/docs/Configuration.md).
 
-## Locking
-Each script file automatically locks out redundant execution (or allows up to `VCLOD_BATCH_JOBS` number of instances to run).
+#### Connections (See the [connections/](/connections) directory)
+The most powerful Configuration Variables are for Connections. You always have access to 2 connections: one for .sql and one for .dst. Connections have prefixes and variables. The Variables that are actually used to form a connection are `prefix`+`variable`, for instance, `VCLOD_SRC_HOST` has the prefix `VCLOD_SRC_` and the Variable `HOST`. The 2 extensions that use connections specify their primary prefix as follows:
 
-## Operation
-Based on the file extension list, different operations can be assigned. If the extension is `.sh` then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run sql on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. Some extensions recurse further, letting you specify what amounts to subscripts within their context, for example, `.diff-f+dst.sql` will run a `.sql` script and diff the output to the contents of the `f` file piped through the `.dst` extension. [Here is a list of all the .extension Operations](/docs/Operation.md).
+Extension | Variable Prefix | Default 
+----------|-----------------|--------
+`.sql` | `$SRC` | VCLOD_SRC_
+`.dst` | `$DST` | VCLOD_DST_
 
-## Destination
-Log output (anything in stdout at pipe's end) can go to the following locations: 
+This means you can setup multiple users with default hosts globally and then specify the ones to use for the primary and secondary connections in the local config file. If the variables with those prefixes are blank, they fall back to the Engine prefixes below. If those are blank, the `VCLOD_` prefix is used. 
+
+Engine | Preix Fall back Variable | Description 
+-------|--------------------------|------------
+mysql | VCLOD_MYSQL_ | The default Engine. Used to connect to mysql and mariadb 
+mssql | VCLOD_MSSQL_ | Used to connect to mssql (Microsoft's SQL Server)
+oracle | VCLOD_ORACLE_ | Used to connect to Oracle. You can use TNS by leaving the HOST variable empty and putting the TNS string in DB variable.
+postgres | VCLOD_POSTGRES_ |Used to connect to postgres 
+
+Given the found prefix, the following 5 variables are used to make the connection:
+
+Variable | Description
+---------|------------
+ENGINE | Which Engine to use (from the above table). This variable skips the Engine Prefix fallback.
+HOST | The hostname of the server to connect to.
+USER | The username to use. It is recommended to put this in a separate config folder and either source it in the global or local config files.
+PASSWORD | The password for the given USER. It is recommended to put this in the USER's config file and source it with the USER.
+DB | The database name to connect to.
+
+### Locking
+Each Script file automatically locks out redundant execution for the same Script in the same Directory. Simlinks are treated as different Scripts, so you can use the same program with different configurations without copying the code. You can tune how many instances you want of each Script to run at once by setting `$VCLOD_BATCH_JOBS`.
+
+### Operation - What Extensions to use
+Based on the file extension list, different operations can be assigned. If the extension is `.sh`, then it is sourced as a ksh script. If the extension is `.sql` then it is passed as sql to the primary sql connection. Extensions are recursively applied, so `.dst.sql` will run SQL on the primary database connection, then pipe the output into the secondary database connection, effectively making it a metasql script. Some extensions recurse further, letting you specify what amounts to subscripts within their context, for example, `.diff-f+dst.sql` will run a `.sql` script and diff the output to the contents of the `f` file piped through the `.dst` extension. [Here is a list of all the .extension Operations](/docs/Operation.md).
+
+### Destination - The Logging system
+Log output (anything in stdout at the pipe's end) can go to the following locations: 
 Control | Where | Description
 --------|-------|------------
-Always | log files | in $LOG_BASE_DIR and $VCLOD_ERR_DIR
+Always | log files | in `$LOG_BASE_DIR` and `$VCLOD_ERR_DIR`
 Always | syslog | This can be pulled in by systems like graylog and datadog
 Conditional | stdout | if you are manually running the script in a terminal
-Conditional | email | stderr goes to email ($OPERATIONS_EMAIL) for alerting
-Optional | Slack | stderr goes to slack when configured for alerting
+Conditional | email | stderr goes to the `$OPERATIONS_EMAIL` email for alerting
+Optional | Slack | stderr goes to Slack when configured for alerting
 Optional | SQL database | Use the provided DDL (pp_log2sql_table.sql) to setup the tables, then configure the LOG_DB_ connection to store all logs for relational querying
-Optional | post process script | As defined in $LOG_POST_PROCESS
+Optional | post process script | As defined in `$LOG_POST_PROCESS`
 
-# Sales Pitch
-## What is the Strategy?
-* Accomidating lazy Database Programmers ;)
-* Prioriting work done over copy paste boilerplate
-* Adds data pipelining power tools (especially .etl)
-
-## What are the Objections?
-* Unnecessary!! I don't need this brain pain!!
-  * Copy and paste is always an option, but requires re-debugging
-  * Since you have to run shell anyways, make it do the common, critical tasks so that you dont have to re-implement them every time you add a new language to your tech stack
-  
-* ksh < python3
-  * ok, so use python inside VCLODs. Productionization is free
-  * Shell scripting is the universal languge
-
-# Examples
-## Pseudocode Examples: Note `.` is shorthand for `|` so VCLODScript names are self descriptive
-* For more examples, look in this repo's test directory. Output is compared to `test/expected`
+## Examples
+### Pseudocode Examples: Note `.` is shorthand for `|`, so VCLODScript names are self-descriptive
+* For more examples, look in this repo's test directory. Output is compared to `test/expected_*`
 * script.sh: run a script in directory context (VCLODs handles Timing, Configuration, Locking, Logging, ...)
 * script.sql.sh: script.sh except it spits out SQL to avoid connection call
 * script.sh.sql: a query generates a shell script (usually curl)
@@ -100,8 +107,8 @@ Optional | post process script | As defined in $LOG_POST_PROCESS
 * script.dst.sql: run a query on primary connection that generates a query for secondary connection (data migration)
 * script.sql.tee-file.batch.sql: run a query, batch the output, stash batched statements into a file for auditing, run generated batch statements
 
-## Example Crontab
-Specify when you want which directories to run and then everything in them run
+### Example Crontab
+Specifies when you want which directories to run, which runs all scripts recursively in that directory.
 
     44 4 1 1 *   /usr/local/bin/vclod /vclod/yearly/
     15 2 1 * *   /usr/local/bin/vclod /vclod/monthly/
@@ -114,7 +121,7 @@ Specify when you want which directories to run and then everything in them run
     22 * * * *   /usr/local/bin/vclod /vclod/hourly/
     *  * * * *   /usr/local/bin/vclod /vclod/minutely/
 
-## Example Directory Structure
+### Example Directory Structure
     /vclod/nightly/
     /vclod/nightly/config
     /vclod/nightly/script1.sh
@@ -124,13 +131,25 @@ Specify when you want which directories to run and then everything in them run
     /vclod/nightly/server_database/script3.dst.sql
     ...
 
-# Installation
+### Hello World
+
+Output will be: `[Log] Hello World` in all 3 cases.
+
+    echo echo Hello World >hello_world.sh ; vclod hello_world.sh
+    echo "SELECT 'Hello World';" | O_VCLOD_SRC_HOST=somehost O_VCLOD_SRC_DB=test vclod hello_world.sql
+    cat << 'EOF' | O_VCLOD_SRC_HOST=host1 O_VCLOD_SRC_DB=test O_VCLOD_DST_HOST=host2 O_VCLOD_DST_DB=test vclod hello_world.dst.sql.sh
+    echo "SELECT CONCAT('SELECT ', QUOTE('Hello World'), ';');"
+    EOF
+
+## Installation
 
 * Docker https://github.com/joshurbain/vclods-docker 
-* Raw: clone to /usr/local/bin/vlcods (or whereever, but then need to specify the path later) ; cd vclods ; ./install 
+* Raw: clone to `/usr/local/bin/vlcods` (or wherever) ; `cd vclods ; ./INSTALL.sh`
 
-# Testing
+## Testing
 
-First setup the `./test/secure_config` file to have the right mysql permissions.
-`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; check post_process log2sql; prints all output to the terminal
-`./run_test.sh | cat` - does the same thing, but with no output except on test error
+First, create and setup the `./test/secure_config` file to have the right MySQL permissions (need to specify `$VCLOD_MYSQL_HOST`, `$VCLOD_MYSQL_USER`, `$VCLOD_MYSQL_PASSWORD`, and `$LOG_SQL_HOST`).
+
+`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; checks post_process log2sql; prints all output to the terminal
+
+`./run_test.sh | cat` - does the same thing, but with no output except on test error.

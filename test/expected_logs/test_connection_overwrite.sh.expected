@@ -3,5 +3,5 @@
 [LOG] DB: funny
 [LOG] USER: dont_trust_this_guy
 [LOG] PASSWORD: totally_insecure
-[ERROR] ERROR 2005 (HY000): Unknown MySQL server host 'nonexistent' (2)
+[ERROR] nonexistent:funny: ERROR 2005 (HY000): Unknown MySQL server host 'nonexistent' (2)
 [ERROR] this_should_fail.sql returned 1

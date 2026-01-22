@@ -4,13 +4,6 @@ CREATE OR REPLACE TEMPORARY TABLE tmp (
  t_id INT UNSIGNED NOT NULL, 
  json JSON NOT NULL 
 );
-/* tmp_deep
-key_id 
-value_id 
-the_jpath 
-the_key 
-the_value 
-*/
 DROP TABLE IF EXISTS tmp_deep;
 CREATE OR REPLACE TABLE deep_sync_key (
   deep_sync_key_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -54,7 +47,9 @@ INSERT INTO tmp_deep VALUES
 ,(789,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('ImIi')))
 ,(789,'$.1',"1",JSON_UNQUOTE(FROM_BASE64('IjIi')))
 ;
-ALTER TABLE tmp_deep ADD COLUMN key_id INT UNSIGNED NULL DEFAULT NULL, ADD COLUMN value_id INT UNSIGNED NULL DEFAULT NULL;
+ALTER TABLE tmp_deep
+  ADD COLUMN key_id INT UNSIGNED NULL DEFAULT NULL,
+  ADD COLUMN value_id INT UNSIGNED NULL DEFAULT NULL;
 SET @update_cnt=0;
 INSERT INTO deep_sync_key (jpath,k)
   SELECT the_jpath,the_key

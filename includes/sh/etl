@@ -11,17 +11,26 @@ function etl_sync_tbl { # PRIVATE
 function etl_populate_tmp_tbl { # PRIVATE
   [ "$ETL_EXT_ROW_REP" -eq 1 ] && echo "SET SESSION binlog_format='ROW';"
   cat - "$TEMP_FILE" << EOF  # sed gets rid of directives to avoid confusing other potential stream readers
-$(sed '/^ *#/ d;s/#.*$//' "$ETL_TBL_TEMP_FILE")
+$(sed '/\/\*/,/\*\//d;s/#.*$//;/^\s*$/d' "$ETL_TBL_TEMP_FILE")
 #RESET
 #start INSERT INTO $tmp_tbl ($ingest_fields) VALUES
 EOF
 }
+function etl_addex { # PRIVATE
+  awk '@include "std"
+function n() {if(t && t==$1) {print ","} else {if (t) {print ";"} print "ALTER TABLE "$1} t=$1}
+/#addex(_a_index)? / {n(); printf "%s", "  ADD COLUMN "tail3()}
+/#addex(_a)?_index / {n(); if($3~/^[(]/ || $4~/^[(]/) {idx=tail3()} else {idx="("$3")"}; printf "%s", "  ADD INDEX "idx}
+END {if(t) print ";"}' <<<"$addex_fields"
+}
 function etl_explode_extra_tbls_using_sql { # PRIVATE
   grep '#explode_json_deep' -q <<<"$working_fields" && echo 'SET SESSION standard_compliant_cte = 0;'
   grep '#explode' <<<"$working_fields" | awk -v tt="$tmp_tbl" -f etl_explode
+  etl_addex
 }
 function etl_explode_extra_tbls_using_coroutine { # PRIVATE
   grep '#explode' <<<"$working_fields" | etl_explode_coroutine
+  etl_addex | pipe_to_coroutine
 }
 function etl_process_tbls { # PRIVATE
   grep -E -o '#(include|append|sync(_no_update)?) [^#]+' "$ETL_TBL_TEMP_FILE" | while read d t m ; do
@@ -63,12 +72,18 @@ function etl_run { # PRIVATE
 
   # prep variables
   sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
-  tmp_tbl=$(grep -Em1 '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' "$ETL_TBL_TEMP_FILE" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
-  ingest_fields=$(grep -E '#(map|ingest|unique)' "$ETL_TBL_TEMP_FILE" | grep -E -v '#(key|ignore|include|append)' | awk '{print $1}' | paste -sd',')
+  std_space="$(sed -r 's/^\s+//;s/\s+/ /g;:a;/\\$/N; s/\s*\\\n\s*/ /;ta' "$ETL_TBL_TEMP_FILE")"
+  tmp_tbl=$(grep -Em1 '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' <<<"$std_space" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
+  ingest_fields=$(sed -r '/\/\*/,/\*\//d' <<<"$std_space" | awk '/#(map|ingest|unique)/ && !/#(key|ignore|include|append)/ {print $1}' | paste -sd',')
   all_directives='#(sync(_no_update)?|mode|l?join|where|append|include|ignore|ingest|key|unique|explode_[^ ]+|(map|generate|pivot)(_[^ ]+)?) '
-  working_fields=$(grep -E "$all_directives" "$ETL_TBL_TEMP_FILE" | sed -r 's/^ +//;s/ +/ /g;s/^([^# ]+ )[^#]*/\1/;s/(#[^ ]+ )/\1  /' | awk '/^[^#]/ {gsub(/ '"$all_directives"'/, "\n"$1"&", $0)} /^[#]/ {gsub(/'"$all_directives"'/, "\n&", $0)} 1' | grep "#")
+  working_fields=$(awk '/^[^#]/ {gsub(/ #/, "\n"$1"&", $0)} /^[#]/ {gsub(/#/, "\n&", $0)} 1' <<<"$std_space" | grep -E "$all_directives")
+  addex_fields="$(awk '/#addex/ {gsub(/#/, gensub(/([ ;,])+#/, " #", 1, gensub(/^([^#]+)#.*$/, "\n\\1 #", 1))); print}' <<<"$std_space" | grep -E '#addex((_with)?_index)?' | sed -r 's/^([^#]+) (#\S+) (\S+) ?$/\3 \2 \1/;s/#addex_with_index/#addex_a_index/' | sort)"
 
   # run tests
+  # test that all fields have a #sync
+  echo "$working_fields" | grep -E "#(map|unique|key|generate|pivot)" |
+    grep -vwE "($(echo "$working_fields" | awk '/^\s*#sync/ {print $2}' | paste -sd'|'))" | 
+    awk 'BEGIN {e="[WARNING] Unused field(s): %s"} {printf e, ($1 ~ /^[#]/) ? $3 : $1; e=", %s"} END {print ""}' >&2
   cat >"$TEMP_FILE" # include the previous pipe's data... then test it
   [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
   awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }

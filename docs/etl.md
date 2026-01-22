@@ -1,34 +1,38 @@
 # .etl Extension Details and Commands
 
-Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement that exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
+Commands applied to a field in the Temp table create statement. These Commands (and the CREATE TEMPORARY TABLE statement they are attached to) must be in an extension options file. Stdin into the .etl extension must be a the VALUES part of the computed INSERT statement (the fields in the order of the CREATE TEMPORARY TABLE statement with exclusively `#ingest`, `#unique`, or `#map` commands attached to them). Fields may have multiple commands attached to them. `.etl` should always be followed by `.batch` unless you just want to test (ie, `do.sql.batch.etl-file.sh`)
 
-NOTE: "destination table" below refers to the table you are inserting into. To allow the same table to be referenced several different ways, the format is \<physical table name\>@\<identifier\> where only the physical table name is required.
+NOTE: "destination table" below refers to the table you are inserting into. To allow the same table to be referenced several different ways, the format is `\<physical table name\>@\<identifier\>` where only the physical table name is required.
 
 ## Stand-Alone Commands
-Order between #sync, #append, and #include commands indicates execution order. 
+These are commands that are not attached to a field. Order between #sync, #append, and #include commands indicates execution order. 
 Command | Description
 --|--
-#sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained below. When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
+#sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained [below](#sync-optional-parameters). When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
 #mode | Alter how a table is processed. Takes a destination table name and an option. See the availible options below.
-#join | For the given table (first argument), JOIN in a given #explode sub-temp table (second argument)
+#join | For the given table (first argument), JOIN in a given #explode sub-temp table (second argument).<br />Currently only works or the main temp table.
 #ljoin | #join, but do a LEFT JOIN instead of a JOIN
-#where | Add a WHERE clause to most queries.
+#where | Add a WHERE clause to most queries. First argument is the destination table, the rest is the WHERE clause to add. Multiple constraints may be added to one line, or multiple lines will aggregate together.
 #include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore. `;` must be the last character at the end of a group of #appends.
-#generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
+#generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the destination table and field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
 #pivot | #generate but for #join fields that need to be pivoted on. After the field name, takes the #join table name, field, and expected value. 
 
 ## Commands after a field definition
 Unless specified, the following commands take the destination table and field name as parameters. Spaces are not allowed in table and field names. #generate follows the same format but is not attached to a field.
+NOTE: .etl supports line continuate by putting a trailing backslash `\` at the end of a line. In this way, you can wrap field commands on multiple lines.
 Command | Description
 --|--
 #ingest | Force this field to be ingested in the initial INSERT INTO tmp table. Takes no parameters.
-#ignore | Do not ingest this field into the initial temp table. Takes no parameters.
+#ignore | Do not ingest this field into the initial temp table. Takes no parameters. #explode temp table #sync commands are automatically #ignored ([Details below](#sync-optional-parameters)).
 #key | The auto_incrementing Primary key that will be used to sync deep FK chains. Will not be ingested, but rather derived after syncing with the destination table.
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.
-#explode | Generate a sub-temp table that explodes a column (or virtual column like #generate). Attach this directive to an id column for the temp table. Use with #join.<br />There are several methods of exploding with different generated columns. See details below.
+#explode | Generate a sub-temp table that explodes a column (or virtual column like #generate). Attach this command to an id column (not called id) for the temp table. Use with #join to extend the main temp table or you can #sync off it directly ([Details below](#sync-optional-parameters)).<br />There are several methods of exploding with different generated columns. [See details below](#modifiers-for-explode).
+#addex | Add a column to the given #explode table name. Used inside a multiline comment (`/**/`), the field name must be followed by a field definition like in the main temp table.
+#addex_index | Add an index to the given #explode table name. Used inside a multiline comment (`/**/`), the index may be 1) a single field name, 2) one or more field names inside parentheses, or 3) an index name followed by one or more field names inside parentheses.
+#addex_with_index | A logical union of the #addex and the first form of the #addex_index commands.
 
 ## #mode Options
 Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
@@ -43,7 +47,9 @@ not_exists | Presence_Test | The default: use a NOT EXISTS subselect to force ab
 not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.
 
 ## #sync Optional Parameters
-These follow a destination table name
+After the destination table name that we are #syncing to, you may optionally add a temp table name to sync off of. These extra temp tables start as an #explode command, but to specify the field commands, you need to specify the all the fields you are #syncing from the #explode table (and any additional fields you want to add to it) in a multiline comment (`/*<each field and commands on its own line>*/` -- cannot be part of another line). It is recommended to start the multiline comment with the temp table name that is being manipulated. All fields specified within the multiline comment are automatically #ignored as they reference fields off the main temp table.
+Currently, you may not #join or #ljoin to any of these extra temp tables. This means that you need to add #append or #include commands to ALTER the #exploded temp table to add any new columns you need and then UPDATE those columns from the main temp table.
+After the destination table and any optional temp table names, you may add one of the following modifiers to clean up any records missing from the current ingestion. These only work if the full data is being ingested for whatever slice of the table that is under review (ie, you have to be very careful batching the .etl ingestion with these).
 Option | Format | Description
 --|--|--
 SET_NOT_PRESENT | \<SET clause without the SET\>\<Optional WHERE clause\> | UPDATEs any rows in the destination table that are not found in the temp table in the provided way.
@@ -60,7 +66,7 @@ _greatest | Update the field to the GREATEST value between the destination and t
 _least | Update the field to the LEAST value between the destination and temp tables. NULL safe.
 
 ## Modifiers for #explode
-All Sub tables have an `id` column that linkes to the main temp tables id field (that the #explode directive is attached to). The temp table id is what the #explode directive is attached to. The 2 id fields are used for normal #sync operations by using the #join directive.
+All Sub tables have an `id` column that links to the main temp table's id field (that the #explode command is attached to -- should not be called id). The 2 id fields are used for normal #sync operations by using the #join command.
 Modifier | Columns | Description
 --|--|--
 _csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
