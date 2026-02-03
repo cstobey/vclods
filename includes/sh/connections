@@ -20,8 +20,12 @@ vclod_conn() # PRIVATE
         [ "$IGNORE_NO_CONNECT" != 1 ] && echo ".sql: $IGNORE_NO_CONNECT" | envsubst >&2;
         cat >/dev/null; return 0; }
   fi
-  # add host and database to all error output.
-  { { { $CMD "$h" "$d" "$u" "$p" >&3; printf '%s\n' "$?" >&4; } 2>&1 | sed -r "s/^(.)/${h}:${d}: \1/" >&2; } 4>&1 | { read ret ; exit $ret; } } 3>&1
+  if [ "$IS_INTERACTIVE" -eq 1 ] ; then
+    $CMD "$h" "$d" "$u" "$p"
+  else
+    # add host and database to all error output.
+    { { { $CMD "$h" "$d" "$u" "$p" >&3; printf '%s\n' "$?" >&4; } 2>&1 | sed -r "s/^(.)/${h}:${d}: \1/" >&2; } 4>&1 | { read ret ; exit $ret; } } 3>&1
+  fi
 }
 
 vclod_conn_arg() # PRIVATE
