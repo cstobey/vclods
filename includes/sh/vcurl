@@ -45,7 +45,8 @@ vcurl_run() # run curl with the provided url and arguments (make sure to quote a
     if [ "$(vcurl_get_http_status_code)" -eq 429 ] && [ "${VCURL_RECURSION_CNT:=0}" -lt "${VCURL_RECURSION_LIMIT:=10}" ]; then # how many times to retry a curl 429 HTTP return code
       RETRY_AFTER="$(vcurl_get_header_value 'Retry-After')"
       [[ "$RETRY_AFTER" =~ [:-] ]] && RETRY_AFTER="$(( $(date +%s -d"$RETRY_AFTER") - $(date +%s) ))"
-      (( RETRY_AFTER=RETRY_AFTER<3?4:RETRY_AFTER+1 )) # add a little buffer
+      [[ "$RETRY_AFTER" -le "${VCURL_MIN_RETRY_AFTER:-3}" ]] && RETRY_AFTER="$VCURL_MIN_RETRY_AFTER" # Minimum amount of time to wait when we get a 429:Too Many Requests HTTP return code.
+      (( RETRY_AFTER=RETRY_AFTER+1 )) # add a little buffer
       if (( RETRY_AFTER > 14400 )) ; then # 4 hours is just too long
         [ "$DEBUG_SHOULD_TIME_IT" == 1 ] && echo >&2 "[DEBUG] curl: 429 Too Many Requests, requested wait time too long: $RETRY_AFTER"
         cat >&2 "$VCURL_LAST_ERROR"

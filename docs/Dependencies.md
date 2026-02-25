@@ -32,7 +32,7 @@ mysql|Connections: mysql<br />Includes: connections.sh|# the Include connection 
 psql|Connections: postgres|
 python3|Extensions: py|
 readlink|Global|
-sed|Connections: mssql oracle<br />Extensions: vfs<br />Includes: configuration.sh etl.sh etl_explode.sh trap.sh vcurl.sh<br />Post: log2sql|
+sed|Connections: mssql oracle<br />Extensions: vfs<br />Includes: configuration.sh connections.sh etl.sh etl_explode.sh trap.sh vcurl.sh<br />Post: log2sql|
 sh|Global<br />Script<br />Extensions: env para shard split while|
 sleep|Script<br />Extensions: shard<br />Includes: vcurl.sh|
 sort|Global<br />Extensions: dir py|

@@ -117,6 +117,7 @@ VCLOD_POSTGRES_HOST|Connections: postgres|$VCLOD_HOST|Default host for postgres 
 VCLOD_POSTGRES_PASSWORD|Connections: postgres|$VCLOD_PASSWORD|Default password for postgres connections
 VCLOD_POSTGRES_USER|Connections: postgres|$VCLOD_USER|Default user for postgres connections
 VCLOD_USER|Connections: mssql mysql oracle postgres||Base level default user
+VCURL_MIN_RETRY_AFTER|Includes: vcurl.sh|3|Minimum amount of time to wait when we get a 429:Too Many Requests HTTP return code.
 VCURL_OPTIONS|Includes: vcurl.sh||Addtional curl options you want to use every time
 VCURL_RECURSION_LIMIT|Includes: vcurl.sh|10|how many times to retry a curl 429 HTTP return code
 WHILE_EXT_OPERATION|Extensions: while|${ext_opt:-sh}|what vclod_operation to use to process stdin
