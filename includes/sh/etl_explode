@@ -52,6 +52,7 @@ STMT
           pipe_to_coroutine <"${ETL_EXT_DIR}/$f"
           if [ "$f" != "$sub_tmp_tbl_source" ] ; then
             flush_coroutine | vclod_operation "$sub_tmp_tbl_source" | pipe_to_coroutine
+            :>"$COROUTINE_FILE"
           fi
         else
           echo >&2 "#explode_manual file ${ETL_EXT_DIR}/$f does not exist"

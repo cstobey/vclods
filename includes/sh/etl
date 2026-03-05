@@ -2,7 +2,9 @@ function pipe_to_coroutine { # PRIVATE
   if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat ; fi >&p
 }
 function flush_coroutine {
-  print -p "SELECT '#END NOW';" && while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done
+  :>"$COROUTINE_FILE"
+  print -p "SELECT '#END NOW';" && while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done >"$COROUTINE_FILE"
+  [ -s "$COROUTINE_FILE" ] && cat "$COROUTINE_FILE"
 }
 function etl_sync_tbl { # PRIVATE
 # TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
