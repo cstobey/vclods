@@ -27,18 +27,18 @@ SELECT tmp.t_id, REPLACE(TO_BASE64(tmp.json), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.json != '';
 SELECT '#END NOW';
 INSERT INTO tmp_deep VALUES
-(12345,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('MQ==')))
+(12345,'$.a',"a",1)
 ,(12345,'$.b',"b",JSON_UNQUOTE(FROM_BASE64('ImMi')))
-,(12345,'$.d.e',"e",JSON_UNQUOTE(FROM_BASE64('Mg==')))
-,(12345,'$.d.f[0]',"",JSON_UNQUOTE(FROM_BASE64('Mw==')))
-,(12345,'$.d.f[1][0]',"",JSON_UNQUOTE(FROM_BASE64('NA==')))
-,(12345,'$.d.f[1][1]',"",JSON_UNQUOTE(FROM_BASE64('NQ==')))
+,(12345,'$.d.e',"e",2)
+,(12345,'$.d.f[0]',"",3)
+,(12345,'$.d.f[1][0]',"",4)
+,(12345,'$.d.f[1][1]',"",5)
 ,(12345,'$.d.f[2]',"",JSON_UNQUOTE(FROM_BASE64('IignXG4nKSI=')))
 ,(12345,'$.d.g',"g",JSON_UNQUOTE(FROM_BASE64('e30=')))
 ,(12345,'$.d.h',"h",JSON_UNQUOTE(FROM_BASE64('W10=')))
-,(345,'$[0]',"",JSON_UNQUOTE(FROM_BASE64('MA==')))
-,(345,'$[1]',"",JSON_UNQUOTE(FROM_BASE64('MQ==')))
-,(345,'$[2]',"",JSON_UNQUOTE(FROM_BASE64('Mg==')))
+,(345,'$[0]',"",0)
+,(345,'$[1]',"",1)
+,(345,'$[2]',"",2)
 ,(789,'$.a',"a",JSON_UNQUOTE(FROM_BASE64('ImIi')))
 ,(789,'$.1',"1",JSON_UNQUOTE(FROM_BASE64('IjIi')))
 ;

@@ -1,7 +1,7 @@
 vclod_mssql_connection() {
   { { { { sqlcmd -y 0 -X -S"$1" -d"$2" -U"$3" -P"$4" ${MSSQL_CONN_OPT:-} ; echo $? >&3; } | # Any additional MSSQL options you want to specify
-    grep -E -v '[(][0-9]+ rows affected[])]' |
-    grep -v 'Sqlcmd: Warning: The last operation was terminated because the user pressed CTRL+C.' |
-    sed -r 's/\x00+$//' >&4; } 3>&1; } | { read xs; exit $xs; } } 4>&1
+    grep --line-buffered -E -v '[(][0-9]+ rows affected[])]' |
+    grep --line-buffered -v 'Sqlcmd: Warning: The last operation was terminated because the user pressed CTRL+C.' |
+    sed -ur 's/\x00+$//' >&4; } 3>&1; } | { read xs; exit $xs; } } 4>&1
 }
 export vclod_mssql_connection

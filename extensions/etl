@@ -18,7 +18,7 @@ etl_run
 #join | For the given table (first argument), JOIN in a given #explode sub-temp table (second argument).<br />Currently only works or the main temp table.
 #ljoin | #join, but do a LEFT JOIN instead of a JOIN
 #where | Add a WHERE clause to most queries. First argument is the destination table, the rest is the WHERE clause to add. Multiple constraints may be added to one line, or multiple lines will aggregate together.
-#include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.
+#include | Load a sql script file (with no .extension) to handle any additional reformatting or processing that is required. If added to a field line, also acts like #ignore.<br />If using .etlsql/.etldst, you can optionally add .extensions that will preform those operations with implicit starting and ending .sql/.dst extensions (dependind on whether you used .etlsql or .etldst respectively).
 #append | Add the rest of the line to the stream. Allows you to append manual queries without using #include. If added to a field line, also acts like #ignore. `;` must be the last character at the end of a group of #appends.
 #generate | Generate a virtual field that is not in the temp table. The SQL statements that follow the destination table and field name are used instead of a column name in the temp table when doing the ETL into the destination table. Used in place of either a VIRTUAL column on the temp table or an #include script to do the generation. See Modifiers below.
 #generate_unique | A logical combination of #generate and #unique
@@ -34,9 +34,9 @@ etl_run
 #unique | Unique fields candidate keys on the table. If there is no UNIQUE index, you can spoof the behavior with #unique_no_update. Does not need to be unique in the temp table (useful for deep FK chains). Multiple #unique fields for a single destination table act like a single index.
 #map | A regular field on the given destination table. See Modifiers below.
 #explode | Generate a sub-temp table that explodes a column (or virtual column like #generate). Attach this command to an id column (not called id) for the temp table. Use with #join to extend the main temp table or you can #sync off it directly ([Details below](#sync-optional-parameters)).<br />There are several methods of exploding with different generated columns. [See details below](#modifiers-for-explode).
-#addex | Add a column to the given #explode table name. Used inside a multiline comment (`/**/`), the field name must be followed by a field definition like in the main temp table.
-#addex_index | Add an index to the given #explode table name. Used inside a multiline comment (`/**/`), the index may be 1) a single field name, 2) one or more field names inside parentheses, or 3) an index name followed by one or more field names inside parentheses.
-#addex_with_index | A logical union of the #addex and the first form of the #addex_index commands.
+#addex | Add a column to the given #explode table name. Used inside a multiline comment (`/**/`), the field name must be followed by a field definition like in the main temp table.<br />Format: <field name/type> #addex <tmp_table_name>
+#addex_index | Add an index to the given #explode table name. Used inside a multiline comment (`/**/`), the index may be 1) a single field name, 2) one or more field names inside parentheses, or 3) an index name followed by one or more field names inside parentheses.<br />Format: <index name and/or column list> #addex_index <tmp_table_name>
+#addex_with_index | A logical union of the #addex and the first form of the #addex_index commands.<br />Format: <field name> <field type> #addex_with_index <tmp_table_name>
 
 ## #mode Options
 # Specifies different methods of how a to sync a table. modes of the same Group exclude the use of other modes in that same Group.
@@ -44,7 +44,7 @@ etl_run
 # odku | Layout | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the table. Can bloat the id space so best with log type tables.
 # odku_ai_always | Layout | Same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
 # odku_ai | Layout | The default: same as odku_always does its best to avoid needing to run the ALTER TABLE.
-# ui_split | Layout | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.
+# ui_split | Layout | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.<br />NOTE: CANNOT use with #join. Instead, use #addex to add the columns you need and #append to sync the 2 tables.
 # sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
 # not_exists | Presence_Test | The default: use a NOT EXISTS subselect to force absence when needed.
 # not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.
@@ -67,9 +67,9 @@ etl_run
 # _least | Update the field to the LEAST value between the destination and temp tables. NULL safe.
 
 ## Modifiers for #explode
-# All Sub tables have an `id` column that links to the main temp table's id field (that the #explode command is attached to -- should not be called id). The 2 id fields are used for normal #sync operations by using the #join command.
+# All Sub tables have an `id` column that links to the main temp table's id field (that the #explode command is attached to -- should not be called id). The 2 id fields are used for normal #sync operations by using the #join command. NOTE: These operations will preform faster when using the .etlsql/.etldst varients.
 #TBL Modifier | Columns | Description
 # _csv | id, the_value, index_number | break up comma separated lists... quoting not supported (this is a super simple implementation)
 # _json_shallow | id, the_value, the_key | From a JSON document, break up the top level Object OR Array. the_key is a string for Ojects or an int for Arrays.
 # _json_deep | id, the_value, the_key, the_jpath | Recursively explode a JSON field, retaining all leaf nodes (including empty objects/arrays).
-# _manual | User Defined (must include id) | takes an #include file instead of a #generate SQL clause so you can define your own temp table to use. Be sure to keep the temp table's name consistent.
+# _manual | User Defined (must include id) | takes an #include file instead of a #generate SQL clause so you can define your own temp table to use. Be sure to keep the temp table's name consistent.<br />If using .etlsql/.etldst, you can optionally add .extensions that will preform those operations with implicit starting and ending .sql/.dst extensions (dependind on whether you used .etlsql or .etldst respectively).

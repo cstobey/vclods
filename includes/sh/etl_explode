@@ -43,7 +43,7 @@ SELECT '#END NOW';
 STMT
         while read -p i l || return 1 ; do
           [ "$i $l" != "#END NOW" ] || break
-          base64 -d <<<"$l" | jq -r --stream --arg i "$i" --arg q "'" 'select(has(1)) | "(\($i),\($q)$\(first | map(if type == "number" then "["+(.|tostring)+"]" else "."+. end) | join(""))\($q),\(first[-1] | if type == "number" then "" else . end | @json),JSON_UNQUOTE(FROM_BASE64(\($q)\(last | @json | @base64)\($q))))"'
+          base64 -d <<<"$l" | jq -r --stream --arg i "$i" --arg q "'" 'select(has(1)) | "(\($i),\($q)$\(first | map(if type == "number" then "["+(.|tostring)+"]" else "."+. end) | join(""))\($q),\(first[-1] | if type == "number" then "" else . end | @json),\(last | if type == "number" or type == "null" or type == "boolean" then @json else "JSON_UNQUOTE(FROM_BASE64(\($q)\(@json | @base64)\($q)))" end))"'
         done >$COROUTINE_FILE
         ;;
       "#explode_manual")

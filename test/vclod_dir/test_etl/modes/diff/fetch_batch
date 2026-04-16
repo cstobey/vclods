@@ -1,0 +1,33 @@
+SET SESSION binlog_format='ROW';
+CREATE TEMPORARY TABLE tmp (
+  a_id INT UNSIGNED NULL DEFAULT NULL,
+  name VARCHAR(50) NOT NULL,
+  is_happy TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+  KEY (name)
+) ENGINE=InnoDB;
+#RESET
+#start INSERT INTO tmp (name,is_happy) VALUES
+("some data goes here")
+#RESET
+UPDATE a JOIN tmp ON tmp.name<=>a.name SET tmp.a_id=a.a_id;
+SELECT 'UPDATE b SET b.a_name=IFNULL(',QUOTE(tmp.name),',b.a_name) WHERE a_id<=>',QUOTE(tmp.a_id),';'
+  FROM b JOIN tmp ON tmp.a_id<=>b.a_id;
+SELECT '#RESET
+#start INSERT INTO b (a_id,a_name) VALUES';
+  SELECT CONCAT('(', CONCAT_WS(',', QUOTE(a_id) , QUOTE(name)), ')')
+  FROM tmp
+  WHERE NOT EXISTS (SELECT 1 FROM b
+  WHERE tmp.a_id<=>b.a_id)
+    GROUP BY a_id;
+SELECT '#RESET';
+SELECT 'DELETE FROM b WHERE a_id<=>',QUOTE(tmp.a_id),';'
+  FROM b WHERE
+  NOT EXISTS (SELECT 1 FROM tmp
+  WHERE tmp.a_id<=>b.a_id);
+SELECT 'UPDATE c SET c.is_happy=IFNULL(',QUOTE(tmp.is_happy),',c.is_happy) WHERE ;'
+  FROM c JOIN tmp ON ;
+SELECT '#RESET
+#start INSERT INTO c (is_happy) VALUES';
+  SELECT CONCAT('(', CONCAT_WS(',', QUOTE(is_happy)), ')')
+  FROM tmp;
+SELECT '#RESET';

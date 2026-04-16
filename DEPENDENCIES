@@ -15,6 +15,7 @@ ksh
 mail
 mkfifo 
 mktemp
+mount
 mysql # the Include connection is because mysql is the default.
 psql
 python3
@@ -28,6 +29,7 @@ sqlplus
 sshpass
 stat
 stdbuf
+sudo
 sync
 tee
 which

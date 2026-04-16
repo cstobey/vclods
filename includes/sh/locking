@@ -1,6 +1,6 @@
-# Ensures that at most N parallel batch jobs run for a particular lock/script. Processes beyond N abort (rather than blocking). 
+# Ensures that at most N parallel batch jobs run for a particular lock/script. Processes beyond N abort (rather than blocking).
 # Each script is atuomatically locked with its own name and inode (or absolute path when there are symlinks).
-# virtual files and given lock names are used without modification.  
+# virtual files and given lock names are used without modification.
 get_semaphore_lock () { # Get a lock. First argument is the lock basename.
   : "${VCLOD_BATCH_JOBS:=1}" # How many instances of one script can be run at the same time
   LOCK_NAME="$(stat -c '%h %i' "$1" 2>/dev/null | awk -v a="$(basename "$1")" -v b="${1//\//_}" 'BEGIN {n=0} {n=$1;i=$2} END {if (n==0) {print a} else {if (n==1) print a"-"i; else print b}}')"
@@ -12,7 +12,31 @@ get_semaphore_lock () { # Get a lock. First argument is the lock basename.
       ps -p "$(<"$LOCK_FILE")" >/dev/null && continue || { printf 'Removing apparently false lock %s' "$LOCK_FILE"; rm -f "$LOCK_FILE"; }
     fi
     MY_LOCK="$LOCK_FILE"
+    CGROUP_NAME="${LOCK_NAME}_$i" # setup cgroup
   done
-  [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo $MYPID >"$MY_LOCK" || exit 1
-  add_file_cleanup "$MY_LOCK" # TODO: need to setup PID namespaces or cgroups to make killing children easier without a race condition.
+  [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo "$MYPID" >"$MY_LOCK" || exit 1
+  add_file_cleanup "$MY_LOCK"
+  if mount -l | grep cgroup -q ; then
+    CGROUP_BASE="/sys/fs/cgroup"
+    if mount -l | grep cgroup2 -q ; then
+      CGROUP_DIR="$CGROUP_BASE/$CGROUP_NAME"
+      sudo mkdir "$CGROUP_DIR"
+      sudo -s sh -c "sudo echo '$MYPID' >'$CGROUP_DIR/cgroup.procs'"
+      #sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'" # TODO: this isnt quite right... needs to mimic the v1 usage
+    else
+      CGROUP_DIR="$CGROUP_BASE/cpuset/$CGROUP_NAME"
+      setup_cgroup_v1
+    fi
+  fi
+}
+cleanup_cgroup_v1 () {
+  if [ -s "$1/tasks" ]; then
+    echo $$ | sudo tee "/sys/fs/cgroup/cpuset/tasks" 2>&1 >/dev/null
+  fi
+  sudo rmdir "$1" 2>/dev/null
+}
+setup_cgroup_v1 () {
+  sudo mkdir "$CGROUP_DIR" 2>/dev/null
+  sudo -s sh -c "cat '$CGROUP_BASE/cpuset/cpuset.cpus' >'${CGROUP_DIR}/cpuset.cpus'; cat '$CGROUP_BASE/cpuset/cpuset.mems' >'${CGROUP_DIR}/cpuset.mems'; echo '$MYPID' >'$CGROUP_DIR/tasks'"
+  post_exit_trap "cleanup_cgroup_v1 '$CGROUP_DIR'"
 }

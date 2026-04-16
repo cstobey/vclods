@@ -61,7 +61,7 @@ function etl_process_tbls { # PRIVATE
         ;;
       "#sync"*)
         m="$(sed -r 's/(SET|DELETE)_NOT_PRESENT.*$//' <<<"$m")" # need to isolate the table name.
-        if [ -z "$1" ] ; then etl_sync_tbl $t $m ; else etl_sync_tbl $t $m | pipe_to_coroutine; fi
+        if [ -z "$1" ] ; then etl_sync_tbl $t $m ; else etl_sync_tbl $t $m | pipe_to_coroutine | flush_coroutine | vclod_operation b.batch | pipe_to_coroutine; fi # TODO: might want to only use the batcher if using the batch #mode.
         ;;
     esac
   done

@@ -39,3 +39,11 @@ function ui_split() {
   if(!no_update && uset) p("UPDATE "t" JOIN "tt" ON "((f) ? tt"."nf"="t"."f : w_uni) j_stmt" SET "uset pre_if("\n  WHERE ", w)";");
   p("INSERT INTO "t" ("tc")\n  SELECT "ttc"\n  FROM "tt j_stmt pre_if("\n  WHERE ", cc_ws(@mode_presence_test(0), " AND ", w_s)) pre_if("\n  GROUP BY ", ugb) ";");
 }
+function fetch() {}
+function batch() {
+  discover_existing_tt_ids();
+  if(!no_update && uset) p("SELECT 'UPDATE "t" SET "uset_b" WHERE "((f) ? f"=',QUOTE("tt"."nf"),'" : w_uni_b)";'\n  FROM "t" JOIN "tt" ON "((f) ? tt"."nf"="t"."f : w_uni) j_stmt pre_if("\n  WHERE ", w)";");
+  p("SELECT '#RESET\n#start INSERT INTO "t" ("tc") VALUES';");
+  p("SELECT CONCAT('(', CONCAT_WS(',', "ttc_b"), ')')\n  FROM "tt j_stmt pre_if("\n  WHERE ", cc_ws(@mode_presence_test(0), " AND ", w_s)) pre_if("\n  GROUP BY ", ugb) ";");
+  p("SELECT '#RESET';");
+}
