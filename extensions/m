@@ -1,0 +1,22 @@
+#FLOW Run the input through the given extensions once per connection provided in M_EXT_CONNS (provided either manually or through the $M_EXT_CONN_SCRIPT subscript). 
+# Uses .para to process the different hosts.
+: "${ext_opt:=${M_EXT_OPERATION:=dst}}"
+: "${M_EXT_DIR:=$INPUT_DIR}" # Directory to look for the connection generator file
+: "${M_EXT_CONNS:-}" # The list of connections. (overridden by running $M_EXT_CONN_SCRIPT if it is setup)<br />A connection is a HOST with optional DB, ENGINE, USER, and PASSWORD in that order (previous variables required for subsequent ones to be recognized and use the VCLOD_DST_ prefix with the normal defaulting behavior).
+: "${M_EXT_CONN_SCRIPT:-}" # Defines an optional connection generator file used to populate $M_EXT_CONNS using a subscript. The base_filename defines the file to use while the extensions define the process to run the subscript.
+
+TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
+cat >"$TEMP_FILE"
+
+if [ -n "$M_EXT_CONN_SCRIPT" ] && [ -s "$M_EXT_DIR/${M_EXT_CONN_SCRIPT%%.*}" ] && [[ "$M_EXT_CONN_SCRIPT" =~ $VCLOD_FILE_REGEX ]] ; then # SKIP_COMMENT
+  vclod_operation $M_EXT_CONN_SCRIPT <"$M_EXT_DIR/${M_EXT_CONN_SCRIPT%%.*}" || return $? # SKIP_COMMENT
+elif [ -z "M_EXT_CONNS" ] ; then
+  echo >&2 ".m: missing connections list or valid subscript to find them"
+  return 42
+else
+  echo "$M_EXT_CONNS"
+fi | awk -v b="$base_filename" -v e="$ext_opt" -v f="$TEMP_FILE" '@include "std" 
+function prep_var(n, v) { return pre_if(" VCLOD_DST_"n"=", v)}
+{vars=prep_var("HOST", $1) prep_var("DB", $2) prep_var("ENGINE", $3) prep_var("USER", $4) prep_var("PASSWORD", $5)
+  cleaned_host=gensub(/^([^.]+)([.].*)?$/, "\\1", "g", $1) # should this be gensub(/[.]/, ",", "g", $1)?
+  print "cat "f" |" vars" vclod_operation "b"_"cleaned_host"."e}' | vclod_operation "$base_filename.para-sh"

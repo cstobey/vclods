@@ -29,6 +29,7 @@ etlsql|PIPE|${ETL_EXT_FILE:=$base_filename}|Shortcut for .sql.batch.etl with the
 g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
 jq|PIPE|$base_filename|Run stdin through the jq utility to parse JSON
 litsh|PIPE|$HEREDOC_DELIMITER|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose. Use with caution!
+m|FLOW|${M_EXT_OPERATION:=dst}|Run the input through the given extensions once per connection provided in M_EXT_CONNS (provided either manually or through the $M_EXT_CONN_SCRIPT subscript).
 null|TERM|Not Used|dump stdout to /dev/null, effectively silencing output.
 out|TERM|${OUT_EXT_FILE:=$base_filename}|Write to file; stop
 outa|TERM|${OUT_EXT_FILE:=$base_filename}|Append to file; stop

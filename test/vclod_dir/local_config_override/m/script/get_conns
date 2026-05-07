@@ -1,0 +1,2 @@
+echo "$VCLOD_MYSQL_HOST information_schema"
+echo "$VCLOD_MYSQL_HOST test"

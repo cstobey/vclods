@@ -62,6 +62,10 @@ LOG_SQL_HOST|Post: log2sql||Defines log2sql Post Processing db connection. Needs
 LOG_SQL_PASSWORD|Post: log2sql|$LOG_PW|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 LOG_SQL_USER|Post: log2sql|$LOG_USER|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 MSSQL_CONN_OPT|Connections: mssql||Any additional MSSQL options you want to specify
+M_EXT_CONNS|Extensions: m||The list of connections. (overridden by running $M_EXT_CONN_SCRIPT if it is setup)<br />A connection is a HOST with optional DB, ENGINE, USER, and PASSWORD in that order (previous variables required for subsequent ones to be recognized and use the VCLOD_DST_ prefix with the normal defaulting behavior).
+M_EXT_CONN_SCRIPT|Extensions: m||Defines an optional connection generator file used to populate $M_EXT_CONNS using a subscript. The base_filename defines the file to use while the extensions define the process to run the subscript.
+M_EXT_DIR|Extensions: m|$INPUT_DIR|Directory to look for the connection generator file
+M_EXT_OPERATION|Extensions: m|dst|
 OPERATIONS_EMAIL|Global||Email address list to send error output to
 OUT_EXT_DIR|Extensions: out outa|$INPUT_DIR|Directory to put program output
 OUT_EXT_FILE|Extensions: out outa|$base_filename|the filename. Overridden by ext_opt.

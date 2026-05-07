@@ -16,5 +16,6 @@ OPERATIONS_EMAIL=noop@noop.com
 
 SHARD_EXT_COUNT=2
 SPLIT_EXT_COUNT=2
+PARA_EXT_JOBS=2
 
 . ${LOCAL_DIR}/secure_config  # so you can override the HOST, USER, and PASSWORD without accidentally putting it in version control
