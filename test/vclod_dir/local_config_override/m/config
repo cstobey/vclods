@@ -1,2 +1,2 @@
-M_EXT_CONNS="$VCLOD_MYSQL_HOST information_schema
+M_EXT_CONNS="VCLOD_MYSQL_DB=information_schema
 $VCLOD_MYSQL_HOST test"

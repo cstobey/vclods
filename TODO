@@ -23,7 +23,7 @@ generate a subselect the same as with the odku case so #generate_unique works...
 includes/sh/etl Line 64:        if [ -z "$1" ] ; then etl_sync_tbl $t $m ; else etl_sync_tbl $t $m 
  pipe_to_coroutine | flush_coroutine | vclod_operation b.batch | pipe_to_coroutine; fi|might want to only use the batcher if using the batch #mode.
 
-includes/sh/locking Line 25:      #sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'"
+includes/sh/locking Line 26:      #sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'"
 this isnt quite right... needs to mimic the v1 usage
 
 includes/sh/operations Line 29:

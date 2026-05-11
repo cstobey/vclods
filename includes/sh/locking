@@ -3,6 +3,7 @@
 # virtual files and given lock names are used without modification.
 get_semaphore_lock () { # Get a lock. First argument is the lock basename.
   : "${VCLOD_BATCH_JOBS:=1}" # How many instances of one script can be run at the same time
+  : "${VCLOD_USE_CGROUP:=1}" # If 1, every script will get its own cgroup if otherwise configured
   LOCK_NAME="$(stat -c '%h %i' "$1" 2>/dev/null | awk -v a="$(basename "$1")" -v b="${1//\//_}" 'BEGIN {n=0} {n=$1;i=$2} END {if (n==0) {print a} else {if (n==1) print a"-"i; else print b}}')"
 
   MY_LOCK=''
@@ -16,7 +17,7 @@ get_semaphore_lock () { # Get a lock. First argument is the lock basename.
   done
   [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo "$MYPID" >"$MY_LOCK" || exit 1
   add_file_cleanup "$MY_LOCK"
-  if sudo -v && mount -l | grep cgroup -q ; then
+  if [ "$VCLOD_USE_CGROUP" -eq 1 ] && sudo -v && mount -l | grep cgroup -q ; then
     CGROUP_BASE="/sys/fs/cgroup"
     if mount -l | grep cgroup2 -q ; then
       CGROUP_DIR="$CGROUP_BASE/$CGROUP_NAME"

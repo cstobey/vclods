@@ -62,7 +62,7 @@ LOG_SQL_HOST|Post: log2sql||Defines log2sql Post Processing db connection. Needs
 LOG_SQL_PASSWORD|Post: log2sql|$LOG_PW|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 LOG_SQL_USER|Post: log2sql|$LOG_USER|Defines log2sql Post Processing db connection. Needs pp_log2sql_table.sql tables loaded.
 MSSQL_CONN_OPT|Connections: mssql||Any additional MSSQL options you want to specify
-M_EXT_CONNS|Extensions: m||The list of connections. (overridden by running $M_EXT_CONN_SCRIPT if it is setup)<br />A connection is a HOST with optional DB, ENGINE, USER, and PASSWORD in that order (previous variables required for subsequent ones to be recognized and use the VCLOD_DST_ prefix with the normal defaulting behavior).
+M_EXT_CONNS|Extensions: m||The list of connections. (overridden by running $M_EXT_CONN_SCRIPT if it is setup)<br />A connection is a HOST with optional DB, ENGINE, USER, and PASSWORD in that order (previous variables required for subsequent ones to be recognized and use the VCLOD_DST_ prefix with the normal defaulting behavior).i<br />You may use any prefix or modify any env variable if you format the line such that ALL arguments define the variable name they are overriding.
 M_EXT_CONN_SCRIPT|Extensions: m||Defines an optional connection generator file used to populate $M_EXT_CONNS using a subscript. The base_filename defines the file to use while the extensions define the process to run the subscript.
 M_EXT_DIR|Extensions: m|$INPUT_DIR|Directory to look for the connection generator file
 M_EXT_OPERATION|Extensions: m|dst|
@@ -121,6 +121,7 @@ VCLOD_POSTGRES_HOST|Connections: postgres|$VCLOD_HOST|Default host for postgres 
 VCLOD_POSTGRES_PASSWORD|Connections: postgres|$VCLOD_PASSWORD|Default password for postgres connections
 VCLOD_POSTGRES_USER|Connections: postgres|$VCLOD_USER|Default user for postgres connections
 VCLOD_USER|Connections: mssql mysql oracle postgres||Base level default user
+VCLOD_USE_CGROUP|Includes: locking.sh|1|If 1, every script will get its own cgroup if otherwise configured
 VCURL_MIN_RETRY_AFTER|Includes: vcurl.sh|3|Minimum amount of time to wait when we get a 429:Too Many Requests HTTP return code.
 VCURL_OPTIONS|Includes: vcurl.sh||Addtional curl options you want to use every time
 VCURL_RECURSION_LIMIT|Includes: vcurl.sh|10|how many times to retry a curl 429 HTTP return code
