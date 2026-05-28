@@ -24,4 +24,4 @@ CREATE OR REPLACE TABLE tmp_col (
   column_position INT(11) #map field order_by
 #generate nonexistant field_missing_a_table 1
 );
-#append UPDATE tmp_col SET entity_id = NULL WHERE entity_id IS NULL; # no-op just to test #append 
+#append UPDATE tmp_col SET entity_id = NULL WHERE entity_id IS NULL; # no-op just to test # append 

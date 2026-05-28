@@ -53,8 +53,11 @@ function append_j_stmt(e_j, join_type) {
   if(e_j in e) j_stmt = cc_ws(j_stmt, "", "\n  "join_type" "e_j" ON "e_j".id = "tt"."e[e_j])
   else ext("could not find requested explode table "e_j);
 }
+function _discover_existing_tt_ids() {
+  if(f) return "UPDATE "t" JOIN "tt" ON "w_uni j_stmt" SET "tt"."nf"="t"."f pre_if("\n  WHERE ", w)";"
+}
 function discover_existing_tt_ids() {
-  if(f) p("UPDATE "t" JOIN "tt" ON "w_uni j_stmt" SET "tt"."nf"="t"."f pre_if("\n  WHERE ", w)";")
+  p(_discover_existing_tt_ids())
 }
 
 END {
@@ -66,7 +69,7 @@ END {
   use_b=mode_layout=="batch"
 
   @mode_layout();
-  if(f && use_b) {p("SELECT '" discover_existing_tt_ids() "';");} else {discover_existing_tt_ids();}
+  if(f && use_b) {p("SELECT '" _discover_existing_tt_ids() "';");} else {discover_existing_tt_ids();}
   if(snp && (f || w_uni)) {
     if (use_b) {
       if (f) {

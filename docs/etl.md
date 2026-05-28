@@ -5,7 +5,7 @@ Commands applied to a field in the Temp table create statement. These Commands (
 NOTE: "destination table" below refers to the table you are inserting into. To allow the same table to be referenced several different ways, the format is `\<physical table name\>@\<identifier\>` where only the physical table name is required.
 
 ## Stand-Alone Commands
-These are commands that are not attached to a field. Order between #sync, #append, and #include commands indicates execution order. 
+These are commands that are not attached to a field. Order between #sync, #append, #explode, and #include commands indicates execution order. 
 Command | Description
 --|--
 #sync | Command to sync the temp table with the destination table. First parameter is a destination table name, additional parameters explained [below](#sync-optional-parameters). When modified with `_no_update` (as #sync_no_update), any otherwise computed changes will not be UPDATEd.
@@ -48,7 +48,7 @@ not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when need
 
 ## #sync Optional Parameters
 After the destination table name that we are #syncing to, you may optionally add a temp table name to sync off of. These extra temp tables start as an #explode command, but to specify the field commands, you need to specify the all the fields you are #syncing from the #explode table (and any additional fields you want to add to it) in a multiline comment (`/*<each field and commands on its own line>*/` -- cannot be part of another line). It is recommended to start the multiline comment with the temp table name that is being manipulated. All fields specified within the multiline comment are automatically #ignored as they reference fields off the main temp table.
-Currently, you may not #join or #ljoin to any of these extra temp tables. This means that you need to add #append or #include commands to ALTER the #exploded temp table to add any new columns you need and then UPDATE those columns from the main temp table.
+Currently, you may not #join or #ljoin to any of these extra temp tables. This means that you need to #addex to ALTER the #exploded temp table and add #append or #include commands to UPDATE those columns from the main temp table or elsewhere.
 After the destination table and any optional temp table names, you may add one of the following modifiers to clean up any records missing from the current ingestion. These only work if the full data is being ingested for whatever slice of the table that is under review (ie, you have to be very careful batching the .etl ingestion with these).
 Option | Format | Description
 --|--|--
