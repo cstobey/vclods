@@ -12,8 +12,8 @@ the_value #unique deep_sync_value val
 #sync deep_sync_key tmp_deep
 #sync deep_sync_value tmp_deep DELETE_NOT_PRESENT
 #sync deep_sync                #join deep_sync tmp_deep
-#append SELECT CONCAT_WS(' ', id, jpath, k, val) FROM deep_sync JOIN deep_sync_key USING (deep_sync_key_id) JOIN deep_sync_value USING (deep_sync_value_id) ORDER BY 1;
-#append SELECT val FROM deep_sync_value ORDER BY 1;
+#append SELECT CONCAT_WS(' ', id, jpath, k, val) AS d FROM deep_sync JOIN deep_sync_key USING (deep_sync_key_id) JOIN deep_sync_value USING (deep_sync_value_id) ORDER BY d RLIKE '^\\\\W', 1;
+#append SELECT val FROM deep_sync_value ORDER BY val RLIKE '^\\\\W', 1;
 
 DROP TABLE IF EXISTS tmp_deep;
 

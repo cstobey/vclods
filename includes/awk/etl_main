@@ -72,11 +72,12 @@ END {
   if(f && use_b) {p("SELECT '" _discover_existing_tt_ids() "';");} else {discover_existing_tt_ids();}
   if(snp && (f || w_uni)) {
     if (use_b) {
+      snp_w=cc_if(" WHERE ",snp ~ /WHERE/, gensub(/^.+ WHERE /, "", "1", snp), "")
       if (f) {
         p("SELECT '#RESET\n#start UPDATE "t" SET "snp f" IN (\n#end );';");
-        p("SELECT QUOTE("t"."f") FROM "t" WHERE " @mode_presence_test(1) ";");
+        p("SELECT QUOTE("t"."f") FROM "t snp_w @mode_presence_test(1) ";");
         p("SELECT '#RESET';");}
-      else {p("SELECT 'UPDATE "t" SET "snp w_uni_bs";'\n  FROM "t" WHERE " @mode_presence_test(1) ";");}}
+      else {p("SELECT 'UPDATE "t" SET "snp w_uni_bs";'\n  FROM "t snp_w @mode_presence_test(1) ";");}}
     else {p("UPDATE "t" SET "snp @mode_presence_test(1) ";");}}
   if(dnp && (f || w_uni)) {
     if (use_b) {
