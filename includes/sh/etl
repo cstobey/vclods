@@ -1,10 +1,9 @@
 function pipe_to_coroutine { # PRIVATE
-  if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat ; fi >&p
-}
-function flush_coroutine {
-  :>"$COROUTINE_FILE"
-  print -p "SELECT '#END NOW';" && while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done >"$COROUTINE_FILE"
-  [ -s "$COROUTINE_FILE" ] && cat "$COROUTINE_FILE"
+  COROUTINE_FILE="$(mktemp)"; add_file_cleanup "$COROUTINE_FILE"
+  { if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat - ; fi ;
+    echo "SELECT '#END NOW';" ; } >&5 &
+  while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done >"$COROUTINE_FILE"
+  cat "$COROUTINE_FILE"
 }
 function etl_sync_tbl { # PRIVATE
 # TODO: generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
@@ -26,7 +25,14 @@ function n() {if(t && t==$2) {print ","} else {if (t) {print ";"} print "ALTER T
 END {if(t) print ";"}'
 }
 function etl_process_tbls { # PRIVATE
+  PIPE_FILE="$(mktemp)"; add_file_cleanup "$PIPE_FILE"
+  APPEND_FILE="$(mktemp)"; add_file_cleanup "$APPEND_FILE"
   grep -E '#(include|append|sync|explode_)' <<<"$working_fields" | while read d t m ; do
+    :>"$PIPE_FILE"
+    if [ -s "$APPEND_FILE" ] && [ "$d" != "#append" ] ; then
+      pipe_to_coroutine <"$APPEND_FILE" # because append could be just a part of a statement, make sure we have all sequential #appends before flushing
+      :>"$APPEND_FILE"
+    fi
     case "$d" in
       "#include")
         if [ -z "$1" ] ; then # passthrough or coroutine
@@ -34,28 +40,28 @@ function etl_process_tbls { # PRIVATE
         else
           f="${t%%.*}"
           if [ -s "${ETL_EXT_DIR}/$f" ] ; then
-            pipe_to_coroutine <"${ETL_EXT_DIR}/$f"
-            if [ "$f" != "$t" ] ; then
-              flush_coroutine | vclod_operation "$t" | pipe_to_coroutine
-            fi
+            pipe_to_coroutine <"${ETL_EXT_DIR}/$f" | if [ "$f" != "$t" ] ; then
+                vclod_operation "$t" >"$PIPE_FILE"
+              else cat - ; fi
           else
             echo >&2 "#include file ${ETL_EXT_DIR}/$f does not exist"
             return 1
           fi
-          flush_coroutine
         fi
         ;;
       "#append") if [ -z "$1" ] ; then echo "$t $m"; else
-          pipe_to_coroutine <<<"$t $m"
-          if [[ "$t$m" =~ [;]$ ]] ; then flush_coroutine; fi # because append could be just a part of a statement, make sure the last character is ; before flushing
+          echo "$t $m" >>"$APPEND_FILE"
         fi
         ;;
       "#sync"*)
         m="$(sed -r 's/(SET|DELETE)_NOT_PRESENT.*$//' <<<"$m")" # need to isolate the table name.
         if [ -z "$1" ] ; then
           etl_sync_tbl $t $m ;
-        else etl_sync_tbl $t $m | pipe_to_coroutine
-          if grep -q "#mode $t batch" <<<"$working_fields" ; then flush_coroutine | vclod_operation b.batch | pipe_to_coroutine; fi
+        else 
+          etl_sync_tbl $t $m | pipe_to_coroutine |
+          if grep -q "#mode $t batch" <<<"$working_fields" ; then 
+            vclod_operation batch_mode.batch >"$PIPE_FILE" ; 
+          else cat - ; fi
         fi
         ;;
       [!#]*)
@@ -70,13 +76,15 @@ function etl_process_tbls { # PRIVATE
         fi
         ;;
     esac
+    [ -s "$PIPE_FILE" ] && pipe_to_coroutine <"$PIPE_FILE"
   done
+  [ -s "$APPEND_FILE" ] && pipe_to_coroutine <"$APPEND_FILE"
+  return 0
 }
 function etl_run { # PRIVATE
   #setup files
   ETL_TBL_TEMP_FILE="$(mktemp)"; add_file_cleanup "$ETL_TBL_TEMP_FILE"
   TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
-  COROUTINE_FILE="$(mktemp)"; add_file_cleanup "$COROUTINE_FILE"
 
   # prep variables
   sed 's/--.*$//' "$ETL_EXT_DIR/$ext_opt" >"$ETL_TBL_TEMP_FILE" # handle fifos; -- are real comments
@@ -104,11 +112,13 @@ function etl_run { # PRIVATE
     LD_PRELOAD=/usr/libexec/coreutils/libstdbuf.so; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'; export LD_PRELOAD _STDBUF_I _STDBUF_O _STDBUF_E
     real_bfn="$base_filename" # NOTE: for some reason, $base_filename gets updated when calling .teea in pipe_to_coroutine, so force it to stay consistent
     vclod_op "etlsql_coroutine.$1" |& # TODO: pass ext_opt from env?
-    [ "$ETL_EXT_DEBUG" -eq 1 ] && { print -p "SELECT CONNECTION_ID();" ; read -p connid ; echo >&2 "CONNECTION_ID: $connid"; }
+    exec 5>&p
+    [ "$ETL_EXT_DEBUG" -eq 1 ] && { echo "SELECT CONNECTION_ID();" >&5 ; read -p connid ; echo >&2 "CONNECTION_ID: $connid"; }
     etl_populate_tmp_tbl | vclod_op b.batch | pipe_to_coroutine &&
       etl_process_tbls "$1"
     ret="$?"
-    print -p "quit"
+    echo "quit" >&5
+    exec 5>&-
     [ -n "$(jobs -p)" ] && wait
     return "$ret"
   fi

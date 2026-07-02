@@ -25,7 +25,6 @@ INSERT INTO tmp (t_id,json) VALUES
 CREATE OR REPLACE TEMPORARY TABLE tmp_deep (id INT UNSIGNED NOT NULL, the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
 SELECT tmp.t_id, REPLACE(TO_BASE64(tmp.json), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.json != '';
-SELECT '#END NOW';
 INSERT INTO tmp_deep VALUES
 (12345,'$.a',"a",1)
 ,(12345,'$.b',"b",JSON_UNQUOTE(FROM_BASE64('ImMi')))
@@ -45,7 +44,6 @@ INSERT INTO tmp_deep VALUES
 CREATE OR REPLACE TEMPORARY TABLE tmp_shallow (id INT UNSIGNED NOT NULL, the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));
 SELECT tmp.t_id, REPLACE(TO_BASE64(REPLACE(tmp.json, '\\', '\\\\')), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.json != '';
-SELECT '#END NOW';
 INSERT INTO tmp_shallow VALUES
 (12345,FROM_BASE64('YQ=='),FROM_BASE64('MQ=='))
 ,(12345,FROM_BASE64('Yg=='),FROM_BASE64('ImMi'))

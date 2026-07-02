@@ -19,7 +19,6 @@ INSERT INTO tmp (t_id,csv) VALUES
 CREATE OR REPLACE TEMPORARY TABLE tmp_csv (id INT UNSIGNED NOT NULL, the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));
 SELECT tmp.t_id, REPLACE(TO_BASE64(REPLACE(tmp.csv, '\\', '\\\\')), '\n', '') FROM tmp
 WHERE tmp.t_id != '' AND tmp.csv != '';
-SELECT '#END NOW';
 INSERT INTO tmp_csv VALUES
 (12345,FROM_BASE64('YQ=='),0)
 ,(12345,FROM_BASE64('Yg=='),1)

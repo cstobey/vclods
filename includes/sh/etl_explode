@@ -1,17 +1,17 @@
 etl_explode_coroutine () {
+  PIPE_FILE="$(mktemp)"; add_file_cleanup "$PIPE_FILE"
   while read tmp_tbl_id explode_type sub_tmp_tbl sub_tmp_tbl_source ; do
-    :>"$COROUTINE_FILE"
+    :>"$PIPE_FILE"
     id_def="$(grep -wm1 "$tmp_tbl_id" "$ETL_TBL_TEMP_FILE" | sed -r 's/\s+(PRIMARY\s+KEY|AUTO_INCREMENT|UNIQUE(\s+KEY)?)//g;s/^\s*\S+(\s.*)\s*,\s*#.*$/id\1,/')"
     case "$explode_type" in
       "#explode_csv")
-        pipe_to_coroutine << STMT
+        pipe_to_coroutine << STMT | {
 CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_value VARCHAR(6000), index_number INT NOT NULL, KEY(id), KEY(index_number));
 SELECT ${tmp_tbl}.${tmp_tbl_id}, REPLACE(TO_BASE64(REPLACE(${sub_tmp_tbl_source}, '\\\\', '\\\\\\\\')), '\n', '') FROM ${tmp_tbl}
 WHERE ${tmp_tbl}.${tmp_tbl_id} != '' AND ${sub_tmp_tbl_source} != '';
-SELECT '#END NOW';
 STMT
-        while read -p i l || return 1 ; do
-          [ "$i $l" != "#END NOW" ] || break
+        echo "#start INSERT INTO $sub_tmp_tbl VALUES" ;
+        while read i l || return 1 ; do
           fs="$(printf "%s" "$l" | base64 -d)";x=0
           old_IFS=$IFS;IFS=',';
           for vs in $fs ; do
@@ -20,46 +20,43 @@ STMT
             x=$((x+1))
           done
           IFS=$old_IFS
-        done >$COROUTINE_FILE
+        done ; } | vclod_operation explode_input_batch.batch >"$PIPE_FILE"
         ;;
       "#explode_json_shallow")
-        pipe_to_coroutine << STMT
+        pipe_to_coroutine << STMT | {
 CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)));
 SELECT ${tmp_tbl}.${tmp_tbl_id}, REPLACE(TO_BASE64(REPLACE(${sub_tmp_tbl_source}, '\\\\', '\\\\\\\\')), '\n', '') FROM ${tmp_tbl}
 WHERE ${tmp_tbl}.${tmp_tbl_id} != '' AND ${sub_tmp_tbl_source} != '';
-SELECT '#END NOW';
 STMT
-        while read -p i l || return 1 ; do
-          [ "$i $l" != "#END NOW" ] || break
+        echo "#start INSERT INTO $sub_tmp_tbl VALUES";
+        while read i l || return 1 ; do
           base64 -d <<<"$l" | jq -r --arg i "$i" --arg q "'" 'to_entries[] | "(\($i),FROM_BASE64(\($q)\(.key | @base64)\($q)),FROM_BASE64(\($q)\(.value | @json | @base64)\($q)))"'
-        done >$COROUTINE_FILE
+        done ; } | vclod_operation explode_input_batch.batch >"$PIPE_FILE"
         ;;
       "#explode_json_deep")
-        pipe_to_coroutine << STMT
+        pipe_to_coroutine << STMT | {
 CREATE OR REPLACE TEMPORARY TABLE $sub_tmp_tbl ($id_def the_jpath VARCHAR(6000), the_key VARCHAR(1024), the_value VARCHAR(6000), KEY (id), KEY (the_key(555)), KEY (the_jpath(555)));
 SELECT ${tmp_tbl}.${tmp_tbl_id}, REPLACE(TO_BASE64(${sub_tmp_tbl_source}), '\n', '') FROM ${tmp_tbl}
 WHERE ${tmp_tbl}.${tmp_tbl_id} != '' AND ${sub_tmp_tbl_source} != '';
-SELECT '#END NOW';
 STMT
-        while read -p i l || return 1 ; do
-          [ "$i $l" != "#END NOW" ] || break
+        echo "#start INSERT INTO $sub_tmp_tbl VALUES";
+        while read i l || return 1 ; do
           base64 -d <<<"$l" | jq -r --stream --arg i "$i" --arg q "'" 'select(has(1)) | "(\($i),\($q)$\(first | map(if type == "number" then "["+(.|tostring)+"]" else "."+. end) | join(""))\($q),\(first[-1] | if type == "number" then "" else . end | @json),\(last | if type == "number" or type == "null" or type == "boolean" then @json else "JSON_UNQUOTE(FROM_BASE64(\($q)\(@json | @base64)\($q)))" end))"'
-        done >$COROUTINE_FILE
+        done ; } | vclod_operation explode_input_batch.batch >"$PIPE_FILE"
         ;;
       "#explode_manual")
         f="${sub_tmp_tbl_source%%.*}"
         if [ -s "${ETL_EXT_DIR}/$f" ] ; then
-          pipe_to_coroutine <"${ETL_EXT_DIR}/$f"
-          if [ "$f" != "$sub_tmp_tbl_source" ] ; then
-            flush_coroutine | vclod_operation "$sub_tmp_tbl_source" | pipe_to_coroutine
-            :>"$COROUTINE_FILE"
-          fi
+          pipe_to_coroutine <"${ETL_EXT_DIR}/$f" | if [ "$f" != "$sub_tmp_tbl_source" ] ; then
+              vclod_operation "$sub_tmp_tbl_source" >"$PIPE_FILE"
+            else cat - ; fi
         else
           echo >&2 "#explode_manual file ${ETL_EXT_DIR}/$f does not exist"
           return 1
         fi ;;
     esac
-    [ -s "$COROUTINE_FILE" ] && cat <(echo "#start INSERT INTO $sub_tmp_tbl VALUES") "$COROUTINE_FILE" | vclod_operation explode_input_batch.batch | pipe_to_coroutine
+    [ -s "$PIPE_FILE" ] && pipe_to_coroutine <"$PIPE_FILE"
+    :>"$PIPE_FILE"
   done
   return 0
 }
