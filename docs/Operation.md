@@ -18,7 +18,7 @@ awk|PIPE|${AWK_EXT_FILE:=$base_filename}|Run awk program [See more](/docs/awk.md
 batch|PIPE|Used, No Default|aggregate input into batch SQL statements [See more](/docs/batch.md)
 diff|TERM|Used, No Default|diff extension pipe with a "static" file (or generate output based on provided operation)
 dir|WRAP|${DIR_EXT_START:=$base_filename}|Runs all scripts in any subdirectory that starts with $DIR_EXT_START where the .extensions are mined from all directory names between $DIR_EXT_DIR and the filename and disallowed on the filename.
-dst|ANY|Not Used|Run a sql script with the secondary connection (configured with VCLOD_DST_)<br />If using a mysql connection, ext_opt secondarys to BNAwrc, otherwise it is not used.
+dst|ANY|Not Used|Run a sql script with the secondary connection (configured with VCLOD_DST_)<br />If using a mysql connection, ext_opt secondarys to BNAwrncq, otherwise it is not used.
 email|TERM|Not Used|email extension pipe to SUPPORT_EMAIL either as an attachment or inline.
 end|PIPE|${ADD_EXT_FILE:=$base_filename}|Postpend a file's contents to the extension pipe
 env|ANY|Used, No Default|run an extra config file as the env context for the given operations. ext_opt is of the form `<config_filename>+<operations>`. Each piece may be overridden.
@@ -40,7 +40,7 @@ shard|FLOW|sh|Running a stdin with the given operation $SHARD_EXT_COUNT times. O
 shebang|ANY|Not Used|Respect script's first line shebang (default: source in ksh just like .sh)
 slack|TERM|${SLACK_EXT_CHANNEL:=vclod_logs}|push stdin to slack channel. Will propogate all data on.
 split|FLOW|sh|Split records into batched operations... running the same operation for every $SPLIT_EXT_COUNT rows
-sql|ANY|Not Used|Run a sql script with the default connection (configured with VCLOD_SRC_)<br />If using a mysql connection, ext_opt defaults to BNAwrc, otherwise it is not used.
+sql|ANY|Not Used|Run a sql script with the default connection (configured with VCLOD_SRC_)<br />If using a mysql connection, ext_opt defaults to BNAwrncq, otherwise it is not used.
 tee|PIPE|Used, No Default|Route output to a file or sub_pipe and the remaining extension pipe
 teea|PIPE|$base_filename|Route output to file (appended) and the remaining extension pipe
 vfs|WRAP|Not Used|virtual file system: use #fifo to generate virtual files and #run to use those files inside a VCLOD context. You can only use each virtual file once per run. Helps with large composite programs with many small files. Especially useful for running oneoff scripts from stdin [See more](/docs/vfs.md)

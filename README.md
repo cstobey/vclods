@@ -150,6 +150,6 @@ Output will be: `[Log] Hello World` in all 3 cases.
 
 First, create and setup the `./test/secure_config` file to have the right MySQL permissions (need to specify `$VCLOD_MYSQL_HOST`, `$VCLOD_MYSQL_USER`, `$VCLOD_MYSQL_PASSWORD`, and `$LOG_SQL_HOST`).
 
-`./run_test.sh` - confirms that the proper log files are generated with the right contents; checks syslog; checks post_process log2sql; prints all output to the terminal
+`./run_tests.sh` - confirms that the proper log files are generated with the right contents; checks syslog; checks post_process log2sql; prints all output to the terminal
 
-`./run_test.sh | cat` - does the same thing, but with no output except on test error.
+`./run_tests.sh | cat` - does the same thing, but with no output except on test error.

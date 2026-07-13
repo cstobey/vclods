@@ -23,7 +23,7 @@ get_semaphore_lock () { # Get a lock. First argument is the lock basename.
       CGROUP_DIR="$CGROUP_BASE/$CGROUP_NAME"
       sudo mkdir "$CGROUP_DIR"
       sudo -s sh -c "sudo echo '$MYPID' >'$CGROUP_DIR/cgroup.procs'"
-      #sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'" # TODO: this isnt quite right... needs to mimic the v1 usage
+      sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'" # TODO: this isnt quite right... needs to mimic the v1 usage
     else
       CGROUP_DIR="$CGROUP_BASE/cpuset/$CGROUP_NAME"
       setup_cgroup_v1

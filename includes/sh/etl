@@ -1,6 +1,6 @@
 function pipe_to_coroutine { # PRIVATE
   COROUTINE_FILE="$(mktemp)"; add_file_cleanup "$COROUTINE_FILE"
-  { if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat - ; fi ;
+  { if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat ; fi ;
     echo "SELECT '#END NOW';" ; } >&5 &
   while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done >"$COROUTINE_FILE"
   cat "$COROUTINE_FILE"
@@ -42,7 +42,7 @@ function etl_process_tbls { # PRIVATE
           if [ -s "${ETL_EXT_DIR}/$f" ] ; then
             pipe_to_coroutine <"${ETL_EXT_DIR}/$f" | if [ "$f" != "$t" ] ; then
                 vclod_operation "$t" >"$PIPE_FILE"
-              else cat - ; fi
+              else cat ; fi
           else
             echo >&2 "#include file ${ETL_EXT_DIR}/$f does not exist"
             return 1
@@ -61,7 +61,7 @@ function etl_process_tbls { # PRIVATE
           etl_sync_tbl $t $m | pipe_to_coroutine |
           if grep -q "#mode $t batch" <<<"$working_fields" ; then 
             vclod_operation batch_mode.batch >"$PIPE_FILE" ; 
-          else cat - ; fi
+          else cat ; fi
         fi
         ;;
       [!#]*)
@@ -91,7 +91,7 @@ function etl_run { # PRIVATE
   std_space="$(sed -r 's/^\s+//;s/\s+/ /g;:a;/\\$/N; s/\s*\\\n\s*/ /;ta' "$ETL_TBL_TEMP_FILE")"
   tmp_tbl=$(grep -Em1 '^CREATE (OR REPLACE )?(TEMPORARY )?TABLE' <<<"$std_space" | sed -r 's/^.* TABLE +([^ (]+)([( ].*)?$/\1/')
   ingest_fields=$(sed -r '/\/\*/,/\*\//d' <<<"$std_space" | awk '/#(map|ingest|unique)/ && !/#(key|ignore|include|append)/ {print $1}' | paste -sd',')
-  working_fields=$(awk '@include "std"; /#/ {f=gensub(/,\s*$/, "", "g", gensub(/^\s*([^#]+)#.*$/, "\\1", "g")); p(gensub(/[^\n]*\n?/, "", "1", gensub(/#(sync|mode|append|l?join|where|include|generate)/, "\n&", "g", gensub(/ #(ignore|ingest|key|unique|explode_|map|pivot)/, "\n"$1"&", "g", gensub(/#addex\S*\s+\S+(\s|$)/, "\n& "f" ", "1")))))}' <<<"$std_space")
+  working_fields=$(awk '@include "std"; /#/ {f=gensub(/,\s*$/, "", "g", gensub(/^\s*([^#]+)#.*$/, "\\1", "g")); p(gensub(/[^\n]*\n?/, "", "1", gensub(/#(sync|mode|append|l?join|where|include|generate|pivot)/, "\n&", "g", gensub(/ #(ignore|ingest|key|unique|explode_|map)/, "\n"$1"&", "g", gensub(/#addex\S*\s+\S+(\s|$)/, "\n& "f" ", "1")))))}' <<<"$std_space")
 
   # run tests
   # test that all fields have a #sync

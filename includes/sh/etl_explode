@@ -49,7 +49,7 @@ STMT
         if [ -s "${ETL_EXT_DIR}/$f" ] ; then
           pipe_to_coroutine <"${ETL_EXT_DIR}/$f" | if [ "$f" != "$sub_tmp_tbl_source" ] ; then
               vclod_operation "$sub_tmp_tbl_source" >"$PIPE_FILE"
-            else cat - ; fi
+            else cat ; fi
         else
           echo >&2 "#explode_manual file ${ETL_EXT_DIR}/$f does not exist"
           return 1

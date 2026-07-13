@@ -9,7 +9,7 @@ cat >"$TEMP_FILE"
 
 if [ -n "$M_EXT_CONN_SCRIPT" ] && [ -s "$M_EXT_DIR/${M_EXT_CONN_SCRIPT%%.*}" ] && [[ "$M_EXT_CONN_SCRIPT" =~ $VCLOD_FILE_REGEX ]] ; then # SKIP_COMMENT
   vclod_operation $M_EXT_CONN_SCRIPT <"$M_EXT_DIR/${M_EXT_CONN_SCRIPT%%.*}" || return $? # SKIP_COMMENT
-elif [ -z "M_EXT_CONNS" ] ; then
+elif [ -z "$M_EXT_CONNS" ] ; then
   echo >&2 ".m: missing connections list or valid subscript to find them"
   return 42
 else

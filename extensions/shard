@@ -13,7 +13,7 @@ for SHARD_NUMBER in $(seq 0 $((SHARD_EXT_COUNT - 1)) ) ; do
   case "$SHARD_EXT_SLEEP_INTERVAL" in
     0) : ;;
     -1) wait $pids ; pids='' ;;
-    [0-9]+) sleep "$SHARD_EXT_SLEEP_INTERVAL" ;;
+    +([0-9])) sleep "$SHARD_EXT_SLEEP_INTERVAL" ;;
     *) echo "$SHARD_EXT_SLEEP_INTERVAL" | . /dev/stdin ;;
   esac
 done

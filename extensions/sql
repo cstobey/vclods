@@ -1,4 +1,4 @@
-#ANY Run a sql script with the default connection (configured with VCLOD_SRC_)<br />If using a mysql connection, ext_opt defaults to BNAwrc, otherwise it is not used.
+#ANY Run a sql script with the default connection (configured with VCLOD_SRC_)<br />If using a mysql connection, ext_opt defaults to BNAwrncq, otherwise it is not used.
 : "${SQL_EXT_IGNORE_NO_CONNECT:=0}" # 0: connection errors break the pipe.<br />1: test the connection first and silently continue without outputting anything.<br />anything else is used as an error message
 : "${SQL_EXT_ENVSUBST:=1}" # 0: Input is sent as a raw query.<br />1: first run input through envsubst before running it as a query
 : "${SRC:=VCLOD_SRC_}" # Overrides the connection naming prefix.

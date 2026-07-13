@@ -14,13 +14,13 @@ do I want to do this?
 includes/awk/etl_main_presence_test Line 16:  #else {}
 should I print an error if there is not key or unique column?
 
-includes/sh/etl Line 106:    vclod_op "etlsql_coroutine.$1" 
+includes/sh/etl Line 114:    vclod_op "etlsql_coroutine.$1" 
 &|pass ext_opt from env?
 
-includes/sh/etl Line 10:
+includes/sh/etl Line 9:
 generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
 
-includes/sh/locking Line 26:      #sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'"
+includes/sh/locking Line 26:      sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'"
 this isnt quite right... needs to mimic the v1 usage
 
 includes/sh/operations Line 29:

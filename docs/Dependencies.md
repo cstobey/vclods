@@ -27,7 +27,7 @@ jq|Extensions: jq slack<br />Includes: etl_explode.sh<br />Post: slack_errors|
 ksh|Global<br />Extensions: shebang<br />Post: log2sql|
 mail|Global<br />Extensions: email<br />Post: extra_error_email|
 mkfifo|Global<br />Extensions: para vfs|
-mktemp|Global<br />Extensions: email g m shard shebang slack split vfs while<br />Includes: etl.sh vcurl.sh|
+mktemp|Global<br />Extensions: email g m shard shebang slack split vfs while<br />Includes: etl.sh etl_explode.sh vcurl.sh|
 mount|Includes: locking.sh|
 mysql|Connections: mysql<br />Includes: connections.sh|# the Include connection is because mysql is the default.
 psql|Connections: postgres|

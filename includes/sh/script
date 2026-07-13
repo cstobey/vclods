@@ -39,7 +39,7 @@ check_dirs() { # PRIVATE
 
 function run_script { # PRIVATE
   export MYPID="$(exec sh -c 'echo $PPID')"
-  S="$( ( cd $(dirname "$1"); printf '%s\n' "$(pwd)/$(basename "$1")";) )" # get the absolute path
+  S="$( ( cd "$(dirname "$1")"; printf '%s\n' "$(pwd)/$(basename "$1")";) )" # get the absolute path
   : "${pIN_FILE:=$S}"
   printf '%s' "$(basename "$S")" >/proc/$MYPID/comm # or /proc/self/task/$MYPID/comm # Limited to 15 characters... hopefully that is enough.
 

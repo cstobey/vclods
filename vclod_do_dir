@@ -36,7 +36,7 @@ if [ ! -e "$1" ]; then # needs to be here instead of the next if because of the 
 fi
 
 if [ -e "$1" ]; then
-  find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort -n
+  find "$@" ! -empty -xtype f -regextype posix-egrep -regex "$VCLOD_FILE_REGEX" | sort -V
 else
   printf '%s\n' "$1"
 fi | while read filename ; do
