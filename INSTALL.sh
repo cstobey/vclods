@@ -39,7 +39,7 @@ if [ "$VCLOD_USE_CGROUP" -eq 1 ] && sudo -v && mount -l | grep cgroup -q ; then
     CGROUP_BASE="/sys/fs/cgroup"
     CGROUP_FILE="cgroup.procs"
   fi  
-  { [ "$SHOW_ALL" -eq 1 ] && grep ^ $CGROUP_BASE/*/$CGROUP_FILE -H | sed -r 's#^/.*/([^/]+)/[^/:]+:(.+)$#\1 \2#'; grep ^ $VCLOD_LOCK_DIR/*.LCK -H | sed -r 's#^/.*/([^/]+)[.]([0-9]+)[.]LCK:(.+)$#\1_\2 \3#'; } | sort | awk -v q='"' -v f="$FOREST" 'BEGIN {print "export PS_FORMAT=pid,ppid,%cpu,%mem,tname,uname,start_time,time,args;"} function o() {print "ps -p "pids" "f" | cat <(echo -e "q"\033[1;31m"proc"\033[0m"q") -";pids="";proc=$1} NR == 1 {proc=$1} $1 != proc {o()} $1 == proc {pids=((pids=="") ? "" : (pids","))$2} END {o()}' | . /dev/stdin
+  { [ "$SHOW_ALL" -eq 1 ] && grep ^ $CGROUP_BASE/*/$CGROUP_FILE -H 2>/dev/null | sed -r 's#^/.*/([^/]+)/[^/:]+:(.+)$#\1 \2#'; grep ^ $VCLOD_LOCK_DIR/*.LCK -H 2>/dev/null | sed -r 's#^/.*/([^/]+)[.]([0-9]+)[.]LCK:(.+)$#\1_\2 \3#'; } | sort | awk -v q='"' -v f="$FOREST" 'BEGIN {print "export PS_FORMAT=pid,ppid,%cpu,%mem,tname,uname,start_time,time,args;"} function o() {print "ps -p "pids" "f" | cat <(echo -e "q"\033[1;31m"proc"\033[0m"q") -";pids="";proc=$1} NR == 1 {proc=$1} $1 != proc {o()} $1 == proc {pids=((pids=="") ? "" : (pids","))$2} END {if(proc) o()}' | . /dev/stdin
 else
   cd $VCLOD_LOCK_DIR ; fst_l=1; typeset -A locks; typeset -A files; typeset -A pids;
   grep ^ -H *.LCK 2>/dev/null | sed -r 's#^(.*)-([0-9]+)[.][0-9]+[.]LCK:([0-9]+)$#\3 \2 \1#;s#^(.*)[.][0-9]+[.]LCK:([0-9]+)$#\2 x \1#' | while read p i f ; do locks["$p"]="$i"; files["$p"]="$([ "$i" == "x" ] && echo "${f//_/[\/_]}" || echo "$f")" ; done
