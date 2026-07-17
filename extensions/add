@@ -1,5 +1,7 @@
 #PIPE Prepend a file's contents to the extension pipe
 : "${ADD_EXT_DIR:=$INPUT_DIR}" # directory to find files.
 : "${ext_opt:=${ADD_EXT_FILE:=$base_filename}}" # the filename. Overridden by ext_opt.
+: "${ADD_EXT_WARN:=1}" # If 1, add a warning when a file is missing.
 
+[ "$ADD_EXT_WARN" -eq 1 ] && [ ! -f "$ADD_EXT_DIR/$ext_opt" ] && echo >&2 "[WARNING] Missing file: $ADD_EXT_DIR/$ext_opt"
 cat "$ADD_EXT_DIR/$ext_opt" -

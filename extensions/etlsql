@@ -5,5 +5,6 @@
 : "${ext_opt:=${ETL_EXT_FILE:=$base_filename}}" # temp table definition filename.
 : "${ETL_EXT_DEBUG:=0}" # when set to 1, gives the CONNECTION_ID of the coroutine for dubugging purposes.
 : "${ETL_EXT_DEBUG_TEE:=0}" # if 1, .teea all the inputs into the sql coroutine.
+: "${ETL_EXT_SQL_OPTION:-}" # Extension option to pass onto the .sql extension.
 
-etl_run sql
+etl_run sql${ETL_EXT_SQL_OPTION:+-}$ETL_EXT_SQL_OPTION

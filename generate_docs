@@ -56,7 +56,7 @@ EOF
 cat << EOF >>docs/Dependencies.md
 
 Name | Scope | Note
------|-------|-----$(sed -r 's/^([a-z]+)([=<>]+[0-9.]+)?\s*[#]?$/\1 /g;/^ *$/ d' DEPENDENCIES | sort | while read c n ; do printf '\n%s|' "$c" ; grep -rEl "^((#!)?[^#]*[^A-Za-z0-9])?$c([^A-Za-z0-9]|$)" $CODE_FILES | sed -r 's#^vclod_do_dir$#Global#;s#^includes/sh/script$#Script#;s#^([^./]+)/([^./]+)/([^./]+)$#\1 \3.\2#;s#^([^./]+)([./].+)?/#\1 #' | sort | awk 'NR==1 {printf "%s", toupper(substr($1,1,1))substr($1,2);l_d=$1}
+-----|-------|-----$(sed -r 's/^([a-z]+)([=<>]+[0-9.]+)?\s*[#]?$/\1 /g;/^ *$/ d' DEPENDENCIES | sort | while read c n ; do printf '\n%s|' "$c" ; grep -rEo "^((#!)?([^#']*|'[^']*')*[^A-Za-z0-9_#'\"])?$c(\s|[)<>|]|$)" $CODE_FILES | sed -r 's/"[^"(]*"//g;s/\$\([^$()]*\)//g;s/\$[^(]//g;/"[^$(]*\$[^(]/d;s/^([^:]+):.*$/\1/' | sort | uniq | sed -r 's#^vclod_do_dir$#Global#;s#^includes/sh/script$#Script#;s#^([^./]+)/([^./]+)/([^./]+)$#\1 \3.\2#;s#^([^./]+)([./].+)?/#\1 #' | sort | awk 'NR==1 {printf "%s", toupper(substr($1,1,1))substr($1,2);l_d=$1}
 l_d!=$1 {printf "<br />%s", toupper(substr($1,1,1))substr($1,2)}
 NF==2 && (NR==1 || l_d!=$1) {printf ":"}
 NF==2 {printf " %s", $2}

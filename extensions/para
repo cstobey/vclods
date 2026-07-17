@@ -6,7 +6,7 @@ _FIFO="${VCLOD_LOCK_DIR%/}/para.$MYPID.fifo" ; mkfifo "$_FIFO" ; exec 8<>"$_FIFO
 post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
 
 # force stdbuf defaults without using the program... override below as needed
-LD_PRELOAD=/usr/libexec/coreutils/libstdbuf.so; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'
+LD_PRELOAD="$(find_active_ld_preload)"; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'
 
 stdbuf -i0 -o0 -e0 seq 1 "$PARA_EXT_JOBS" >&8
 while read PARA_LINE || [ -n "$PARA_LINE" ] ; do # do not require a trailing newline in this context

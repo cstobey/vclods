@@ -17,6 +17,7 @@ Name | Scope | Defaults | Description
 -----|-------|----------|------------
 ADD_EXT_DIR|Extensions: add end wrap|$INPUT_DIR|directory to find files.
 ADD_EXT_FILE|Extensions: add end wrap|$base_filename|the filename. Overridden by ext_opt.
+ADD_EXT_WARN|Extensions: add end wrap|1|If 1, add a warning when a file is missing.
 AUTOGIT_BRANCH|Includes: autogit.sh|origin/master|what branch to force when local change conflict with the source.
 AWK_EXT_DIR|Extensions: awk|$INPUT_DIR|directory to find awk files.
 AWK_EXT_FILE|Extensions: awk|$base_filename|filename of awk file to run. Overridden by ext_opt.
@@ -45,9 +46,11 @@ ENV_EXT_OPERATION|Extensions: env|sh|Operations to use of awk file to run. Overr
 ETL_EXT_DEBUG|Extensions: etldst etlsql|0|when set to 1, gives the CONNECTION_ID of the coroutine for dubugging purposes.
 ETL_EXT_DEBUG_TEE|Extensions: etldst etlsql|0|if 1, .teea all the inputs into the sql coroutine.
 ETL_EXT_DIR|Extensions: etl etldst etlsql|$INPUT_DIR|Directory to look for .etl temp table definition files
+ETL_EXT_DST_OPTION|Extensions: etldst||Extension option to pass onto the .dst extension.
 ETL_EXT_ERR_ON_EMPTY|Extensions: etl etldst etlsql|1|If non-zero, error when the input stream is empty.<br />If 1, also emit an error message.
 ETL_EXT_FILE|Extensions: etl etldst etlsql|$base_filename|temp table definition filename.
 ETL_EXT_ROW_REP|Extensions: etl etldst etlsql|1|If 1, force ROW based replication.
+ETL_EXT_SQL_OPTION|Extensions: etlsql||Extension option to pass onto the .sql extension.
 EXTRA_ERROR_EMAIL|Post: extra_error_email||must have an email to send to
 HEREDOC_DELIMITER|Extensions: litsh|MSG|If multiple literate_source layers deep, use this to override the heredoc delimiter
 JQ_EXT_DIR|Extensions: jq|$INPUT_DIR|What directory to look for ext_opt jq programs in.

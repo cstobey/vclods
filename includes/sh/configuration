@@ -5,3 +5,10 @@ function vclod_load_local_config { # loads or reloads the local config file, mai
   env | grep ^O_ | sed 's/^O_//' | . /dev/stdin # allow commandline overrides
   set +a
 }
+
+function find_active_ld_preload { # PRIVATE returns the location of the libstdbuf.so for LD_PRELOAD
+  for LD_PRELOAD in /usr/lib{{exec,64,,/x86_64-linux-gnu}/coreutils,}/libstdbuf.so ; do
+    [ -f "$LD_PRELOAD" ] && echo "$LD_PRELOAD" && return
+  done
+  echo >&2 "$base_filename: Could not find libstdbuf.so location for LD_PRELOAD variable"
+}

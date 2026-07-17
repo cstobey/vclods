@@ -1,6 +1,8 @@
 #PIPE Wrap stdin with files like .add and .end, but using filenames ending in __beg and __end
 : "${ADD_EXT_DIR:=$INPUT_DIR}" # directory to find files.
 : "${ext_opt:=${ADD_EXT_FILE:=$base_filename}}" # the filename. Overridden by ext_opt.
+: "${ADD_EXT_WARN:=1}" # If 1, add a warning when a file is missing.
 
 the_file="$ADD_EXT_DIR/$ext_opt"
+[ "$ADD_EXT_WARN" -eq 1 ] && for f in "${the_file}__beg" "${the_file}__end" ; do [ ! -f "$f" ] && echo >&2 "[WARNING] Missing file: $f" ; done
 cat "${the_file}__beg" - "${the_file}__end"

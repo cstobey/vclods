@@ -15,7 +15,9 @@ get_semaphore_lock () { # Get a lock. First argument is the lock basename.
     MY_LOCK="$LOCK_FILE"
     CGROUP_NAME="${LOCK_NAME}_$i" # setup cgroup
   done
+  set -C
   [ ! -f "${MY_LOCK:?All $LOCK_NAME locks taken}" ] && [ "$(find "${VCLOD_LOCK_DIR%/}/" -name "${LOCK_NAME}.*.LCK" | wc -l)" -le "$VCLOD_BATCH_JOBS" ] && echo "$MYPID" >"$MY_LOCK" || exit 1
+  set +C
   add_file_cleanup "$MY_LOCK"
   if [ "$VCLOD_USE_CGROUP" -eq 1 ] && sudo -v && mount -l | grep cgroup -q ; then
     CGROUP_BASE="/sys/fs/cgroup"

@@ -31,3 +31,4 @@ SET WRA ON;
 EOF
 }
 export vclod_oracle_connection
+export VCLOD_ORACLE_TEST_QUERY='SELECT NULL FROM DUAL;'
