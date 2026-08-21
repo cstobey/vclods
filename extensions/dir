@@ -8,5 +8,5 @@ err_opt="$([ "$DIR_ERR_SHOULD_EXIT" -eq 1 ] && echo " || exit 1")"
 cat
 
 find "$DIR_EXT_DIR" ! -empty -xtype f -regextype posix-egrep -regex "^${DIR_EXT_DIR%/}/${ext_opt}([^./]*(\.($VCLOD_FILE_EXTS)(-[^./]+)?)*/)+${DIR_EXT_SCRIPT}$" ! -name config | sort -V \
-  | awk -F'/' -v e="$err_opt" -v d="${DIR_EXT_DIR%/}/$ext_opt" -v q="'" '{f=gensub("/[^./]*([^/]*)", "\\1", "g", gensub("^"d"(.+)/"$NF, $(NF)"/\\1", 1)); print "cat "q $0 q" | vclod_operation "f e}' | . /dev/stdin \
+  | awk -F'/' -v d="${DIR_EXT_DIR%/}/$ext_opt" -v q="'" '{f=gensub("/[^./]*(|[.][^/]*)", "\\1", "g", gensub("^"d, "/", 1, gensub("/"$NF, "", 1))); print "cat "q $0 q" | vclod_operation "q $NF f q}' | . /dev/stdin \
   || { ret="$?" ; echo "$ext_opt Directory Failed $DIR_EXT_CONTEXT" >&2; exit "$ret"; }
