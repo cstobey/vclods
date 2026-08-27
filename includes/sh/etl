@@ -2,7 +2,7 @@ function pipe_to_coroutine { # PRIVATE
   COROUTINE_FILE="$(mktemp)"; add_file_cleanup "$COROUTINE_FILE"
   { if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat ; fi ;
     echo "SELECT '#END NOW';" ; } >&5 &
-  while read -p l || return 1 ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done >"$COROUTINE_FILE"
+  while read -t 18000 -p l || { exec 5>&-; return 1; } ; do [ "$l" != "#END NOW" ] || break ; echo "$l" ; done >"$COROUTINE_FILE" # wait up to 5 hours, then close the coproc and error
   cat "$COROUTINE_FILE"
 }
 function etl_sync_tbl { # PRIVATE
@@ -111,15 +111,11 @@ function etl_run { # PRIVATE
   else
     LD_PRELOAD="$(find_active_ld_preload)"; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'; export LD_PRELOAD _STDBUF_I _STDBUF_O _STDBUF_E
     real_bfn="$base_filename" # NOTE: for some reason, $base_filename gets updated when calling .teea in pipe_to_coroutine, so force it to stay consistent
+    post_exit_trap 'exec 5>&- 2>/dev/null;[ -n "$(jobs -p)" ] && wait'
     vclod_op "etlsql_coroutine.$1" |&
     exec 5>&p
     [ "$ETL_EXT_DEBUG" -eq 1 ] && { echo "SELECT CONNECTION_ID();" >&5 ; read -p connid ; echo >&2 "CONNECTION_ID: $connid"; }
-    etl_populate_tmp_tbl | vclod_op b.batch | pipe_to_coroutine &&
-      etl_process_tbls "$1"
-    ret="$?"
-    echo "quit" >&5
-    exec 5>&-
-    [ -n "$(jobs -p)" ] && wait
-    return "$ret"
+    etl_populate_tmp_tbl | vclod_op b.batch | pipe_to_coroutine || return $?
+    etl_process_tbls "$1"
   fi
 }

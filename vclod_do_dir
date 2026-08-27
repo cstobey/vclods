@@ -25,7 +25,7 @@ check_dirs
 
 ulimit -s unlimited  # log files might get large, need to let them float in however much memory is needed/available.
 
-PIPE_FIFO="${VCLOD_LOCK_DIR%/}/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 9<>"$PIPE_FIFO" ; add_file_cleanup "$PIPE_FIFO"
+PIPE_FIFO="${VCLOD_LOCK_DIR%/}/pipe.$$.fifo" ; mkfifo "$PIPE_FIFO" ; exec 9<>"$PIPE_FIFO" 8<"$PIPE_FIFO" ; add_file_cleanup "$PIPE_FIFO"
 stdbuf -i0 -o0 -e0 seq 1 "$VCLOD_JOBS" >&9
 post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
 
@@ -40,7 +40,7 @@ if [ -e "$1" ]; then
 else
   printf '%s\n' "$1"
 fi | while read filename ; do
-  stdbuf -i0 -o0 -e0 read dummy <&9
+  stdbuf -i0 -o0 -e0 read dummy <&8
   : | run_script "$filename" &
 done
 [ -n "$(jobs -p)" ] && wait
