@@ -1,6 +1,6 @@
 cd "$(dirname "$(readlink -f "$(which "$0")")")"
 
-CODE_FILES='vclod* extensions/* post*/* connections/* includes/*'
+CODE_FILES='vclod* extensions/ post*/ connections/ includes/'
 exclusions=$(grep -rE '^\s*[A-Z_]+=' $CODE_FILES | grep -v vclod_op | sed 's/^[^:]*://;s/=/ /' | awk '{r=$1".*"$1; if($0 !~ r) print "-e"$1;}' | sort| uniq | paste -sd' ')
 
 echo '# Configuration -- Enviornment Variables' >docs/Configuration.md
