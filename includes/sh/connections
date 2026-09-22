@@ -18,13 +18,14 @@ vclod_conn() # PRIVATE
     printf 'printf "${VCLOD_%s_TEST_QUERY:-SELECT NULL;}\n"' "${ENGINE_UPPER:?}" | . /dev/stdin | 
       $CMD "$h" "$d" "$u" "$p" >/dev/null 2>/dev/null || {
         [ "$IGNORE_NO_CONNECT" != 1 ] && echo ".sql: $IGNORE_NO_CONNECT" | envsubst >&2;
+        [ "$base_filename" = _etl_coroutine ] && printf "#CONN-DEAD %d\n" "$((IGNORE_NO_CONNECT == 1 ? 0 : 1))"
         cat >/dev/null; return 0; }
   fi
   if [ "$IS_INTERACTIVE" -eq 1 ] ; then
-    $CMD "$h" "$d" "$u" "$p"
+    $CMD "$h" "$d" "$u" "$p" || { ret="$?" ; [ "$base_filename" = _etl_coroutine ] && printf '#CONN-DEAD %d\n' "$ret" ; return "$ret"; }
   else
     # add host and database to all error output.
-    { { { $CMD "$h" "$d" "$u" "$p" >&3; printf '%s\n' "$?" >&4; } 2>&1 | sed -r "s/^(.)/${h}:${d}: \1/" >&2; } 4>&1 | { read ret ; exit $ret; } } 3>&1
+    { { { $CMD "$h" "$d" "$u" "$p" >&3; printf '%s\n' "$?" >&4; } 2>&1 | sed -r "s/^(.)/${h}:${d}: \1/" >&2; } 4>&1 | { read ret ; [ "$base_filename" = _etl_coroutine ] && [ "$ret" != 0 ] && printf '#CONN-DEAD %d\n' "${ret:-1}" ; exit $ret; } } 3>&1
   fi
 }
 

@@ -1,0 +1,6 @@
+CREATE TEMPORARY TABLE tmp (
+row VARCHAR(50) #map missing_table invalid_field
+);
+#sync missing_table
+#append SELECT invalid statement;
+#append SELECT "should never run";

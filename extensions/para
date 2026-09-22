@@ -3,7 +3,7 @@
 : "${PARA_EXT_JOBS:=10}" # number of parallel jobs to run at the same time.
 : "${PARA_EXT_STOP:=0}" # if 1, stop after we finish the currently started threads. You can set this on the fly in the config, as it is reloaded at the start of every thread.
 _FIFO="${VCLOD_LOCK_DIR%/}/para.$MYPID.fifo" ; mkfifo "$_FIFO" ; exec 9<>"$_FIFO" 8<"$_FIFO" ; add_file_cleanup "$_FIFO"
-post_exit_trap 'for j in "$(jobs -p)";do kill -SIGINT "$j" 2>/dev/null;done;[ -n "$(jobs -p)" ] && wait'
+add_cleanup_children
 
 # force stdbuf defaults without using the program... override below as needed
 LD_PRELOAD="$(find_active_ld_preload)"; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'

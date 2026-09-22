@@ -74,8 +74,19 @@ vcurl_while() # Keep curling until there is no longer a URL to curl.<br />$1 is 
   shift
   VCURL_LOOP_COUNTER=0
   typeset -a next_url=("$@")
-  while vcurl_run "${next_url[@]:-$("$get_next_url_func")}" && VCURL_LOOP_COUNTER=$((VCURL_LOOP_COUNTER+1)) && IFS=$'\n' next_url=($("$get_next_url_func")) && unset IFS && [ -n "$next_url" ]
-  do : ; done
+
+  vcurl_while_next_url()
+  {
+    typeset -a next_url=()
+    while IFS= read -r l || [ -n "$l" ] ; do
+      [[ $l =~ [^[:space:]] ]] && next_url+=("$l")
+    done < <($get_next_url_func)
+  }
+  [ ${#next_url[@]} -eq 0 ] && vcurl_while_next_url # not on commandline, piped in instead.
+
+  while [ ${#next_url[@]} -gt 0 ] && vcurl_run "${next_url[@]}" ; do
+    (( ++VCURL_LOOP_COUNTER )) ; vcurl_while_next_url
+  done
 }
 
 vcurl_multi_run() # Proces stdin where each line is the URL and curl arguments of vcurl_run.
