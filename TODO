@@ -14,7 +14,7 @@ do I want to do this?
 includes/awk/etl_main_presence_test Line 16:  #else {}
 should I print an error if there is not key or unique column?
 
-includes/sh/etl Line 9:
+includes/sh/etl Line 24:
 generate a subselect the same as with the odku case so #generate_unique works... ie, use an actual subselect that is JOINed.
 
 includes/sh/locking Line 28:      sudo post_exit_trap "sudo rmdir '$CGROUP_DIR'"

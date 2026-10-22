@@ -55,8 +55,10 @@ STMT
           return 1
         fi ;;
     esac
+    etl_exit_if_dead
     [ -s "$PIPE_FILE" ] && pipe_to_coroutine <"$PIPE_FILE"
     :>"$PIPE_FILE"
+    etl_exit_if_dead
   done
   return 0
 }

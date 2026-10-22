@@ -42,6 +42,7 @@ odku | Layout | Uses INSERT INTO ... ON DUPLICATE KEY UPDATE to quickly sync the
 odku_ai_always | Layout | Same as odku but forces the AUTO_INCREMENTING keys not to bloat at the expence of an ALTER TABLE.
 odku_ai | Layout | The default: same as odku_always does its best to avoid needing to run the ALTER TABLE.
 ui_split | Layout | tries its best to not bloat AUTO_INCREMENTING keys by being more particular about managing whether it uses an UPDATE or INSERT. Best with lower cardinality tables.<br />NOTE: CANNOT use with #join. Instead, use #addex to add the columns you need and #append to sync the 2 tables.
+batch | Layout | ONLY valid in the coroutine varients (.etlsql/.etldst).<br />Use the .batch extension to do the sync so most of the updates have only single table locks.
 sparse | Quantity | Treats the temp table as sparse. All rows with NULL unique values are ignored. Only makes sense for leaf tables.
 not_exists | Presence_Test | The default: use a NOT EXISTS subselect to force absence when needed.
 not_in | Presence_Test | Use a ROW() NOT IN subselect to force absence when needed. Normally the slower option, but sometimes faster.

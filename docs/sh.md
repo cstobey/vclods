@@ -25,6 +25,7 @@ operations|vclod_operation||Within the current VCLODScript's context, process a 
 trap|pre_exit_trap||adds the given command to the beginning of the exit trap
 trap|post_exit_trap||adds the given command to the end of the exit trap
 trap|add_file_cleanup||Cleans up the given file(s) when the current script or subshell exits.
+trap|add_cleanup_children||Cleans up child jobs that are still running
 vcurl|urlen||url encode a string from stdin
 vcurl|vcurl_get_header_value||takes a HTTP header key name and returns its value from the last vcurl call.
 vcurl|vcurl_get_http_status_code||gets the 3 digit HTTP status code

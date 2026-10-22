@@ -1,1 +1,2 @@
 [ERROR] shadowmaster.ces.cvnt.net:test: ERROR 1146 (42S02) at line 11: Table 'test.missing_table' doesn't exist
+[ERROR] hang_etl.etlsql returned 1

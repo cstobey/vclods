@@ -1,11 +1,21 @@
+function etl_exit_if_dead { # PRIVATE
+  [ -s "$ETL_DEAD_FILE" ] || return 0
+  exit "$(<"$ETL_DEAD_FILE")"
+}
+function etl_coroutine_died { # PRIVATE $1=exit code $2=background writer pid
+  kill "$2" 2>/dev/null; exec 5>&-
+  printf '%s\n' "$1" >"$ETL_DEAD_FILE"
+  exit "$1"
+}
 function pipe_to_coroutine { # PRIVATE
+  etl_exit_if_dead
   COROUTINE_FILE="$(mktemp)"; add_file_cleanup "$COROUTINE_FILE"
   { if [ "$ETL_EXT_DEBUG_TEE" -eq  1 ] ; then vclod_op "${real_bfn}_io.teea" ; else cat ; fi ;
     echo "SELECT '#END NOW';" ; } >&5 &
   w_pid=$!
-  while read -t 18000 -p l || { kill $w_pid 2>/dev/null; exec 5>&-; return 1; } ; do
+  while read -t 18000 -p l || etl_coroutine_died 1 "$w_pid" ; do
     [ "$l" != "#END NOW" ] || break
-    [[ "$l" =~ ^#CONN-DEAD ]] && { kill $w_pid 2>/dev/null; exec 5>&-; read sentinal ret <<<"$l" ; return "${ret:-1}" ; }
+    [[ "$l" =~ ^#CONN-DEAD ]] && { read sentinal ret <<<"$l" ; etl_coroutine_died "${ret:-1}" "$w_pid" ; }
     echo "$l"
   done >"$COROUTINE_FILE" # wait up to 5 hours, then close the coproc and error
   cat "$COROUTINE_FILE"
@@ -33,10 +43,10 @@ function etl_process_tbls { # PRIVATE
   PIPE_FILE="$(mktemp)"; add_file_cleanup "$PIPE_FILE"
   APPEND_FILE="$(mktemp)"; add_file_cleanup "$APPEND_FILE"
   grep -E '#(include|append|sync|explode_)' <<<"$working_fields" | while read d t m ; do
-    :>"$PIPE_FILE"
     if [ -s "$APPEND_FILE" ] && [ "$d" != "#append" ] ; then
       pipe_to_coroutine <"$APPEND_FILE" # because append could be just a part of a statement, make sure we have all sequential #appends before flushing
       :>"$APPEND_FILE"
+      etl_exit_if_dead
     fi
     case "$d" in
       "#include")
@@ -81,9 +91,11 @@ function etl_process_tbls { # PRIVATE
         fi
         ;;
     esac
-    [ -s "$PIPE_FILE" ] && pipe_to_coroutine <"$PIPE_FILE"
+    etl_exit_if_dead
+    if [ -s "$PIPE_FILE" ] ; then pipe_to_coroutine <"$PIPE_FILE" ; :>"$PIPE_FILE" ; etl_exit_if_dead ; fi
   done
   [ -s "$APPEND_FILE" ] && pipe_to_coroutine <"$APPEND_FILE"
+  etl_exit_if_dead
   return 0
 }
 function etl_run { # PRIVATE
@@ -105,7 +117,7 @@ function etl_run { # PRIVATE
     awk 'BEGIN {e="[WARNING] Unused field(s): %s"} {printf e, ($1 ~ /^[#]/) ? $3 : $1; e=", %s"} END {print ""}' >&2
   cat >"$TEMP_FILE" # include the previous pipe's data... then test it
   [ -s "$TEMP_FILE" ] || case "$ETL_EXT_ERR_ON_EMPTY" in 0) : ;; 1) echo >&2 "[WARNING] Empty input: $base_filename.etl-$ext_opt"; return 0 ;; *) return 0 ;; esac
-  awk 'NF {exit $1 !~ /^[(#]/}' || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
+  awk 'NF {exit $1 !~ /^[(#]/}' "$TEMP_FILE" || { echo >&2 "Invalid starting .etl line. Must be an INSERT row or a .batch directive"; return 1; }
 
   # execute
   if [ -z "$1" ] ; then # passthrough or coroutine
@@ -116,6 +128,7 @@ function etl_run { # PRIVATE
   else
     LD_PRELOAD="$(find_active_ld_preload)"; _STDBUF_I=0; _STDBUF_O='L'; _STDBUF_E='L'; export LD_PRELOAD _STDBUF_I _STDBUF_O _STDBUF_E
     real_bfn="$base_filename" # NOTE: for some reason, $base_filename gets updated when calling .teea in pipe_to_coroutine, so force it to stay consistent
+    ETL_DEAD_FILE="$(mktemp)"; add_file_cleanup "$ETL_DEAD_FILE"
     post_exit_trap 'exec 5>&- 2>/dev/null;'
     add_cleanup_children
     vclod_op "_etl_coroutine.$1" |&
