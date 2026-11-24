@@ -44,5 +44,5 @@ stat|Includes: locking.sh|
 stdbuf|Global<br />Script<br />Extensions: awk batch para while|
 sudo|Includes: locking.sh|
 sync|Script<br />Includes: autogit.sh operations.sh|
-tee|Extensions: g tee teea<br />Includes: locking.sh|
+tee|Extensions: tee teea<br />Includes: locking.sh|
 which|Global|

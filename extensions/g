@@ -1,8 +1,6 @@
-#WRAP Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
-# It is expected to only use this once per pipe chain, per ext_opt...
-# So if using vclod_operation, vary the base_filename that you give to that function.
-# (The guard will still work, the streams just won't be isolated).
+#WRAP Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging<br />It is expected to only use this once per pipe chain, per ext_opt...<br />So if using vclod_operation, vary the base_filename that you give to that function.<br />(The guard will still work, the error streams just won't be isolated).<br />.g can also be used to break pipe backpressure for large datastream as it dumps incoming data before passing it on.
 : "${ext_opt:?}"
 TEMP_FILE="$(mktemp)"; add_file_cleanup "$TEMP_FILE"
 NFL="$LF.g-$base_filename"
-tee "$TEMP_FILE" | VCLOD_EXIT_ERR="$base_filename.g-$ext_opt FILE: $NFL" vclod_operation "g_$base_filename.$ext_opt" || { ret="$?" ; cat <"$TEMP_FILE" >>"$NFL" ; return "$ret" ; }
+cat >"$TEMP_FILE" # instead of tee, drain the file completely before piping.
+cat "$TEMP_FILE" | VCLOD_EXIT_ERR="$base_filename.g-$ext_opt FILE: $NFL" vclod_operation "g_$base_filename.$ext_opt" || { ret="$?" ; cat <"$TEMP_FILE" >>"$NFL" ; return "$ret" ; }

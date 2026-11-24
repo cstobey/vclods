@@ -26,7 +26,7 @@ err|TERM|Not Used|Everything to this point is an error. Great for Data tests.
 etl|PIPE|${ETL_EXT_FILE:=$base_filename}|Preform advanced ETL operations based on a temp table definition with structured comments. Should be followed by .(sql\|dst).batch. [See more](/docs/etl.md)
 etldst|PIPE|${ETL_EXT_FILE:=$base_filename}|Shortcut for .dst.batch.etl with the ability to preform additional vclod_operations that manipuate the same .sql session.
 etlsql|PIPE|${ETL_EXT_FILE:=$base_filename}|Shortcut for .sql.batch.etl with the ability to preform additional vclod_operations that manipuate the same .sql session.
-g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging
+g|WRAP|Used, No Default|Guard another extension (like in .g-jq) by saving its inputs on error alongside normal logging<br />It is expected to only use this once per pipe chain, per ext_opt...<br />So if using vclod_operation, vary the base_filename that you give to that function.<br />(The guard will still work, the error streams just won't be isolated).<br />.g can also be used to break pipe backpressure for large datastream as it dumps incoming data before passing it on.
 jq|PIPE|$base_filename|Run stdin through the jq utility to parse JSON
 litsh|PIPE|$HEREDOC_DELIMITER|literate source: inverts code and comments allowing ksh (ie, process and variable subsitition and expansion) inside prose. Use with caution!
 m|FLOW|${M_EXT_OPERATION:=dst}|Run the input through the given extensions once per connection provided in M_EXT_CONNS (provided either manually or through the $M_EXT_CONN_SCRIPT subscript).<br />Uses .para to process the different hosts.
