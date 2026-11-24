@@ -33,7 +33,7 @@ mysql|Connections: mysql|# the Include connection is because mysql is the defaul
 psql|Connections: postgres|
 python3|Extensions: py|
 readlink|Global|
-sed|Connections: mssql oracle<br />Extensions: vfs<br />Includes: configuration.sh connections.sh etl.sh etl_explode.sh trap.sh vcurl.sh<br />Post: log2sql|
+sed|Connections: mssql oracle<br />Extensions: split vfs<br />Includes: configuration.sh connections.sh etl.sh etl_explode.sh trap.sh vcurl.sh<br />Post: log2sql|
 sh|Script<br />Extensions: para<br />Includes: locking.sh|
 sleep|Script<br />Extensions: shard<br />Includes: vcurl.sh|
 sort|Global<br />Extensions: dir py|
